@@ -1,7 +1,17 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+val localProps = Properties()
+localProps.load(FileInputStream(rootProject.file("local.properties")))
+val devBaseUrl = localProps.getProperty("DEV_BASE_URL") ?: ""
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
 }
+
+
+
 
 android {
     namespace = "com.example.storynest"
@@ -17,18 +27,28 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+
     buildTypes {
-        release {
+        getByName("debug") {
+            isMinifyEnabled = false
+            buildConfigField("String", "BASE_URL", "\"$devBaseUrl\"")
+        }
+
+        getByName("release") {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            buildConfigField("String", "BASE_URL", "\"$devBaseUrl\"")
         }
+
     }
 
     buildFeatures{
         viewBinding = true
+        buildConfig = true
     }
 
     compileOptions {
@@ -51,5 +71,9 @@ dependencies {
     androidTestImplementation(libs.androidxEspressoCore)
 
     implementation("io.coil-kt:coil:2.5.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.11")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
 
 }
