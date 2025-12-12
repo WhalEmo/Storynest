@@ -1,3 +1,10 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+val localProps = Properties()
+localProps.load(FileInputStream(rootProject.file("local.properties")))
+val devBaseUrl = localProps.getProperty("DEV_BASE_URL") ?: ""
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
@@ -6,7 +13,9 @@ plugins {
 android {
     namespace = "com.example.storynest"
     compileSdk = 36
-
+    buildFeatures{
+        buildConfig = true
+    }
     defaultConfig {
         applicationId = "com.example.storynest"
         minSdk = 24
@@ -25,6 +34,12 @@ android {
                 "proguard-rules.pro"
             )
         }
+        getByName("debug") {
+            buildConfigField("String", "BASE_URL", "\"$devBaseUrl\"")
+        }
+        getByName("release") {
+            buildConfigField("String", "BASE_URL", "\"$devBaseUrl\"")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -37,6 +52,9 @@ android {
 
 dependencies {
     implementation(libs.androidxCoreKtx)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation(libs.androidxAppcompat)
     implementation(libs.material)
     implementation(libs.androidxActivity)

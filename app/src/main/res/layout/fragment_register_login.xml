@@ -75,10 +75,10 @@
         android:visibility="gone">
 
         <EditText
-            android:id="@+id/edtLoginEmail"
+            android:id="@+id/edtLoginUsername"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Email"
+            android:hint="Kullanıcı adı"
             android:padding="16dp"
             android:textColor="#FFFFFF"
             android:textColorHint="#AAAAAA" />
@@ -113,16 +113,32 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_below="@id/lambaAcik"
-        android:layout_marginTop="-55dp"
+        android:layout_marginTop="-100dp"
         android:padding="24dp"
         android:layout_alignParentBottom="true"
         android:visibility="gone">
 
         <EditText
-            android:id="@+id/edtRegName"
+            android:id="@+id/edtUserName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Kullanıcı Adı"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#AAAAAA"
+            android:padding="16dp"/>
+        <EditText
+            android:id="@+id/name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Adı"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#AAAAAA"
+            android:padding="16dp"/>
+        <EditText
+            android:id="@+id/surname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Soyadi"
             android:textColor="#FFFFFF"
             android:textColorHint="#AAAAAA"
             android:padding="16dp"/>
