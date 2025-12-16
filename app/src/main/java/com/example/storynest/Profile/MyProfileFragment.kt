@@ -1,13 +1,16 @@
 package com.example.storynest.Profile
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import coil.load
 import com.example.storynest.CustomViews.ErrorDialog
+import com.example.storynest.Notification.NotificationFragment
 import com.example.storynest.R
 import com.example.storynest.Settings.SettingsFragment
 import com.example.storynest.databinding.MyProfileFragmentBinding
@@ -60,6 +63,19 @@ class MyProfileFragment : Fragment(){
         super.onViewCreated(view, savedInstanceState)
         this.viewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
         settingsButtonAnimation()
+        binding.notificationBook.setOnClickListener {
+            val notificationFragment = NotificationFragment()
+            parentFragmentManager.beginTransaction()
+                .setCustomAnimations(
+                    R.anim.enter_from_right,
+                    R.anim.exit_to_left
+                )
+                .replace(R.id.fragmentContainer, notificationFragment)
+                .addToBackStack(null)
+                .commit()
+        }
+
+
         viewModel.getMyProfile()
 
         viewModel.profile.observe(viewLifecycleOwner){ profile ->
@@ -89,21 +105,55 @@ class MyProfileFragment : Fragment(){
         _binding = null
     }
 
-    private fun settingsButtonAnimation(){
-        binding.settingsButton.setOnClickListener {
-            it.animate().rotationBy(360f).setDuration(300).start()
-            val settingsFragment = SettingsFragment()
+    @SuppressLint("ClickableViewAccessibility")
+    private fun settingsButtonAnimation() {
 
-            parentFragmentManager.beginTransaction()
-                .setCustomAnimations(
-                    R.anim.enter_from_right,
-                    R.anim.exit_to_left
-                )
-                .replace(R.id.fragmentContainer, settingsFragment)
-                .addToBackStack(null)
-                .commit()
+        binding.settingsButton.setOnTouchListener { view, event ->
+            when (event.action) {
 
+                MotionEvent.ACTION_DOWN -> {
+                    view.animate()
+                        .scaleX(0.9f)
+                        .scaleY(0.9f)
+                        .rotationBy(360f)
+                        .setDuration(150)
+                        .start()
+                    true
+                }
+
+                MotionEvent.ACTION_UP -> {
+                    view.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(150)
+                        .start()
+
+                    val settingsFragment = SettingsFragment()
+                    parentFragmentManager.beginTransaction()
+                        .setCustomAnimations(
+                            R.anim.enter_from_right,
+                            R.anim.exit_to_left
+                        )
+                        .replace(R.id.fragmentContainer, settingsFragment)
+                        .addToBackStack(null)
+                        .commit()
+
+                    true
+                }
+
+                MotionEvent.ACTION_CANCEL -> {
+                    view.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(150)
+                        .start()
+                    true
+                }
+
+                else -> false
+            }
         }
     }
+
 
 }

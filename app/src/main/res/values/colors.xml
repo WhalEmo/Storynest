@@ -6,6 +6,11 @@
     <color name="colorSurface">#FAF7F0</color>
     <color name="colorSurfaceVariant">#EDE9DF</color>
 
+    <color name="accept_green">#4CAF50</color>
+    <color name="accept_indigo">#5C6BC0</color>
+    <color name="accept_blue">#4A90E2</color>
+    <color name="reject_gray">#8E8E93</color>
+
     <!-- Primary -->
     <color name="colorPrimary">#4B7BE5</color>
     <color name="colorPrimaryVariant">#3C69C7</color>

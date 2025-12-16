@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="12dp"
+    android:background="?attr/selectableItemBackground"> <com.google.android.material.imageview.ShapeableImageView
+    android:id="@+id/imgProfile"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:padding="1dp"
+    android:scaleType="centerCrop"
+    android:src="@drawable/ic_launcher_foreground"
+    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+    app:strokeColor="#E0E0E0"
+    app:strokeWidth="1dp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/explain"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:ellipsize="end"
+        android:gravity="start|center_vertical"
+        android:maxLines="2"
+        android:text="emrullahuygn seni takip etmek istiyor."
+        android:textColor="#1F1F1F"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnAccept"
+        app:layout_constraintStart_toEndOf="@id/imgProfile"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAccept"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="0dp"
+        android:minWidth="0dp"
+        android:minHeight="36dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="0dp"
+        android:text="Kabul"
+        android:textColor="@color/colorOnPrimary"
+        android:textStyle="bold"
+        android:textSize="13sp"
+        app:backgroundTint="@color/accept_blue"
+        app:cornerRadius="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnReject"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnReject"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="0dp"
+        android:minWidth="0dp"
+        android:minHeight="36dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="0dp"
+        android:text="Red"
+        android:textSize="13sp"
+        android:textColor="@color/colorOnPrimary"
+        android:textStyle="bold"
+        app:backgroundTint="@color/reject_gray"
+        app:cornerRadius="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

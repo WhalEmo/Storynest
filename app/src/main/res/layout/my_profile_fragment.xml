@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="@color/cardview_light_background"
     android:padding="16dp">
 
     <ImageButton
@@ -19,6 +19,32 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="ContentDescription" />
+
+    <FrameLayout
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginEnd="15dp"
+        app:layout_constraintEnd_toStartOf="@id/settingsButton"
+        app:layout_constraintTop_toTopOf="parent">
+        <ImageButton
+            android:id="@+id/notificationBook"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/book_selector"
+            android:scaleType="centerInside"
+            app:tint="#000000"
+            tools:ignore="ContentDescription" />
+        <View
+            android:id="@+id/notificationDot"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="2dp"
+            android:background="@drawable/red_dot"
+            android:visibility="visible" />
+
+    </FrameLayout>
 
     <ImageButton
         android:id="@+id/settingsButton"
