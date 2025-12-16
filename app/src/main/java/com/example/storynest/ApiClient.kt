@@ -1,5 +1,6 @@
 package com.example.storynest
 
+import com.example.storynest.HomePage.HPController
 import com.example.storynest.RegisterLogin.RLController
 import com.example.storynest.dataLocal.UserPreferences
 import okhttp3.OkHttpClient
@@ -33,7 +34,7 @@ object ApiClient {
 
     // Farklı servisler
     val api: RLController by lazy {retrofit.create(RLController::class.java)}
-    //val postApi: PostService by lazy { retrofit.create(PostService::class.java) }
+    val postApi: HPController by lazy { retrofit.create(HPController::class.java) }
     //val userApi: UserService by lazy { retrofit.create(UserService::class.java) }
    // val commentApi: CommentService by lazy { retrofit.create(CommentService::class.java) }
 

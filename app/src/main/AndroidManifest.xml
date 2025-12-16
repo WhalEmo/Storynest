@@ -15,10 +15,22 @@
         android:theme="@style/Theme.Storynest">
         <activity
             android:name=".RegisterLogin.LaunchActivity"
+            android:launchMode="singleTask"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data
+                    android:scheme="https"
+                    android:host="coleman-nonethic-marinda.ngrok-free.dev"
+                    android:pathPrefix="/auth/verify"/>
             </intent-filter>
         </activity>
 

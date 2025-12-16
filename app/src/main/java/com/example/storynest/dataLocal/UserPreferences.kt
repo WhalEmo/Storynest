@@ -49,7 +49,7 @@ class UserPreferences private constructor(private val context: Context) {
             prefs[TOKEN] = token
             prefs[NAME] = name
             prefs[SURNAME] = surname
-            prefs[USER_ID] = id.toString() // Long -> String
+            prefs[USER_ID] = id.toString()
             prefs[EMAIL] = email
         }
     }

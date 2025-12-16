@@ -4,101 +4,82 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.storynest.ApiClient
+import com.example.storynest.ErrorType
 import com.example.storynest.ResultWrapper
 import com.example.storynest.dataLocal.UserPreferences
+import com.example.storynest.parseErrorBody
 import kotlinx.coroutines.launch
-import org.json.JSONArray
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
-class RegisterLoginViewModel( private val userPrefs: UserPreferences) : ViewModel() {
+class RegisterLoginViewModel(
+    private val userPrefs: UserPreferences,
+    private val repository: RegisterLoginRepo
+) : ViewModel() {
+
     val loginResult = MutableLiveData<ResultWrapper<LoginResponse>>()
-    val registerResult= MutableLiveData<ResultWrapper<UserResponse>>()
+    val registerResult = MutableLiveData<ResultWrapper<UserResponse>>()
 
     fun login(username: String, password: String) {
         val request = loginRequest(username, password)
 
-        ApiClient.api.login(request).enqueue(object : Callback<LoginResponse> {
+        viewModelScope.launch {
+            try {
+                val body = repository.login(request)
 
-            override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body != null) {
-                        viewModelScope.launch {
-                            userPrefs.saveUser(
-                                username = body.user.username,
-                                token = body.token,
-                                name = body.user.name,
-                                surname = body.user.surname,
-                                id = body.user.id,
-                                email = body.user.email
-                            )
-                        }
-                        ApiClient.updateToken(body.token)
-                        loginResult.value = ResultWrapper.Success(body)
-                    } else {
-                        loginResult.value = ResultWrapper.Error("Hata Sunucu boş yanıt döndürdü")
-                    }
-                } else {
-                    val errorString = response.errorBody()?.string() ?: ""
-                    val errorMessage = when {
-                        errorString.contains("Bad credentials", ignoreCase = true) -> "Kullanıcı adı veya şifre yanlış"
-                        else -> parseErrorBody(errorString)
-                    }
-                    loginResult.value = ResultWrapper.Error(errorMessage)
-                }
-            }
-            override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                loginResult.value = ResultWrapper.Error("Sunucuya bağlanılamadı: ${t.message}")
-            }
-        })
-    }
-    fun register( username: String,  email: String, password: String, name: String, surname: String, profile: String?, biography: String?){
-        val request= registerRequest(username,email,password,name,surname,profile,biography)
+                userPrefs.saveUser(
+                    username = body.user.username,
+                    token = body.token,
+                    name = body.user.name,
+                    surname = body.user.surname,
+                    id = body.user.id,
+                    email = body.user.email
+                )
 
-        ApiClient.api.register(request).enqueue(object : Callback<UserResponse>{
-            override fun onResponse(call: Call<UserResponse?>, response: Response<UserResponse?>) {
-                if(response.isSuccessful){
-                    val body = response.body()
-                    if (body != null) {
-                        registerResult.value = ResultWrapper.Success(body)
-                        login(username, password)
-                    } else {
-                        registerResult.value = ResultWrapper.Error("Hata Sunucu boş yanıt döndürdü")
-                    }
-                }else{
-                    val errorMessage = parseErrorBody(response.errorBody()?.string())
-                    registerResult.value = ResultWrapper.Error(errorMessage)
-                }
-            }
-            override fun onFailure(
-                call: Call<UserResponse?>,
-                t: Throwable
-            ) {
-                registerResult.value= ResultWrapper.Error("Sunucuya bağlanılamadı: ${t.message}")
-            }
+                ApiClient.updateToken(body.token)
 
-        })
+                loginResult.value = ResultWrapper.Success(body)
 
-    }
-    fun parseErrorBody(errorBody: String?): String {
-        if (errorBody.isNullOrEmpty()) return "Bilinmeyen hata"
-        return try {
-            if (errorBody.startsWith("[")) {
-                val jsonArray = JSONArray(errorBody)
-                val messages = mutableListOf<String>()
-                for (i in 0 until jsonArray.length()) {
-                    messages.add(jsonArray.getString(i))
-                }
-                messages.joinToString("\n")
-            } else {
-                errorBody
+            } catch (e: Exception) {
+                loginResult.value = ResultWrapper.Error(
+                    message = parseErrorBody(e.message),
+                    type = ErrorType.WRONG_REGISTER
+                )
             }
-        } catch (e: Exception) {
-            errorBody
         }
     }
 
+    fun register(
+        username: String,
+        email: String,
+        password: String,
+        name: String,
+        surname: String,
+        profile: String?,
+        biography: String?
+    ) {
+        val request = registerRequest(
+            username, email, password, name, surname, profile, biography
+        )
 
+        viewModelScope.launch {
+            try {
+                val body = repository.register(request)
+
+                if (!body.emailVerified) {
+                    registerResult.value = ResultWrapper.Error(
+                        message = "Emailinizi doğrulayın.",
+                        type = ErrorType.EMAIL_NOT_VERIFIED
+                    )
+                } else {
+                    registerResult.value = ResultWrapper.Success(body)
+                }
+
+            } catch (e: Exception) {
+                registerResult.value = ResultWrapper.Error(
+                    message = parseErrorBody(e.message),
+                    type = ErrorType.SERVER_ERROR
+                )
+            }
+        }
+    }
 }
+

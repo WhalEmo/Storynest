@@ -14,16 +14,17 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.example.storynest.ApiClient
 import com.example.storynest.R
-import com.example.storynest.RegisterLogin.RegisterLoginViewModel
 import com.example.storynest.ResultWrapper
 import com.example.storynest.dataLocal.UserPreferences
 
-class RegisterLogin : Fragment() {
+class RegisterLoginFragmnet : Fragment() {
     private val userPrefs by lazy { UserPreferences.getInstance(requireContext()) }
+    private val registerLoginRepo by lazy { RegisterLoginRepo(ApiClient.api) }
 
     private val viewModel: RegisterLoginViewModel by viewModels {
-       RegisterLoginViewModelFactory(userPrefs)
+       RegisterLoginViewModelFactory(userPrefs,registerLoginRepo)
    }
     //private val viewModel: RegisterLoginViewModel by viewModels()
     private lateinit var lamp: ImageView
@@ -43,6 +44,7 @@ class RegisterLogin : Fragment() {
     private lateinit var btnRegister: Button
     private lateinit var lightGlow: View
 
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -53,6 +55,8 @@ class RegisterLogin : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val login = arguments?.getBoolean("login", false)
+        val register = arguments?.getBoolean("register", false)
 
         lamp = view.findViewById(R.id.lambaSonuk)
         layoutButtons = view.findViewById(R.id.initialButtons)
@@ -73,11 +77,28 @@ class RegisterLogin : Fragment() {
         btnRegister=view.findViewById(R.id.btnRegister)
         lightGlow = view.findViewById(R.id.lightGlow)
 
-        startLampAnimation()
+
         setupButtonListeners()
         setupBackPressedCallback()
         clicks()
         setupObservers()
+
+        if(login==true){
+            animateViewGone(layoutButtons) {
+                loginFields.visibility = View.VISIBLE
+                registerFields.visibility=View.GONE
+            }
+        }
+        else if(register==true){
+            animateViewGone(layoutButtons) {
+            registerFields.visibility=View.VISIBLE
+            loginFields.visibility = View.GONE
+                }
+        }
+        else{
+            startLampAnimation()
+        }
+
     }
     private fun clicks(){
         btnLogin.setOnClickListener {
@@ -112,7 +133,7 @@ class RegisterLogin : Fragment() {
                 is ResultWrapper.Success -> {
                     Toast.makeText(
                         requireContext(),
-                        "Kayıt başarılı! Otomatik giriş yapılıyor...",
+                        "Email doğrulandı. Giriş yapabilirsiniz.",
                         Toast.LENGTH_SHORT
                     ).show()
                     //FRAGMNET YONLENDİRMESİ YAPILCAK
