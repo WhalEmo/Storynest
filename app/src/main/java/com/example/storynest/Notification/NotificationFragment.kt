@@ -1,31 +1,35 @@
 package com.example.storynest.Notification
 
-import NotificationAdapter
-import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
+
+import android.Manifest
+import android.content.Context.VIBRATOR_SERVICE
+import android.media.SoundPool
+import android.os.Build
 import android.os.Bundle
-import android.view.HapticFeedbackConstants
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
+import androidx.annotation.RequiresApi
+import androidx.annotation.RequiresPermission
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.example.storynest.Notification.Adapter.NotificationRow
+import com.example.storynest.Notification.Adapter.NotificationAdapter
 import com.example.storynest.R
 import com.example.storynest.databinding.ProfileNotificationFragmentBinding
+import java.time.LocalDateTime
 
 class NotificationFragment : Fragment() {
     private lateinit var viewModel: NotiViewModel
     private lateinit var adapter: NotificationAdapter
-    private lateinit var swipeCallback: ItemTouchHelper.SimpleCallback
+    private lateinit var soundPool: SoundPool
+
+    private var acceptSoundId: Int = 0
+    private var rejectSoundId: Int = 0
+
 
 
     private var _binding: ProfileNotificationFragmentBinding? = null
@@ -89,131 +93,125 @@ class NotificationFragment : Fragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel = ViewModelProvider(this)[NotiViewModel::class.java]
+
+
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(1)
+            .build()
+
+        acceptSoundId = soundPool.load(
+            requireContext(),
+            R.raw.accept,
+            1
+        )
+        rejectSoundId = soundPool.load(
+            requireContext(),
+            R.raw.reject,
+            1
+        )
+
+        val myList = list(testItems)
         adapter = NotificationAdapter(
-            items = testItems,
+            onItemShown = { notificationId ->
+                viewModel.markAsRead(notificationId)
+            },
             onAccept = { item ->
-                // İsteği kabul et
-                Toast.makeText(requireContext(), "${item.requester.username} kabul edildi", Toast.LENGTH_SHORT).show()
+                onAccept()
+                viewModel.accept(item.notification.id)
             },
             onReject = { item ->
-                // İsteği reddet
-                Toast.makeText(requireContext(), "${item.requester.username} reddedildi", Toast.LENGTH_SHORT).show()
+                onReject()
             }
         )
         binding.recycler.layoutManager = LinearLayoutManager(requireContext())
         binding.recycler.adapter = adapter
-        swipeCallback = createSwipeCallback(requireContext())
 
-        ItemTouchHelper(swipeCallback).attachToRecyclerView(binding.recycler)
 
-        /*viewModel.getMyFollowPending()
-        viewModel.pending.observe(viewLifecycleOwner){ pending ->
+        viewModel.buildRows(myList)
+
+        viewModel.rows.observe(viewLifecycleOwner) { rows ->
+            adapter.submitList(rows)
         }
 
-         */
     }
-    private fun createSwipeCallback(context: Context): ItemTouchHelper.SimpleCallback {
-        return object : ItemTouchHelper.SimpleCallback(
-            0,
-            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
-        ) {
-            private val deleteIcon: Drawable? =
-                ContextCompat.getDrawable(context, R.drawable.settings) // Çarpı ikonu
-            private val archiveIcon: Drawable? =
-                ContextCompat.getDrawable(context, R.drawable.book) // Tik ikonu
 
-            private val backgroundRed = ColorDrawable(Color.parseColor("#FF5252"))
-            private val backgroundGreen = ColorDrawable(Color.parseColor("#4CAF50"))
 
-            // İkonun kenardan ne kadar içeride duracağı (padding)
-            private val iconMargin = 60
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun list(
+        itemList: List<FollowResponseDTO>
+    ): List<NotificationRow> {
 
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean = false
+        val notificationRows = mutableListOf<NotificationRow>()
+        val now = LocalDateTime.now()
+        val thirtyDaysAgo = now.minusDays(30)
 
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                val position = viewHolder.adapterPosition
-                try {
-                    viewHolder.itemView.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                    if (position != RecyclerView.NO_POSITION) {
-                        if (direction == ItemTouchHelper.RIGHT) {
-                            // SAĞA KAYDIRMA -> KABUL ET
-                            // viewModel.acceptItem(item) gibi işlemler...
-                        } else {
-                            // SOLA KAYDIRMA -> REDDET / SİL
-                            // viewModel.rejectItem(item) gibi işlemler...
-                        }
 
-                        // Adapter'dan silme işlemi (Eğer veritabanından siliyorsan burayı güncelle)
-                        adapter.removeItem(position)
-                    }
-                } catch (e: Exception) {
-                    adapter.notifyItemChanged(position) // Hata olursa öğeyi geri getir
-                }
-            }
+        val sortedList = itemList.sortedByDescending {
+            LocalDateTime.parse(it.date)
+        }
 
-            override fun onChildDraw(
-                c: Canvas,
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                dX: Float,
-                dY: Float,
-                actionState: Int,
-                isCurrentlyActive: Boolean
-            ) {
-                val itemView = viewHolder.itemView
-                if (dX == 0f) {
-                    super.onChildDraw(
-                        c,
-                        recyclerView,
-                        viewHolder,
-                        dX,
-                        dY,
-                        actionState,
-                        isCurrentlyActive
-                    )
-                    return
-                }
+        if (sortedList.isEmpty()) {
+            notificationRows.add(
+                NotificationRow.NotificationHeader("Bildirim yok")
+            )
+            return notificationRows
+        }
+        notificationRows.add(
+            NotificationRow.NotificationHeader("Son 30 Gün")
+        )
 
-                if (dX > 0) {
-                    println(dX)
-                    backgroundGreen.setBounds(
-                        itemView.left,
-                        itemView.top,
-                        itemView.left + dX.toInt(),
-                        itemView.bottom
-                    )
-                    backgroundGreen.draw(c)
+        for (index in sortedList.indices) {
+            val item = sortedList[index]
+            val itemDateTime = LocalDateTime.parse(item.date)
 
-                } else {
-                    println(dX)
-                    backgroundRed.setBounds(
-                        itemView.right + dX.toInt(),
-                        itemView.top,
-                        itemView.right,
-                        itemView.bottom
-                    )
-                    backgroundRed.draw(c)
-                }
-
-                super.onChildDraw(
-                    c,
-                    recyclerView,
-                    viewHolder,
-                    dX,
-                    dY,
-                    actionState,
-                    isCurrentlyActive
+            if (itemDateTime.isBefore(thirtyDaysAgo)){
+                var indexOlder = index
+                notificationRows.add(
+                    NotificationRow.NotificationHeader("Daha Eski")
                 )
+                while (indexOlder<sortedList.size){
+                    notificationRows.add(
+                        NotificationRow.NotificationItem(sortedList[indexOlder])
+                    )
+                    indexOlder++
+                }
+                break
             }
+            notificationRows.add(
+                NotificationRow.NotificationItem(item)
+            )
         }
+
+        return notificationRows
     }
+
+    private fun onAccept(){
+        soundPool.play(
+            acceptSoundId,
+            1f,
+            1f,
+            1,
+            0,
+            1f
+        )
+    }
+
+    private fun onReject(){
+        soundPool.play(
+            rejectSoundId,
+            1f,
+            1f,
+            1,
+            0,
+            1f
+        )
+
+    }
+
 
 
 }
