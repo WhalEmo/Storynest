@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Hikaye Adı -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hikaye Adı"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@color/black" />
+
+        <EditText
+            android:id="@+id/edtStoryTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Hikayenin başlığını gir"
+            android:inputType="textCapSentences"
+            android:padding="12dp"
+            android:background="@drawable/bg_input"
+            android:layout_marginTop="8dp" />
+
+        <!-- Kapak Fotoğrafı -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kapak Fotoğrafı"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="20dp" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:layout_marginTop="8dp"
+            >
+
+            <ImageView
+                android:id="@+id/imgCover"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/bg_input" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kapak fotoğrafı ekle"
+                android:layout_gravity="center" />
+        </FrameLayout>
+
+        <!-- Kategori Seçimi -->
+        <TextView
+            android:id="@+id/txtKategori"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kategori"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#1E88E5"
+            android:layout_marginTop="20dp" />
+        <TextView
+            android:id="@+id/txtSelectedCategories"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Seçilen kategoriler: -"
+            android:textSize="14sp"
+            android:layout_marginTop="6dp" />
+
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupCategory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checkable="true"
+            android:visibility="gone"
+            app:singleSelection="false">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipFantastik"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:text="Fantastik" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipRomantik"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:text="Romantik" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipBilimKurgu"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:text="Bilim Kurgu" />
+
+
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Hikaye İçeriği -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hikaye Metni"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="20dp" />
+
+        <EditText
+            android:id="@+id/edtStoryContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="200dp"
+            android:hint="Hikayeni yazmaya başla..."
+            android:gravity="top"
+            android:inputType="textMultiLine|textCapSentences"
+            android:padding="12dp"
+            android:background="@drawable/bg_input"
+            android:layout_marginTop="8dp" />
+
+
+        <!-- Paylaş Butonu -->
+        <Button
+            android:id="@+id/btnPublish"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Postu Paylaş"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>
