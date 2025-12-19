@@ -7,7 +7,7 @@ class ProfileService {
     private lateinit var token: String
 
     init {
-        token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlbXJ1bGxhaHV5Z24iLCJpYXQiOjE3NjU1NTY3MzksImV4cCI6MTc2ODE0ODczOX0.9_84CMcwqgPWlbMXXOrASxGNV1BqN3FH3-1pAQy25hQ"
+        token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlbXJ1bGxhaDciLCJpYXQiOjE3NjYxNDQ2MDgsImV4cCI6MTc2NjIzMTAwOH0.PkUy6LqGBH2sbq3G5zpTlJX-x9_R-hzcuZqrksfrtCM"
     }
 
     val profileController = ApiClient.getClient(token).create(ProfileApiController::class.java)

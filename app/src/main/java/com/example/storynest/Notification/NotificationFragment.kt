@@ -1,26 +1,20 @@
 package com.example.storynest.Notification
 
 
-import android.Manifest
-import android.content.Context.VIBRATOR_SERVICE
 import android.media.SoundPool
 import android.os.Build
 import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
-import androidx.annotation.RequiresPermission
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.storynest.Notification.Adapter.NotificationRow
+import com.example.storynest.CustomViews.ErrorDialog
 import com.example.storynest.Notification.Adapter.NotificationAdapter
 import com.example.storynest.R
 import com.example.storynest.databinding.ProfileNotificationFragmentBinding
-import java.time.LocalDateTime
 
 class NotificationFragment : Fragment() {
     private lateinit var viewModel: NotiViewModel
@@ -98,6 +92,9 @@ class NotificationFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         viewModel = ViewModelProvider(this)[NotiViewModel::class.java]
 
+        binding.backButton.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
 
         soundPool = SoundPool.Builder()
             .setMaxStreams(1)
@@ -114,7 +111,6 @@ class NotificationFragment : Fragment() {
             1
         )
 
-        val myList = list(testItems)
         adapter = NotificationAdapter(
             onItemShown = { notificationId ->
                 viewModel.markAsRead(notificationId)
@@ -131,7 +127,20 @@ class NotificationFragment : Fragment() {
         binding.recycler.adapter = adapter
 
 
-        viewModel.buildRows(myList)
+        viewModel.getMyFollowPending()
+
+        viewModel.error.observe(viewLifecycleOwner) { error ->
+            if(!error.isNullOrEmpty()){
+                var errorDialog = ErrorDialog.newInstance(
+                    title = "Bağlantı Hatası",
+                    message = error
+                )
+                errorDialog.setOnOkClickListener{
+                    viewModel.getMyFollowPending()
+                }
+                errorDialog.show(parentFragmentManager, "ErrorDialogTag")
+            }
+        }
 
         viewModel.rows.observe(viewLifecycleOwner) { rows ->
             adapter.submitList(rows)
@@ -139,55 +148,6 @@ class NotificationFragment : Fragment() {
 
     }
 
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun list(
-        itemList: List<FollowResponseDTO>
-    ): List<NotificationRow> {
-
-        val notificationRows = mutableListOf<NotificationRow>()
-        val now = LocalDateTime.now()
-        val thirtyDaysAgo = now.minusDays(30)
-
-
-        val sortedList = itemList.sortedByDescending {
-            LocalDateTime.parse(it.date)
-        }
-
-        if (sortedList.isEmpty()) {
-            notificationRows.add(
-                NotificationRow.NotificationHeader("Bildirim yok")
-            )
-            return notificationRows
-        }
-        notificationRows.add(
-            NotificationRow.NotificationHeader("Son 30 Gün")
-        )
-
-        for (index in sortedList.indices) {
-            val item = sortedList[index]
-            val itemDateTime = LocalDateTime.parse(item.date)
-
-            if (itemDateTime.isBefore(thirtyDaysAgo)){
-                var indexOlder = index
-                notificationRows.add(
-                    NotificationRow.NotificationHeader("Daha Eski")
-                )
-                while (indexOlder<sortedList.size){
-                    notificationRows.add(
-                        NotificationRow.NotificationItem(sortedList[indexOlder])
-                    )
-                    indexOlder++
-                }
-                break
-            }
-            notificationRows.add(
-                NotificationRow.NotificationItem(item)
-            )
-        }
-
-        return notificationRows
-    }
 
     private fun onAccept(){
         soundPool.play(

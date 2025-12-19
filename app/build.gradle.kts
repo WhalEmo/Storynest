@@ -3,7 +3,7 @@ import java.io.FileInputStream
 
 val localProps = Properties()
 localProps.load(FileInputStream(rootProject.file("local.properties")))
-val devBaseUrl = localProps.getProperty("DEV_BASE_URL") ?: ""
+val devBaseUrl = localProps.getProperty("DEV_BASE_URL_V2") ?: ""
 
 plugins {
     alias(libs.plugins.androidApplication)

@@ -68,7 +68,9 @@ class MyProfileFragment : Fragment(){
             parentFragmentManager.beginTransaction()
                 .setCustomAnimations(
                     R.anim.enter_from_right,
-                    R.anim.exit_to_left
+                    R.anim.exit_to_left,
+                    R.anim.enter_from_left,
+                    R.anim.exit_to_right
                 )
                 .replace(R.id.fragmentContainer, notificationFragment)
                 .addToBackStack(null)
@@ -84,6 +86,9 @@ class MyProfileFragment : Fragment(){
             binding.biography.text = profile.biography
             binding.followersCount.text = profile.followers.toString()
             binding.followingCount.text = profile.following.toString()
+            binding.profileImage.load(profile.profile){
+                crossfade(true)
+            }
         }
 
         viewModel.error.observe(viewLifecycleOwner){ error ->
@@ -132,9 +137,11 @@ class MyProfileFragment : Fragment(){
                     parentFragmentManager.beginTransaction()
                         .setCustomAnimations(
                             R.anim.enter_from_right,
-                            R.anim.exit_to_left
+                            R.anim.exit_to_left,
+                            R.anim.enter_from_left,
+                            R.anim.exit_to_right
                         )
-                        .replace(R.id.fragmentContainer, settingsFragment)
+                        .replace(R.id.fragmentContainer, SettingsFragment())
                         .addToBackStack(null)
                         .commit()
 
