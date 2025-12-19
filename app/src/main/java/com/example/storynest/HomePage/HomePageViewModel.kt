@@ -3,6 +3,7 @@ package com.example.storynest.HomePage
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.storynest.RegisterLogin.UserStaticClass
 
 import com.example.storynest.ResultWrapper
 
@@ -12,7 +13,6 @@ import kotlinx.coroutines.launch
 class HomePageViewModel(
     private val repo: HomePageRepo
 ) : ViewModel() {
-
     val addPostResult = MutableLiveData<ResultWrapper<postResponse>>()
     val userPosts = MutableLiveData<ResultWrapper<List<postResponse>>>()
     val PostsLike = MutableLiveData<ResultWrapper<String>>()
@@ -20,18 +20,25 @@ class HomePageViewModel(
     val homepageposts= MutableLiveData<ResultWrapper<List<postResponse>>>()
     val deletePosts= MutableLiveData<ResultWrapper<String>>()
     val updatePost= MutableLiveData<ResultWrapper<String>>()
+
     fun addPost(
         postName: String,
         contents: String,
         categories: String,
         coverImage: String
     ) {
-        val request = postRequest(postName, contents, categories, coverImage)
-
         viewModelScope.launch {
+            val request = postRequest(
+                UserStaticClass.userId,
+                postName,
+                contents,
+                categories,
+                coverImage
+            )
             addPostResult.value = repo.addPost(request)
         }
     }
+
 
     fun getUserPosts(
         userId: Long,

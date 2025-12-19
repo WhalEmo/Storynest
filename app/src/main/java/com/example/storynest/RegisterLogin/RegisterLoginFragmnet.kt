@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
@@ -44,6 +45,8 @@ class RegisterLoginFragmnet : Fragment() {
     private lateinit var btnRegister: Button
     private lateinit var lightGlow: View
 
+    private lateinit var forgotPassword: TextView
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -67,6 +70,7 @@ class RegisterLoginFragmnet : Fragment() {
         edtLoginUsername=view.findViewById(R.id.edtLoginUsername)
         edtLoginPassword=view.findViewById(R.id.edtLoginPassword)
         btnLogin=view.findViewById(R.id.btnLogin)
+        forgotPassword = view.findViewById(R.id.forgotPassword)
 
         registerFields = view.findViewById(R.id.registerFields)
         edtUserName=view.findViewById(R.id.edtUserName)
@@ -113,6 +117,9 @@ class RegisterLoginFragmnet : Fragment() {
             val edtRegEmail=edtRegEmail.text.toString()
             val edtRegPassword=edtRegPassword.text.toString()
             viewModel.register(username,edtRegEmail,edtRegPassword,name,surname,null,null)
+        }
+        forgotPassword.setOnClickListener {
+
         }
 
     }

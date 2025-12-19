@@ -42,25 +42,30 @@
             android:textColor="@color/black"
             android:layout_marginTop="20dp" />
 
-        <FrameLayout
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="180dp"
             android:layout_marginTop="8dp"
+            app:cardCornerRadius="12dp"
+            android:backgroundTint="@color/white"
+            app:cardUseCompatPadding="false"
+            app:cardPreventCornerOverlap="true"
+            app:strokeWidth="1dp"
             >
-
             <ImageView
                 android:id="@+id/imgCover"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:src="@drawable/bg_input" />
+                android:scaleType="centerCrop"/>
 
-            <TextView
+        <TextView
+                android:id="@+id/textkapakekle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Kapak fotoğrafı ekle"
+                android:visibility="visible"
                 android:layout_gravity="center" />
-        </FrameLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Kategori Seçimi -->
         <TextView
@@ -76,37 +81,8 @@
             android:id="@+id/txtSelectedCategories"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Seçilen kategoriler: -"
             android:textSize="14sp"
             android:layout_marginTop="6dp" />
-
-
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chipGroupCategory"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:checkable="true"
-            android:visibility="gone"
-            app:singleSelection="false">
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipFantastik"
-                style="@style/Widget.Material3.Chip.Assist"
-                android:text="Fantastik" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipRomantik"
-                style="@style/Widget.Material3.Chip.Assist"
-                android:text="Romantik" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipBilimKurgu"
-                style="@style/Widget.Material3.Chip.Assist"
-                android:text="Bilim Kurgu" />
-
-
-        </com.google.android.material.chip.ChipGroup>
-
         <!-- Hikaye İçeriği -->
         <TextView
             android:layout_width="wrap_content"
@@ -126,6 +102,8 @@
             android:gravity="top"
             android:inputType="textMultiLine|textCapSentences"
             android:padding="12dp"
+            android:maxLines="32"
+            android:minLines="8"
             android:background="@drawable/bg_input"
             android:layout_marginTop="8dp" />
 

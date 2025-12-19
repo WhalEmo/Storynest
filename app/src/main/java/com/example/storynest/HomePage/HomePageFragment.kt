@@ -17,10 +17,10 @@ import com.example.storynest.R
 import com.example.storynest.HomePage.BarFragmnets.AddPostFragmnet
 import com.example.storynest.HomePage.HelperFragment.HelperFragment
 import com.example.storynest.ResultWrapper
+import com.example.storynest.dataLocal.UserPreferences
 
 class HomePageFragment : Fragment() {
     private val homePageRepo by lazy { HomePageRepo(ApiClient.postApi) }
-
     private val viewModel: HomePageViewModel by activityViewModels() {
         HomePageViewModelFactory(homePageRepo)
     }

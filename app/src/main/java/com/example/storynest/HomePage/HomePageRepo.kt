@@ -1,10 +1,12 @@
 package com.example.storynest.HomePage
 
+import android.util.Log
 import com.example.storynest.ErrorType
 import com.example.storynest.ResultWrapper
 import com.example.storynest.parseErrorBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.toString
 
 
 class HomePageRepo(
@@ -15,6 +17,7 @@ class HomePageRepo(
             val response = withContext(Dispatchers.IO) {
                 api.addPost(request).execute()
             }
+
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null) {
@@ -28,11 +31,13 @@ class HomePageRepo(
             } else {
                 val errorString = response.errorBody()?.string() ?: ""
                 val errorMessage = parseErrorBody(errorString)
+                print(errorMessage)
                 ResultWrapper.Error(
                     message = errorMessage,
                     type = ErrorType.WRONG_REGISTER
                 )
             }
+
         } catch (e: Exception) {
             ResultWrapper.Error(
                 message = "Sunucuya bağlanılamadı: ${e.message}",
@@ -40,6 +45,7 @@ class HomePageRepo(
             )
         }
     }
+
 
     suspend fun getUserPosts(
         userId: Long,
@@ -152,7 +158,7 @@ class HomePageRepo(
     ): ResultWrapper<List<postResponse>>{
         return try {
             val response = withContext(Dispatchers.IO) {
-                api.HomePagePosts( page ,size).execute()
+                api.HomePagePosts(page ,size).execute()
             }
             if(response.isSuccessful){
                 val body=response.body()

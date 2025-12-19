@@ -16,7 +16,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-
+import kotlin.math.log
 
 
 class PostAdapter(
@@ -55,7 +55,7 @@ class PostAdapter(
         val txtPostDate: TextView=itemView.findViewById(R.id.txtPostDate)
         val txtContents: TextView=itemView.findViewById(R.id.txtContents)
         val btnLike: ImageView=itemView.findViewById(R.id.btnLike)
-        val btnComment: TextView=itemView.findViewById(R.id.btnComment)
+        val btnComment: ImageView=itemView.findViewById(R.id.btnComment)
         val txtLikeCount: TextView=itemView.findViewById(R.id.txtLikeCount)
         val txtReadMore: TextView=itemView.findViewById(R.id.txtReadMore)
     }
@@ -120,23 +120,28 @@ class PostAdapter(
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun formatPostDate(postDate: LocalDateTime): String {
+    fun formatPostDate(postDate: String): String {
+
+        val formatterApi = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+        val postDateTime = LocalDateTime.parse(postDate, formatterApi)
+
         val now = LocalDateTime.now()
 
-        val days = ChronoUnit.DAYS.between(postDate, now)
-        val hours = ChronoUnit.HOURS.between(postDate, now)
-        val minutes = ChronoUnit.MINUTES.between(postDate, now)
+        val days = ChronoUnit.DAYS.between(postDateTime, now)
+        val hours = ChronoUnit.HOURS.between(postDateTime, now)
+        val minutes = ChronoUnit.MINUTES.between(postDateTime, now)
 
         return when {
             days >= 7 -> {
                 val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-                postDate.format(formatter)
+                postDateTime.format(formatter)
             }
-            days >= 1 -> "${days} gün önce"
-            hours >= 1 -> "${hours} saat önce"
-            minutes >= 1 -> "${minutes} dakika önce"
+            days >= 1 -> "$days gün önce"
+            hours >= 1 -> "$hours saat önce"
+            minutes >= 1 -> "$minutes dakika önce"
             else -> "Şimdi"
         }
     }
+
 
 }

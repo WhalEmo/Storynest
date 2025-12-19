@@ -1,7 +1,6 @@
 package com.example.storynest.HomePage.BarFragmnets
 
 import android.net.Uri
-import androidx.fragment.app.viewModels
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -17,15 +16,18 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
+import com.bumptech.glide.Glide
 import com.example.storynest.ApiClient
 import com.example.storynest.HomePage.HomePageRepo
 import com.example.storynest.HomePage.HomePageViewModel
 import com.example.storynest.HomePage.HomePageViewModelFactory
 import com.example.storynest.R
 import com.example.storynest.ResultWrapper
+import com.example.storynest.dataLocal.UserPreferences
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
-import org.w3c.dom.Text
 
 class AddPostFragmnet : Fragment() {
     private val homePageRepo by lazy { HomePageRepo(ApiClient.postApi) }
@@ -38,10 +40,11 @@ class AddPostFragmnet : Fragment() {
     private lateinit var imgCover: ImageView
     private lateinit var txtKategori: TextView
     private lateinit var txtSelectedCategories: TextView
-    private lateinit var chipGroupCategory: ChipGroup
     private lateinit var edtStoryContent: EditText
     private lateinit var btnPublish: Button
+    private lateinit var textkapakekle: TextView
 
+    private val secilenKategoriler = mutableSetOf<String>()
     private var selectedImageUri: Uri? = null
 
 
@@ -58,12 +61,11 @@ class AddPostFragmnet : Fragment() {
         imgCover = view.findViewById(R.id.imgCover)
         txtKategori = view.findViewById(R.id.txtKategori)
         txtSelectedCategories = view.findViewById(R.id.txtSelectedCategories)
-        chipGroupCategory = view.findViewById(R.id.chipGroupCategory)
         edtStoryContent = view.findViewById(R.id.edtStoryContent)
         btnPublish = view.findViewById(R.id.btnPublish)
+        textkapakekle=view.findViewById(R.id.textkapakekle)
 
-        setupCategoryLimit()
-        TextListener()
+        textListener()
         setupTextWatchers()
         click()
         setupObservers()
@@ -73,7 +75,11 @@ class AddPostFragmnet : Fragment() {
     ) { uri: Uri? ->
         uri?.let {
             selectedImageUri = it
-            imgCover.setImageURI(it)
+            Glide.with(requireContext())
+                .load(it)
+                .into(imgCover)
+
+            textkapakekle.visibility= View.GONE
         }
     }
 
@@ -81,34 +87,35 @@ class AddPostFragmnet : Fragment() {
         imgCover.setOnClickListener {
             pickImageLauncher.launch("image/*")
         }
+        txtKategori.setOnClickListener {
+            showCategoryBottomSheet()
+        }
 
         btnPublish.setOnClickListener {
             val title = edtStoryTitle.text.toString().trim()
             val content = edtStoryContent.text.toString().trim()
-            val categories=txtSelectedCategories.toString().trim()
-
+            val categoriesString = secilenKategoriler.joinToString(",")
             val lineCount = content.lines().size
-            val isCategorySelected = chipGroupCategory.checkedChipIds.isNotEmpty()
 
             when {
                 title.isEmpty() -> {
                     edtStoryTitle.error = "Başlık boş olamaz"
                 }
 
-                !isCategorySelected -> {
-                    txtKategori.error = "Kategori seçmelisin"
-                }
 
                 lineCount < 5 -> {
                     edtStoryContent.error = "Metin en az 5 satır olmalı"
                 }
+               secilenKategoriler.isEmpty() ->{
+                   txtSelectedCategories.error = "En az bir kategori seçmelisin"
 
+               }
                 else -> {
-                    viewModel.addPost(title,content,categories,selectedImageUri.toString())
+                    viewModel.addPost(title,content,categoriesString,selectedImageUri.toString())
                 }
             }
-
         }
+
     }
     private fun setupTextWatchers() {
         edtStoryTitle.addTextChangedListener {
@@ -120,40 +127,30 @@ class AddPostFragmnet : Fragment() {
         }
     }
 
-    private fun setupCategoryLimit() {
-        chipGroupCategory.setOnCheckedStateChangeListener { group, checkedIds ->
-            if (checkedIds.size > 3) {
-                val lastCheckedId = checkedIds.last()
-                group.findViewById<Chip>(lastCheckedId).isChecked = false
-                return@setOnCheckedStateChangeListener
-            }
-
-            val selectedCategories = checkedIds.map { id ->
-                group.findViewById<Chip>(id).text.toString()
-            }
-            txtSelectedCategories.text =
-                if (selectedCategories.isEmpty())
-                    "Seçilen kategoriler: -"
-                else
-                    "Seçilen kategoriler: ${selectedCategories.joinToString(", ")}"
-        }
-    }
-    private fun TextListener() {
+    private fun textListener() {
         edtStoryContent.addTextChangedListener(object : TextWatcher {
+
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
             override fun afterTextChanged(s: Editable?) {
-                if (s == null) return
-
-                val lines = s.toString().lines()
-
-                if (lines.size > 32) {
-                    s.delete(s.lastIndexOf("\n"), s.length)
+                edtStoryContent.post {
+                    val layout = edtStoryContent.layout ?: return@post
+                    val lineCount = layout.lineCount
+                    if(lineCount>31){
+                        edtStoryContent.error = "Metin en fazla 32 satır olabilir!"
+                    }
+                    if (lineCount > 32) {
+                        s?.delete(s.length - 1, s.length)
+                    }else if(lineCount< 5){
+                        edtStoryContent.error = null
+                    }
                 }
             }
         })
     }
+
     private fun setupObservers(){
         viewModel.addPostResult.observe(viewLifecycleOwner){result->
             when(result){
@@ -162,21 +159,92 @@ class AddPostFragmnet : Fragment() {
                     resetForm()
                 }
                 is ResultWrapper.Error -> {
+                    print(result.message)
                     Toast.makeText(requireContext(), "Hata: ${result.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
+
+    private fun showCategoryBottomSheet() {
+
+        val bottomSheetDialog = BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(R.layout.bottom_sheet_categories, null)
+
+        val chipGroup = view.findViewById<ChipGroup>(R.id.chipGroupCategories)
+        val btnOnayla = view.findViewById<MaterialButton>(R.id.btnOnayla)
+
+        val categories = listOf(
+            "Korku", "Aksiyon", "Aşk", "Fantastik", "Bilim Kurgu", "Tümünü kaldır"
+        )
+
+        categories.forEach { category ->
+            val chip = Chip(requireContext())
+            chip.text = category
+
+            if (category == "Tümünü kaldır") {
+                chip.isCheckable = false
+                chip.setOnClickListener {
+
+                    secilenKategoriler.clear()
+
+
+                    for (i in 0 until chipGroup.childCount) {
+                        val otherChip = chipGroup.getChildAt(i) as Chip
+                        otherChip.isChecked = false
+                    }
+
+                    updateSelectedCategoriesText()
+                }
+
+            } else {
+                chip.isCheckable = true
+                chip.isChecked = secilenKategoriler.contains(category)
+
+                chip.setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked) {
+                        secilenKategoriler.add(category)
+                    } else {
+                        secilenKategoriler.remove(category)
+                    }
+                    updateSelectedCategoriesText()
+                }
+            }
+
+            chipGroup.addView(chip)
+    }
+
+        btnOnayla.setOnClickListener {
+            updateSelectedCategoriesText()
+            bottomSheetDialog.dismiss()
+        }
+
+        bottomSheetDialog.setContentView(view)
+        bottomSheetDialog.show()
+    }
+    private fun updateSelectedCategoriesText() {
+        txtSelectedCategories.error = null
+        val text = if (secilenKategoriler.isEmpty()) {
+            ""
+        } else {
+            secilenKategoriler.joinToString(", ")
+        }
+        txtSelectedCategories.text = text
+    }
+
+
+
     private fun resetForm() {
         edtStoryTitle.text.clear()
         edtStoryContent.text.clear()
-
         imgCover.setImageResource(0)
-
-        txtSelectedCategories.text = "Seçilen kategoriler: -"
+        txtSelectedCategories.text = ""
+        txtSelectedCategories.error = null
         txtKategori.error = null
+        secilenKategoriler.clear()
+        selectedImageUri = null
+        textkapakekle.visibility = View.VISIBLE
 
-        chipGroupCategory.clearCheck()
     }
 
 }

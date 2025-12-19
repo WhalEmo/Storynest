@@ -102,6 +102,11 @@ class LaunchActivity : AppCompatActivity() {
                 intentOther.putExtra("showLogin", true)
                 startActivity(intentOther)
             } else {
+                UserStaticClass.userId=userPrefs.id.firstOrNull()
+                UserStaticClass.name=userPrefs.name.firstOrNull()
+                UserStaticClass.username=userPrefs.username.firstOrNull()
+                UserStaticClass.surname=userPrefs.surname.firstOrNull()
+                UserStaticClass.email=userPrefs.email.firstOrNull()
                 ApiClient.updateToken(token)
                 startActivity(Intent(this@LaunchActivity, MainActivity::class.java))
             }

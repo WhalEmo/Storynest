@@ -8,13 +8,14 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
-import java.time.LocalDateTime
 
 data class postRequest(
-    val postName:String,
-    val contents:String,
-    val categories:String,
-    val coverImage:String)
+    val user_id: Long?,
+    val postName: String,
+    val contents: String,
+    val categories: String,
+    val coverImage: String
+)
 data class postResponse(
     val postId:Long,
     val user: UserResponse,
@@ -23,7 +24,7 @@ data class postResponse(
     val categories:String,
     val coverImage:String,
     val numberOfLikes: Int,
-    val postDate: LocalDateTime
+    val postDate: String
 )
 data class UserResponse(
     val id: Long,
