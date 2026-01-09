@@ -38,6 +38,7 @@ data class VerifyResponse(
     val message: String
 )
 
+
 interface RLController {
     @POST("/api/users/login")
     fun login(@Body request: loginRequest): Call<LoginResponse>
@@ -47,5 +48,10 @@ interface RLController {
 
     @GET("/auth/verify")
     fun verify(@Query("token") token: String): Call<VerifyResponse>
+
+
+    @GET("/auth/forgotPassword")
+    fun forgotPassword(@Query("email") email: String): Call<Void>
+
 
 }

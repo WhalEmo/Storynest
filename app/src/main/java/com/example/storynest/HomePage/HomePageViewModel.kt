@@ -15,7 +15,7 @@ class HomePageViewModel(
 ) : ViewModel() {
     val addPostResult = MutableLiveData<ResultWrapper<postResponse>>()
     val userPosts = MutableLiveData<ResultWrapper<List<postResponse>>>()
-    val PostsLike = MutableLiveData<ResultWrapper<String>>()
+    val PostsLike = MutableLiveData<ResultWrapper<ToggleLikeResponse>>()
     val userswhoLike= MutableLiveData<ResultWrapper<List<UserResponse>>>()
     val homepageposts= MutableLiveData<ResultWrapper<List<postResponse>>>()
     val deletePosts= MutableLiveData<ResultWrapper<String>>()

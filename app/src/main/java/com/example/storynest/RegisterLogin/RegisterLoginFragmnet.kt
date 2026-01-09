@@ -44,8 +44,12 @@ class RegisterLoginFragmnet : Fragment() {
     private lateinit var edtRegPassword: EditText
     private lateinit var btnRegister: Button
     private lateinit var lightGlow: View
-
     private lateinit var forgotPassword: TextView
+
+    private lateinit var forgot: LinearLayout
+    private lateinit var edtforgotemail: EditText
+    private lateinit var btnSend: Button
+
 
 
     override fun onCreateView(
@@ -72,6 +76,7 @@ class RegisterLoginFragmnet : Fragment() {
         btnLogin=view.findViewById(R.id.btnLogin)
         forgotPassword = view.findViewById(R.id.forgotPassword)
 
+
         registerFields = view.findViewById(R.id.registerFields)
         edtUserName=view.findViewById(R.id.edtUserName)
         name=view.findViewById(R.id.name)
@@ -82,6 +87,11 @@ class RegisterLoginFragmnet : Fragment() {
         lightGlow = view.findViewById(R.id.lightGlow)
 
 
+        forgot=view.findViewById(R.id.forgot)
+        edtforgotemail=view.findViewById(R.id.edtforgotemail)
+        btnSend=view.findViewById(R.id.btnSend)
+
+
         setupButtonListeners()
         setupBackPressedCallback()
         clicks()
@@ -90,6 +100,7 @@ class RegisterLoginFragmnet : Fragment() {
         if(login==true){
             animateViewGone(layoutButtons) {
                 loginFields.visibility = View.VISIBLE
+                forgot.visibility= View.GONE
                 registerFields.visibility=View.GONE
             }
         }
@@ -119,7 +130,11 @@ class RegisterLoginFragmnet : Fragment() {
             viewModel.register(username,edtRegEmail,edtRegPassword,name,surname,null,null)
         }
         forgotPassword.setOnClickListener {
-
+            loginFields.visibility= View.GONE
+            forgot.visibility= View.VISIBLE
+        }
+        btnSend.setOnClickListener {
+            viewModel.resetpassword(edtforgotemail.text.toString());
         }
 
     }
@@ -144,6 +159,21 @@ class RegisterLoginFragmnet : Fragment() {
                         Toast.LENGTH_SHORT
                     ).show()
                     //FRAGMNET YONLENDİRMESİ YAPILCAK
+                }
+                is ResultWrapper.Error -> {
+                    Toast.makeText(requireContext(), "Hata: ${result.message}", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+        }
+        viewModel.resetMessage.observe(viewLifecycleOwner){result->
+            when(result) {
+                is ResultWrapper.Success -> {
+                    Toast.makeText(
+                        requireContext(),
+                        result.data,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
                 is ResultWrapper.Error -> {
                     Toast.makeText(requireContext(), "Hata: ${result.message}", Toast.LENGTH_SHORT)

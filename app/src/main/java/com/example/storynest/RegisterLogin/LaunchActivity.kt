@@ -41,7 +41,7 @@ class LaunchActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        println("LauncherOnCreate")
+
         context = this
 
         intentOther = Intent(this@LaunchActivity, MainActivity::class.java)
@@ -49,16 +49,20 @@ class LaunchActivity : AppCompatActivity() {
         userPrefs = UserPreferences.getInstance(this)
         isTokenExpired = IsTokenExpired()
         lifecycleScope.launch {
-            val token = userPrefs.token.firstOrNull()
-            if ((token.isNullOrEmpty() || isTokenExpired.isTokenExpired(token))) {
+            val tokenStart = userPrefs.token.firstOrNull()
+            if ((tokenStart.isNullOrEmpty() || isTokenExpired.isTokenExpired(tokenStart))) {
                 handleIntent(intent)
             }
             else{
                 val uri = intent?.data
                 val token = uri?.getQueryParameter("token")
+                val resetPasswordToken = uri?.getQueryParameter("resetpasswordtoken")
 
                 if (!token.isNullOrEmpty()) {
                     Toast.makeText(context, "Email zaten doğrulanmış!", Toast.LENGTH_SHORT).show()
+                }
+                if(!resetPasswordToken.isNullOrEmpty()){
+                    Toast.makeText(context, "Link zaten gönderildi!", Toast.LENGTH_SHORT).show()
                 }
                 goNormalFlow()
 
@@ -75,6 +79,7 @@ class LaunchActivity : AppCompatActivity() {
 
         val uri = intent?.data
         val token = uri?.getQueryParameter("token")
+        //DEVAMI VAR RESETPASSWORD yapılacak
 
         if (!token.isNullOrEmpty()) {
             println("token")
@@ -120,7 +125,7 @@ class LaunchActivity : AppCompatActivity() {
         finish()
     }
 
-    //BUKOD VİEWMODELDE OLMALI VE CALLBACK KULLANIMAMMALI
+
     private fun verifyEmail(token: String) {
         Log.d("VERIFY", "verifyEmail çağrıldı")
 

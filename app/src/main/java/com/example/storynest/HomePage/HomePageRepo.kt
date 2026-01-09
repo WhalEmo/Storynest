@@ -85,7 +85,7 @@ class HomePageRepo(
 
     suspend fun toggleLike(
         postId: Long
-    ): ResultWrapper<String> {
+    ): ResultWrapper<ToggleLikeResponse> {
         return try {
             val response = withContext(Dispatchers.IO) {
                 api.toggleLike(postId).execute()

@@ -14,6 +14,8 @@ import com.bumptech.glide.Glide
 import com.example.storynest.R
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.log
@@ -92,20 +94,29 @@ class PostAdapter(
 
         holder.txtPostDate.text = formatPostDate(post.postDate)
         holder.txtContents.text=post.contents
-        holder.txtLikeCount.text=post.numberOfLikes.toString()
+        holder.txtLikeCount.text=post.numberof_likes.toString()
 
-        var currentDrawable = holder.btnLike.drawable.constantState
-        var likedDrawable = holder.itemView.context.getDrawable(R.drawable.baseline_favorite_24)?.constantState
+
+        if(post.liked){
+            holder.btnLike.setImageResource(R.drawable.baseline_favorite_24)
+        }else{
+            holder.btnLike.setImageResource(R.drawable.baseline_favorite_border_24)
+        }
 
         holder.btnLike.setOnClickListener {
-            if (currentDrawable != null && currentDrawable == likedDrawable) {
-                holder.txtLikeCount.text=(post.numberOfLikes+1).toString()
+            if (post.liked) {
+                post.liked=false;
+                holder.txtLikeCount.text=(post.numberof_likes-1).toString()
+                post.numberof_likes=post.numberof_likes-1
                 holder.btnLike.setImageResource(R.drawable.baseline_favorite_border_24)
-                listener.onLikeClicked(post.postId)
+                listener.onLikeClicked(post.post_id)
+
             } else {
-                holder.txtLikeCount.text=(post.numberOfLikes-1).toString()
+                post.liked=true;
+                holder.txtLikeCount.text=(post.numberof_likes+1).toString()
+                post.numberof_likes=post.numberof_likes+1
                 holder.btnLike.setImageResource(R.drawable.baseline_favorite_24)
-                listener.onLikeClicked(post.postId)
+                listener.onLikeClicked(post.post_id)
             }
         }
         holder.txtReadMore.setOnClickListener {
@@ -122,19 +133,27 @@ class PostAdapter(
     @RequiresApi(Build.VERSION_CODES.O)
     fun formatPostDate(postDate: String): String {
 
-        val formatterApi = DateTimeFormatter.ISO_LOCAL_DATE_TIME
-        val postDateTime = LocalDateTime.parse(postDate, formatterApi)
+        // Backend formatı: 2025-12-20T09:08:24.056984
+        val parser = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
 
-        val now = LocalDateTime.now()
+        // 1️⃣ String → LocalDateTime
+        val postUtc = LocalDateTime.parse(postDate, parser)
+            .atZone(ZoneOffset.UTC)
 
-        val days = ChronoUnit.DAYS.between(postDateTime, now)
-        val hours = ChronoUnit.HOURS.between(postDateTime, now)
-        val minutes = ChronoUnit.MINUTES.between(postDateTime, now)
+        // 2️⃣ UTC → Türkiye saati
+        val postTr = postUtc.withZoneSameInstant(ZoneId.of("Europe/Istanbul"))
+
+        // 3️⃣ Şu anki zamanı da Türkiye saatinde al
+        val nowTr = ZonedDateTime.now(ZoneId.of("Europe/Istanbul"))
+
+        val days = ChronoUnit.DAYS.between(postTr, nowTr)
+        val hours = ChronoUnit.HOURS.between(postTr, nowTr)
+        val minutes = ChronoUnit.MINUTES.between(postTr, nowTr)
 
         return when {
             days >= 7 -> {
                 val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-                postDateTime.format(formatter)
+                postTr.format(formatter)
             }
             days >= 1 -> "$days gün önce"
             hours >= 1 -> "$hours saat önce"
@@ -142,6 +161,7 @@ class PostAdapter(
             else -> "Şimdi"
         }
     }
+
 
 
 }

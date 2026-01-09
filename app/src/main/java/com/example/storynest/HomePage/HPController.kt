@@ -17,14 +17,15 @@ data class postRequest(
     val coverImage: String
 )
 data class postResponse(
-    val postId:Long,
+    val post_id:Long,
     val user: UserResponse,
     val postName:String,
     val contents:String,
     val categories:String,
     val coverImage:String,
-    val numberOfLikes: Int,
-    val postDate: String
+    var numberof_likes: Int,
+    val postDate: String,
+    var liked:Boolean
 )
 data class UserResponse(
     val id: Long,
@@ -43,6 +44,13 @@ data class PostUpdateRequest(
     val categories:String,
     val coverImage:String,
 )
+
+data class ToggleLikeResponse(
+    val message: String? = null,
+    val error: String? = null
+)
+
+
 interface HPController {
     @POST("/api/posts/addPost")
     fun addPost(@Body request: postRequest): Call<postResponse>
@@ -55,10 +63,8 @@ interface HPController {
     ): Call<List<postResponse>>
 
 
-    @POST("/api/posts/{postId}/like")
-    fun toggleLike(
-        @Path("postId") postId: Long
-    ): Call<String>
+    @POST("api/posts/{postId}/like")
+    fun toggleLike(@Path("postId") postId: Long): Call<ToggleLikeResponse>
 
 
     @GET("/api/posts/{postId}/getUsersWhoLike")

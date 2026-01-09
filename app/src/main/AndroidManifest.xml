@@ -31,6 +31,12 @@
                     android:scheme="https"
                     android:host="coleman-nonethic-marinda.ngrok-free.dev"
                     android:pathPrefix="/auth/verify"/>
+
+                <data
+                    android:scheme="https"
+                    android:host="coleman-nonethic-marinda.ngrok-free.dev"
+                    android:pathPrefix="/auth/reset-password"/>
+
             </intent-filter>
         </activity>
 

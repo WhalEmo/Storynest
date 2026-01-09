@@ -30,4 +30,16 @@ class RegisterLoginRepo(
             throw Exception(response.errorBody()?.string())
         }
     }
+
+    suspend fun resetPassword(email: String): String{
+        val response = withContext(Dispatchers.IO) {
+            api.forgotPassword(email).execute()
+        }
+        if (!response.isSuccessful) {
+            throw Exception(response.errorBody()?.string())
+        }
+        else{
+            return "Emailinize şifre sıfırlama linki gönderildi."
+        }
+    }
 }

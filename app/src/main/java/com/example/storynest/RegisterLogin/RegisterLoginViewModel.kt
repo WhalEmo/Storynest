@@ -1,5 +1,6 @@
 package com.example.storynest.RegisterLogin
 
+import android.R
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,6 +18,7 @@ class RegisterLoginViewModel(
 
     val loginResult = MutableLiveData<ResultWrapper<LoginResponse>>()
     val registerResult = MutableLiveData<ResultWrapper<UserResponse>>()
+    val resetMessage = MutableLiveData<ResultWrapper<String>>()
 
     fun login(username: String, password: String) {
         val request = loginRequest(username, password)
@@ -80,6 +82,22 @@ class RegisterLoginViewModel(
                 )
             }
         }
+    }
+    fun resetpassword(email: String){
+        viewModelScope.launch {
+            try {
+                val body=repository.resetPassword(email)
+                if (!body.isEmpty()) {
+                    resetMessage.value=ResultWrapper.Success(body)
+                }
+            } catch (e: Exception) {
+                registerResult.value = ResultWrapper.Error(
+                    message = parseErrorBody(e.message),
+                    type = ErrorType.SERVER_ERROR
+                )
+            }
+        }
+
     }
 }
 
