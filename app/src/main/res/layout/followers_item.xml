@@ -84,8 +84,23 @@
             android:textStyle="bold"
             android:textColor="@color/colorOnSecondary"
             android:paddingHorizontal="16dp"
+            android:visibility="visible"
             app:cornerRadius="8dp"
             app:backgroundTint="@color/accept_blue"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sendingRequest"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="İstek Gönderildi"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorTextPrimary"
+            android:visibility="gone"
+            android:paddingHorizontal="16dp"
+            app:cornerRadius="8dp"
+            app:backgroundTint="@color/colorDivider"/>
     </LinearLayout>
 
     <!-- Message Button -->

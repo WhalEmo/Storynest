@@ -6,7 +6,8 @@ enum class FollowRequestStatus {
     ACCEPTED,
     REJECTED,
     UNFOLLOW,
-    BLOCKED
+    BLOCKED,
+    CANCEL
 }
 
 data class SimpleUserDTO(

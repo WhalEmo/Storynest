@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import com.example.storynest.ApiClient
 import com.example.storynest.Notification.Adapter.NotificationRow
+import com.example.storynest.TestUserProvider
 import retrofit2.Response
 import java.time.LocalDateTime
 
@@ -12,7 +13,7 @@ class NotificationService {
     private lateinit var token: String
 
     init {
-        token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlbXJ1bGxhaDciLCJpYXQiOjE3NjYxNDQ2MDgsImV4cCI6MTc2NjIzMTAwOH0.PkUy6LqGBH2sbq3G5zpTlJX-x9_R-hzcuZqrksfrtCM"
+        token = TestUserProvider.STATIC_TOKEN
     }
 
     val notificationController = ApiClient.getClient(token).create(NotificationApiController::class.java)

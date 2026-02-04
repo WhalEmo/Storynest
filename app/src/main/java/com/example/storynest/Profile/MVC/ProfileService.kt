@@ -2,12 +2,13 @@ package com.example.storynest.Profile.MVC
 
 import com.example.storynest.ApiClient
 import com.example.storynest.Profile.MyProfile
+import com.example.storynest.TestUserProvider
 
 class ProfileService {
     private lateinit var token: String
 
     init {
-        token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlbXJ1bGxhaDciLCJpYXQiOjE3NjYxNDQ2MDgsImV4cCI6MTc2NjIzMTAwOH0.PkUy6LqGBH2sbq3G5zpTlJX-x9_R-hzcuZqrksfrtCM"
+        token = TestUserProvider.STATIC_TOKEN
     }
 
     val profileController = ApiClient.getClient(token).create(ProfileApiController::class.java)

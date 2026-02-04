@@ -123,6 +123,7 @@
         app:layout_constraintTop_toBottomOf="@id/biography">
 
         <LinearLayout
+            android:id="@+id/followersContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -154,6 +155,7 @@
             android:background="#E0E0E0"/>
 
         <LinearLayout
+            android:id="@+id/followingContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"

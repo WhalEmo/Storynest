@@ -9,7 +9,8 @@ import com.example.storynest.R
 
 class FollowersAdapter(
     private val onAccept: (FollowersRow.FollowerUserItem) -> Unit,
-    private val onReject: (FollowersRow.FollowerUserItem) -> Unit
+    private val onReject: (FollowersRow.FollowerUserItem) -> Unit,
+    private val onCancelRequest: (FollowersRow.FollowerUserItem) -> Unit
 ) : ListAdapter<FollowersRow, RecyclerView.ViewHolder>(DIFF) {
 
     companion object {
@@ -71,7 +72,7 @@ class FollowersAdapter(
                     parent,
                     false
                 )
-                FollowerUserViewHolder(view, onAccept, onReject)
+                FollowerUserViewHolder(view, onAccept, onReject, onCancelRequest)
             }
             else -> throw IllegalArgumentException("Unknown viewType")
         }

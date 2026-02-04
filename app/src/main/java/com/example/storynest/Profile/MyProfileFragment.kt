@@ -10,9 +10,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import coil.load
 import com.example.storynest.CustomViews.ErrorDialog
+import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.MyFollowersFragment
 import com.example.storynest.Notification.NotificationFragment
 import com.example.storynest.R
 import com.example.storynest.Settings.SettingsFragment
+import com.example.storynest.TestUserProvider
 import com.example.storynest.databinding.MyProfileFragmentBinding
 
 
@@ -55,7 +57,6 @@ class MyProfileFragment : Fragment(){
         binding.profileImage.load(myProfile?.profile){
             crossfade(true)
         }
-
         return binding.root
     }
 
@@ -63,18 +64,15 @@ class MyProfileFragment : Fragment(){
         super.onViewCreated(view, savedInstanceState)
         this.viewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
         settingsButtonAnimation()
+
         binding.notificationBook.setOnClickListener {
             val notificationFragment = NotificationFragment()
-            parentFragmentManager.beginTransaction()
-                .setCustomAnimations(
-                    R.anim.enter_from_right,
-                    R.anim.exit_to_left,
-                    R.anim.enter_from_left,
-                    R.anim.exit_to_right
-                )
-                .replace(R.id.fragmentContainer, notificationFragment)
-                .addToBackStack(null)
-                .commit()
+            fragmentAnimation(notificationFragment)
+        }
+
+        binding.followersContainer.setOnClickListener {
+            val myFollowersFragment = MyFollowersFragment()
+            fragmentAnimation(myFollowersFragment)
         }
 
 
@@ -162,5 +160,17 @@ class MyProfileFragment : Fragment(){
         }
     }
 
+    private fun fragmentAnimation(fragment: Fragment){
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.enter_from_right,
+                R.anim.exit_to_left,
+                R.anim.enter_from_left,
+                R.anim.exit_to_right
+            )
+            .replace(R.id.fragmentContainer, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
 
 }
