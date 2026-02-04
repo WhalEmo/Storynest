@@ -56,13 +56,9 @@ class LaunchActivity : AppCompatActivity() {
             else{
                 val uri = intent?.data
                 val token = uri?.getQueryParameter("token")
-                val resetPasswordToken = uri?.getQueryParameter("resetpasswordtoken")
 
                 if (!token.isNullOrEmpty()) {
-                    Toast.makeText(context, "Email zaten doğrulanmış!", Toast.LENGTH_SHORT).show()
-                }
-                if(!resetPasswordToken.isNullOrEmpty()){
-                    Toast.makeText(context, "Link zaten gönderildi!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Zaten doğrulanmış!", Toast.LENGTH_SHORT).show()
                 }
                 goNormalFlow()
 
@@ -79,14 +75,26 @@ class LaunchActivity : AppCompatActivity() {
 
         val uri = intent?.data
         val token = uri?.getQueryParameter("token")
-        //DEVAMI VAR RESETPASSWORD yapılacak
+        val path = uri?.path
 
-        if (!token.isNullOrEmpty()) {
-            println("token")
-            verifyEmail(token)
-        } else {
-            goNormalFlow()
+        if (token.isNullOrEmpty()) {
+            dontNormalFlow("showLogin")
+            return
         }
+
+        when {
+            path?.startsWith("/auth/verify") == true -> {
+                verifyEmail(token)
+            }
+
+            path?.startsWith("/auth/reset-password") == true -> {
+                verifyPassword(token)
+            }
+            else -> {
+                goNormalFlow()
+            }
+        }
+
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -118,9 +126,13 @@ class LaunchActivity : AppCompatActivity() {
             finish()
         }
     }
-    private fun dontNormalFlow(name:String){
+    private fun dontNormalFlow(name:String,token: String? = null){
         println("dontNormalFlow"+" "+name)
         intentOther.putExtra(name, true)
+
+        token?.let {
+            intentOther.putExtra("TOKEN_KEY", it)
+        }
         startActivity(intentOther)
         finish()
     }
@@ -149,6 +161,28 @@ class LaunchActivity : AppCompatActivity() {
             }
         })
     }
+
+    private fun verifyPassword(token: String) {
+        Log.d("VERIFY", "verifyEmail çağrıldı")
+
+        ApiClient.api.verifyResetPassword(token).enqueue(object : Callback<VerifyResponse> {
+
+            override fun onResponse(
+                call: Call<VerifyResponse>,
+                response: Response<VerifyResponse>
+            ) {
+                if (response.isSuccessful) {
+                    dontNormalFlow("forgotpassword",token)
+                } else {
+                    dontNormalFlow("login")
+                }
+            }
+            override fun onFailure(call: Call<VerifyResponse>, t: Throwable) {
+                Log.e("VERIFY", "network error", t)
+            }
+        })
+    }
+
 
 
 }

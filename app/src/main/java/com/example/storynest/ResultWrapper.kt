@@ -36,3 +36,11 @@ fun parseErrorBody(errorBody: String?): String {
         errorBody
     }
 }
+
+inline fun <T, R> ResultWrapper<T>.mapSuccess(
+    transform: (T) -> R
+): ResultWrapper<R> =
+    when (this) {
+        is ResultWrapper.Success -> ResultWrapper.Success(transform(data))
+        is ResultWrapper.Error -> this
+    }

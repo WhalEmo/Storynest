@@ -1,14 +1,11 @@
 package com.example.storynest.RegisterLogin
 
-import android.R
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.storynest.ApiClient
-import com.example.storynest.ErrorType
-import com.example.storynest.ResultWrapper
+import com.example.storynest.*
 import com.example.storynest.dataLocal.UserPreferences
-import com.example.storynest.parseErrorBody
 import kotlinx.coroutines.launch
 
 class RegisterLoginViewModel(
@@ -16,35 +13,41 @@ class RegisterLoginViewModel(
     private val repository: RegisterLoginRepo
 ) : ViewModel() {
 
-    val loginResult = MutableLiveData<ResultWrapper<LoginResponse>>()
-    val registerResult = MutableLiveData<ResultWrapper<UserResponse>>()
-    val resetMessage = MutableLiveData<ResultWrapper<String>>()
+    // Her işlem için ayrı UiState
+    private val _loginState = MutableLiveData<UiState<LoginResponse>>()
+    val loginState: LiveData<UiState<LoginResponse>> = _loginState
+
+    private val _registerState = MutableLiveData<UiState<UserResponse>>()
+    val registerState: LiveData<UiState<UserResponse>> = _registerState
+
+    private val _resetPasswordState = MutableLiveData<UiState<String>>()
+    val resetPasswordState: LiveData<UiState<String>> = _resetPasswordState
+
+    private val _newPasswordState = MutableLiveData<UiState<String>>()
+    val newPasswordState: LiveData<UiState<String>> = _newPasswordState
+
 
     fun login(username: String, password: String) {
         val request = loginRequest(username, password)
+        _loginState.value = UiState.Loading
 
         viewModelScope.launch {
-            try {
-                val body = repository.login(request)
-
-                userPrefs.saveUser(
-                    username = body.user.username,
-                    token = body.token,
-                    name = body.user.name,
-                    surname = body.user.surname,
-                    id = body.user.id,
-                    email = body.user.email
-                )
-
-                ApiClient.updateToken(body.token)
-
-                loginResult.value = ResultWrapper.Success(body)
-
-            } catch (e: Exception) {
-                loginResult.value = ResultWrapper.Error(
-                    message = parseErrorBody(e.message),
-                    type = ErrorType.WRONG_REGISTER
-                )
+            val result = repository.login(request)
+            when (result) {
+                is ResultWrapper.Success -> {
+                    val body = result.data
+                    userPrefs.saveUser(
+                        username = body.user.username,
+                        token = body.token,
+                        name = body.user.name,
+                        surname = body.user.surname,
+                        id = body.user.id,
+                        email = body.user.email
+                    )
+                    ApiClient.updateToken(body.token)
+                    _loginState.value = UiState.Success(body)
+                }
+                is ResultWrapper.Error -> _loginState.value = UiState.Error(result.message)
             }
         }
     }
@@ -55,49 +58,51 @@ class RegisterLoginViewModel(
         password: String,
         name: String,
         surname: String,
-        profile: String?,
-        biography: String?
+        profile: String? = null,
+        biography: String? = null
     ) {
-        val request = registerRequest(
-            username, email, password, name, surname, profile, biography
-        )
+        val request = registerRequest(username, email, password, name, surname, profile, biography)
+        _registerState.value = UiState.Loading
 
         viewModelScope.launch {
-            try {
-                val body = repository.register(request)
-
-                if (!body.emailVerified) {
-                    registerResult.value = ResultWrapper.Error(
-                        message = "Emailinizi doğrulayın.",
-                        type = ErrorType.EMAIL_NOT_VERIFIED
-                    )
-                } else {
-                    registerResult.value = ResultWrapper.Success(body)
+            val result = repository.register(request)
+            when (result) {
+                is ResultWrapper.Success -> {
+                    val body = result.data
+                    if (!body.emailVerified) {
+                        _registerState.value = UiState.Error("Emailinizi doğrulayın.")
+                    } else {
+                        _registerState.value = UiState.Success(body)
+                    }
                 }
-
-            } catch (e: Exception) {
-                registerResult.value = ResultWrapper.Error(
-                    message = parseErrorBody(e.message),
-                    type = ErrorType.SERVER_ERROR
-                )
+                is ResultWrapper.Error -> _registerState.value = UiState.Error(result.message)
             }
         }
     }
-    fun resetpassword(email: String){
+
+    fun resetPassword(email: String) {
+        _resetPasswordState.value = UiState.Loading
+
         viewModelScope.launch {
-            try {
-                val body=repository.resetPassword(email)
-                if (!body.isEmpty()) {
-                    resetMessage.value=ResultWrapper.Success(body)
-                }
-            } catch (e: Exception) {
-                registerResult.value = ResultWrapper.Error(
-                    message = parseErrorBody(e.message),
-                    type = ErrorType.SERVER_ERROR
-                )
+            val result = repository.resetPassword(email)
+            when (result) {
+                is ResultWrapper.Success -> _resetPasswordState.value = UiState.Success(result.data)
+                is ResultWrapper.Error -> _resetPasswordState.value = UiState.Error(result.message)
             }
         }
+    }
 
+
+    fun newPassword(token: String, password: String, cpassword: String) {
+        val request = ResetPasswordRequest(password, cpassword)
+        _newPasswordState.value = UiState.Loading
+
+        viewModelScope.launch {
+            val result = repository.savePassword(token, request)
+            when (result) {
+                is ResultWrapper.Success -> _newPasswordState.value = UiState.Success(result.data)
+                is ResultWrapper.Error -> _newPasswordState.value = UiState.Error(result.message)
+            }
+        }
     }
 }
-

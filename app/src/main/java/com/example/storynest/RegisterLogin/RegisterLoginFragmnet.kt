@@ -10,14 +10,17 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.LiveData
 import com.example.storynest.ApiClient
 import com.example.storynest.R
 import com.example.storynest.ResultWrapper
+import com.example.storynest.UiState
 import com.example.storynest.dataLocal.UserPreferences
 
 class RegisterLoginFragmnet : Fragment() {
@@ -50,6 +53,13 @@ class RegisterLoginFragmnet : Fragment() {
     private lateinit var edtforgotemail: EditText
     private lateinit var btnSend: Button
 
+    private lateinit var newpassword: LinearLayout
+    private lateinit var newpsswrd: EditText
+    private lateinit var confirmpsswrd: EditText
+    private lateinit var btnnewsend: Button
+    private lateinit var generalProgressBar: ProgressBar
+    private var passwrdtoken: String? = null
+
 
 
     override fun onCreateView(
@@ -64,6 +74,8 @@ class RegisterLoginFragmnet : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val login = arguments?.getBoolean("login", false)
         val register = arguments?.getBoolean("register", false)
+        val mainforgotpassword = arguments?.getBoolean("forgotpassword", false)
+        passwrdtoken= arguments?.getString("TOKEN_KEY")
 
         lamp = view.findViewById(R.id.lambaSonuk)
         layoutButtons = view.findViewById(R.id.initialButtons)
@@ -91,6 +103,13 @@ class RegisterLoginFragmnet : Fragment() {
         edtforgotemail=view.findViewById(R.id.edtforgotemail)
         btnSend=view.findViewById(R.id.btnSend)
 
+        newpassword=view.findViewById(R.id.newpassword)
+        newpsswrd=view.findViewById(R.id.newpsswrd)
+        confirmpsswrd=view.findViewById(R.id.confirmpsswrd)
+        btnnewsend=view.findViewById(R.id.btnnewsend)
+
+        generalProgressBar=view.findViewById(R.id.generalProgressBar)
+
 
         setupButtonListeners()
         setupBackPressedCallback()
@@ -108,7 +127,14 @@ class RegisterLoginFragmnet : Fragment() {
             animateViewGone(layoutButtons) {
             registerFields.visibility=View.VISIBLE
             loginFields.visibility = View.GONE
-                }
+            }
+        }else if(mainforgotpassword==true){
+            animateViewGone(layoutButtons) {
+                loginFields.visibility = View.GONE
+                forgot.visibility= View.GONE
+                registerFields.visibility=View.GONE
+                newpassword.visibility=View.VISIBLE
+            }
         }
         else{
             startLampAnimation()
@@ -117,71 +143,139 @@ class RegisterLoginFragmnet : Fragment() {
     }
     private fun clicks(){
         btnLogin.setOnClickListener {
-            val username=edtLoginUsername.text.toString()
-            val password=edtLoginPassword.text.toString()
+            val username=edtLoginUsername.text.toString().trim()
+            val password=edtLoginPassword.text.toString().trim()
+
+            if (username.isEmpty()) {
+                edtLoginUsername.error = "Kullanıcı adı boş olamaz"
+                return@setOnClickListener
+            }
+            if (password.isEmpty()) {
+                edtLoginPassword.error = "Şifre boş olamaz"
+                return@setOnClickListener
+            }
+            if (password.length < 6) {
+                edtLoginPassword.error = "Şifre en az 6 karakter olmalı"
+                return@setOnClickListener
+            }
+            edtLoginUsername.error = null
+            edtLoginPassword.error = null
             viewModel.login(username,password)
         }
+
         btnRegister.setOnClickListener {
-            val username=edtUserName.text.toString()
-            val name=name.text.toString()
-            val surname=surname.text.toString()
-            val edtRegEmail=edtRegEmail.text.toString()
-            val edtRegPassword=edtRegPassword.text.toString()
-            viewModel.register(username,edtRegEmail,edtRegPassword,name,surname,null,null)
+            val username=edtUserName.text.toString().trim()
+            val namee=name.text.toString().trim()
+            val surnamee=surname.text.toString().trim()
+            val email=edtRegEmail.text.toString().trim()
+            val password=edtRegPassword.text.toString().trim()
+
+            if (username.isEmpty()) {
+                edtUserName.error = "Kullanıcı adı boş olamaz"
+                return@setOnClickListener
+            }
+
+            if (namee.isEmpty()) {
+                name.error = "Ad boş olamaz"
+                return@setOnClickListener
+            }
+
+            if (surnamee.isEmpty()) {
+                surname.error = "Soyad boş olamaz"
+                return@setOnClickListener
+            }
+
+            if (email.isEmpty()) {
+                edtRegEmail.error = "Email boş olamaz"
+                return@setOnClickListener
+            }
+            if (password.isEmpty()) {
+                edtRegPassword.error = "Şifre boş olamaz"
+                return@setOnClickListener
+            } else if (password.length < 6) {
+                edtRegPassword.error = "Şifre en az 6 karakter olmalı"
+                return@setOnClickListener
+            }
+            edtRegPassword.error = null
+            edtRegEmail.error = null
+            surname.error = null
+            name.error = null
+            edtUserName.error = null
+            viewModel.register(username,email,password,namee,surnamee,null,null)
         }
+
         forgotPassword.setOnClickListener {
             loginFields.visibility= View.GONE
             forgot.visibility= View.VISIBLE
         }
         btnSend.setOnClickListener {
-            viewModel.resetpassword(edtforgotemail.text.toString());
+            viewModel.resetPassword(edtforgotemail.text.toString());
+        }
+        btnnewsend.setOnClickListener{
+            val password = newpsswrd.text.toString().trim()
+            val confirmpassword= confirmpsswrd.text.toString().trim()
+
+            if (password.isEmpty()&&confirmpassword.isEmpty()) {
+                newpsswrd.error= "Şifre boş olamaz"
+                confirmpsswrd.error= "Şifre boş olamaz"
+                return@setOnClickListener
+            }
+            if (password.length < 6) {
+                newpsswrd.error= "Şifre en az 6 karakter olmalı"
+                return@setOnClickListener
+            }
+            if (password != confirmpassword) {
+               confirmpsswrd.error="Şifre eşleşmiyor!"
+                return@setOnClickListener
+            }
+            passwrdtoken?.let {
+                viewModel.newPassword(it, password, confirmpassword)
+            } ?: run {
+                Toast.makeText(requireContext(), "Süresi doldu!", Toast.LENGTH_SHORT).show()
+            }
         }
 
     }
-    private fun setupObservers(){
-        viewModel.loginResult.observe(viewLifecycleOwner){result->
-            when(result){
-                is ResultWrapper.Success -> {
-                    Toast.makeText(requireContext(), "Giriş başarılı!", Toast.LENGTH_SHORT).show()
-                    // //FRAGMNET YONLENDİRMESİ YAPILCAK
-                }
-                is ResultWrapper.Error -> {
-                    Toast.makeText(requireContext(), "Hata: ${result.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
+    private fun setupObservers() {
+        observeUiState(viewModel.loginState, generalProgressBar) { data ->
+            Toast.makeText(requireContext(), "Giriş başarılı!", Toast.LENGTH_SHORT).show()
+            // Fragment yönlendirme burada yapılabilir
         }
-        viewModel.registerResult.observe(viewLifecycleOwner){result->
-            when(result) {
-                is ResultWrapper.Success -> {
-                    Toast.makeText(
-                        requireContext(),
-                        "Email doğrulandı. Giriş yapabilirsiniz.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    //FRAGMNET YONLENDİRMESİ YAPILCAK
-                }
-                is ResultWrapper.Error -> {
-                    Toast.makeText(requireContext(), "Hata: ${result.message}", Toast.LENGTH_SHORT)
-                        .show()
-                }
-            }
+
+        observeUiState(viewModel.registerState, generalProgressBar) { data ->
+            Toast.makeText(requireContext(), "Email doğrulandı. Giriş yapabilirsiniz.", Toast.LENGTH_SHORT).show()
+            // Fragment yönlendirme burada yapılabilir
         }
-        viewModel.resetMessage.observe(viewLifecycleOwner){result->
-            when(result) {
-                is ResultWrapper.Success -> {
-                    Toast.makeText(
-                        requireContext(),
-                        result.data,
-                        Toast.LENGTH_SHORT
-                    ).show()
+
+        observeUiState(viewModel.resetPasswordState, generalProgressBar) { data ->
+            Toast.makeText(requireContext(), data, Toast.LENGTH_SHORT).show()
+        }
+
+        observeUiState(viewModel.newPasswordState, generalProgressBar) { data ->
+            Toast.makeText(requireContext(), data, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun <T> observeUiState(
+        liveData: LiveData<UiState<T>>,
+        progressBar: View,
+        onSuccess: (T) -> Unit = {}
+    ) {
+        liveData.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is UiState.Loading -> progressBar.visibility = View.VISIBLE
+                is UiState.Success -> {
+                    progressBar.visibility = View.GONE
+                    onSuccess(state.data)
                 }
-                is ResultWrapper.Error -> {
-                    Toast.makeText(requireContext(), "Hata: ${result.message}", Toast.LENGTH_SHORT)
-                        .show()
+                is UiState.Error -> {
+                    progressBar.visibility = View.GONE
+                    Toast.makeText(requireContext(), "Hata: ${state.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
+
     private fun startLampAnimation() {
         val anim = AnimationUtils.loadAnimation(requireContext(), R.anim.lamp_on)
         lamp.setImageResource(R.drawable.lampon)

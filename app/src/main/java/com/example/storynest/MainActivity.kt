@@ -23,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnProfile: ImageView
     private lateinit var bottomBar: LinearLayout
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -61,6 +62,19 @@ class MainActivity : AppCompatActivity() {
             val fragment = RegisterLoginFragmnet()
             val bundle = Bundle()
             bundle.putBoolean("register", true)
+            fragment.arguments = bundle
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commitNow()
+        }else if(intent.getBooleanExtra("forgotpassword",false)){
+            bottomBar.visibility = View.GONE
+            val fragment = RegisterLoginFragmnet()
+            val bundle = Bundle()
+            bundle.putBoolean("forgotpassword", true)
+
+            val token = intent.getStringExtra("TOKEN_KEY") // Launchden gelen sifre tokeni
+            bundle.putString("TOKEN_KEY", token)
+
             fragment.arguments = bundle
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragment_container, fragment)

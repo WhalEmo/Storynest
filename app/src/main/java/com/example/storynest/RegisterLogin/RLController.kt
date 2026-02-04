@@ -38,6 +38,11 @@ data class VerifyResponse(
     val message: String
 )
 
+data class ResetPasswordRequest(
+    val newPassword: String,
+    val confirmPassword: String
+)
+
 
 interface RLController {
     @POST("/api/users/login")
@@ -49,9 +54,14 @@ interface RLController {
     @GET("/auth/verify")
     fun verify(@Query("token") token: String): Call<VerifyResponse>
 
+    @POST("/auth/forgotPassword")
+    fun forgotPassword(@Query("email") email: String): Call<VerifyResponse>
 
-    @GET("/auth/forgotPassword")
-    fun forgotPassword(@Query("email") email: String): Call<Void>
 
+    @GET("/auth/reset-password")
+    fun verifyResetPassword(@Query("token") token: String): Call<VerifyResponse>
+
+    @POST("/auth/savePassword")
+    fun saveNewPassword(@Query("token") token: String, @Body request: ResetPasswordRequest): Call<VerifyResponse>
 
 }
