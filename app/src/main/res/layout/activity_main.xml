@@ -11,9 +11,9 @@
     <LinearLayout
         android:id="@+id/bottomBar"
         android:layout_width="0dp"
-        android:layout_height="56dp"
+        android:layout_height="50dp"
         android:orientation="horizontal"
-        android:background="#EAF3FF"
+        android:background="@drawable/bg_bottom_bar"
         android:gravity="center"
         android:elevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -66,8 +66,6 @@
         app:layout_constraintBottom_toTopOf="@id/bottomBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
-
-
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

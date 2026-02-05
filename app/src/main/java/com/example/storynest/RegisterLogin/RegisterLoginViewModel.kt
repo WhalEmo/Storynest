@@ -70,7 +70,7 @@ class RegisterLoginViewModel(
                 is ResultWrapper.Success -> {
                     val body = result.data
                     if (!body.emailVerified) {
-                        _registerState.value = UiState.Error("Emailinizi doğrulayın.")
+                        _registerState.value = UiState.EmailNotVerified("Emailinizi doğrulayın.")
                     } else {
                         _registerState.value = UiState.Success(body)
                     }
@@ -86,7 +86,7 @@ class RegisterLoginViewModel(
         viewModelScope.launch {
             val result = repository.resetPassword(email)
             when (result) {
-                is ResultWrapper.Success -> _resetPasswordState.value = UiState.Success(result.data)
+                is ResultWrapper.Success -> _resetPasswordState.value = UiState.EmailSent(result.data)
                 is ResultWrapper.Error -> _resetPasswordState.value = UiState.Error(result.message)
             }
         }

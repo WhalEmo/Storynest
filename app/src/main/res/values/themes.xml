@@ -1,9 +1,36 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.Storynest" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <style name="Base.Theme.Storynest"
+        parent="Theme.Material3.DayNight.NoActionBar">
+
+        <item name="textInputStyle">@style/Widget.Storynest.TextInputLayout</item>
+
+        <item name="colorPrimary">#F0D8C0</item>
+
+        <item name="colorError">@color/error_red</item>
+
+    </style>
+    <style name="Theme.Storynest"
+    parent="Base.Theme.Storynest" />
+    <style name="Theme.MyApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
     </style>
 
-    <style name="Theme.Storynest" parent="Base.Theme.Storynest" />
+    <style name="Widget.Storynest.TextInputLayout"
+        parent="Widget.Material3.TextInputLayout.OutlinedBox">
+
+
+        <!-- Basılmadan önce (idle) -->
+        <item name="boxStrokeColor">#F0D8C0</item>
+        <item name="hintTextColor">#F0D8C0</item>
+
+        <!-- Error yazısı -->
+        <item name="errorTextColor">#F0D8C0</item>
+
+
+        <item name="boxStrokeWidth">2dp</item>
+        <!-- Error -->
+        <item name="boxStrokeErrorColor">@color/error_red</item>
+
+
+    </style>
 </resources>

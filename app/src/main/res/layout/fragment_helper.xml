@@ -15,14 +15,16 @@
         <!-- Kitap Kapağı -->
         <ImageView
             android:id="@+id/imgBookCover"
-            android:layout_width="350dp"
+            android:layout_width="0dp"
             android:layout_height="150dp"
             android:scaleType="centerCrop"
             android:contentDescription="Kitap Kapağı"
             android:background="@drawable/bg_input"
-            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="30dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
 
         <TextView
             android:id="@+id/txtBookTitle"
@@ -36,23 +38,26 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/imgBookCover" />
-
         <TextView
             android:id="@+id/categories"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="Korku,Aksiyon,Aşk"
-            android:textColor="@android:color/black"
-            android:textSize="15sp"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:text="Korku  •  Macera  •  Aşk"
+            android:textColor="#AAAAAA"
+            android:textSize="14sp"
+            android:letterSpacing="0.02"
+            android:fontFamily="sans-serif-medium"
+            android:textStyle="italic"
+            android:layout_marginTop="8dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/txtBookTitle" />
+            app:layout_constraintTop_toBottomOf="@id/txtBookTitle"/>
 
         <TextView
             android:id="@+id/txtBookContent"
             android:layout_marginBottom="20dp"
             android:justificationMode="inter_word"
             android:layout_width="0dp"
+            android:layout_marginTop="8dp"
             android:layout_height="wrap_content"
             android:lineSpacingExtra="4dp"
             android:text="Kitabın içeriği burada yer alacak. Uzun uzun yazılar burada problemsiz şekilde kaydırılabilir..."

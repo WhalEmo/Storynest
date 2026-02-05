@@ -11,11 +11,13 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.LiveData
 import com.bumptech.glide.Glide
 import com.example.storynest.ApiClient
 import com.example.storynest.HomePage.HomePageRepo
@@ -23,6 +25,7 @@ import com.example.storynest.HomePage.HomePageViewModel
 import com.example.storynest.HomePage.HomePageViewModelFactory
 import com.example.storynest.R
 import com.example.storynest.ResultWrapper
+import com.example.storynest.UiState
 import com.example.storynest.dataLocal.UserPreferences
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
@@ -46,6 +49,7 @@ class AddPostFragmnet : Fragment() {
 
     private val secilenKategoriler = mutableSetOf<String>()
     private var selectedImageUri: Uri? = null
+    private lateinit var generalProgressBar: ProgressBar
 
 
     override fun onCreateView(
@@ -64,6 +68,7 @@ class AddPostFragmnet : Fragment() {
         edtStoryContent = view.findViewById(R.id.edtStoryContent)
         btnPublish = view.findViewById(R.id.btnPublish)
         textkapakekle=view.findViewById(R.id.textkapakekle)
+        generalProgressBar=view.findViewById(R.id.generalProgressBar)
 
         textListener()
         setupTextWatchers()
@@ -95,23 +100,26 @@ class AddPostFragmnet : Fragment() {
             val title = edtStoryTitle.text.toString().trim()
             val content = edtStoryContent.text.toString().trim()
             val categoriesString = secilenKategoriler.joinToString(",")
-            val lineCount = content.lines().size
+
+            val minChars = 100
+            val maxChars = 2000
 
             when {
                 title.isEmpty() -> {
                     edtStoryTitle.error = "Başlık boş olamaz"
                 }
-
-
-                lineCount < 5 -> {
-                    edtStoryContent.error = "Metin en az 5 satır olmalı"
+                content.length < minChars -> {
+                    edtStoryContent.error = "Metin en az $minChars karakter olmalı"
                 }
-               secilenKategoriler.isEmpty() ->{
-                   txtSelectedCategories.error = "En az bir kategori seçmelisin"
-
-               }
+                content.length > maxChars -> {
+                    edtStoryContent.error = "Metin en fazla $maxChars karakter olabilir"
+                }
+                secilenKategoriler.isEmpty() -> {
+                    txtSelectedCategories.error = "En az bir kategori seçmelisin"
+                }
                 else -> {
-                    viewModel.addPost(title,content,categoriesString,selectedImageUri.toString())
+                    edtStoryContent.error = null
+                    viewModel.addPost(title, content, categoriesString, selectedImageUri.toString())
                 }
             }
         }
@@ -128,41 +136,30 @@ class AddPostFragmnet : Fragment() {
     }
 
     private fun textListener() {
+        val maxChars = 2000
         edtStoryContent.addTextChangedListener(object : TextWatcher {
-
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-
-            override fun afterTextChanged(s: Editable?) {
-                edtStoryContent.post {
-                    val layout = edtStoryContent.layout ?: return@post
-                    val lineCount = layout.lineCount
-                    if(lineCount>31){
-                        edtStoryContent.error = "Metin en fazla 32 satır olabilir!"
-                    }
-                    if (lineCount > 32) {
-                        s?.delete(s.length - 1, s.length)
-                    }else if(lineCount< 5){
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                s?.let {
+                    if (it.length > maxChars) {
+                        edtStoryContent.setText(it.substring(0, maxChars))
+                        edtStoryContent.setSelection(maxChars)
+                        edtStoryContent.error = "Metin en fazla $maxChars karakter olabilir!"
+                    } else {
                         edtStoryContent.error = null
                     }
                 }
             }
+
+            override fun afterTextChanged(s: Editable?) {}
         })
     }
 
     private fun setupObservers(){
-        viewModel.addPostResult.observe(viewLifecycleOwner){result->
-            when(result){
-                is ResultWrapper.Success -> {
-                    Toast.makeText(requireContext(), "Post paylaşıldı!", Toast.LENGTH_SHORT).show()
-                    resetForm()
-                }
-                is ResultWrapper.Error -> {
-                    print(result.message)
-                    Toast.makeText(requireContext(), "Hata: ${result.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
+        observeUiState(viewModel.addPostResult, generalProgressBar) { data ->
+            Toast.makeText(requireContext(), "Post paylaşıldı!", Toast.LENGTH_SHORT).show()
+            resetForm()
         }
     }
 
@@ -187,7 +184,6 @@ class AddPostFragmnet : Fragment() {
                 chip.setOnClickListener {
 
                     secilenKategoriler.clear()
-
 
                     for (i in 0 until chipGroup.childCount) {
                         val otherChip = chipGroup.getChildAt(i) as Chip
@@ -227,7 +223,7 @@ class AddPostFragmnet : Fragment() {
         val text = if (secilenKategoriler.isEmpty()) {
             ""
         } else {
-            secilenKategoriler.joinToString(", ")
+            secilenKategoriler.joinToString(" , ")
         }
         txtSelectedCategories.text = text
     }
@@ -245,6 +241,29 @@ class AddPostFragmnet : Fragment() {
         selectedImageUri = null
         textkapakekle.visibility = View.VISIBLE
 
+    }
+    private fun <T> observeUiState(
+        liveData: LiveData<UiState<T>>,
+        progressBar: View,
+        onSuccess: (T) -> Unit = {}
+    ) {
+        liveData.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is UiState.Loading -> progressBar.visibility = View.VISIBLE
+                is UiState.Success -> {
+                    progressBar.visibility = View.GONE
+                    onSuccess(state.data)
+                }
+                is UiState.Error -> {
+                    progressBar.visibility = View.GONE
+                    Toast.makeText(requireContext(), "Hata: ${state.message}", Toast.LENGTH_SHORT).show()
+                }
+                is UiState.EmailNotVerified->{
+                }
+                is UiState.EmailSent->{
+                }
+            }
+        }
     }
 
 }

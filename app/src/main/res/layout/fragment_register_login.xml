@@ -1,8 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/black"
     android:layout_height="match_parent">
+
     <ImageView
         android:id="@+id/lambaSonuk"
         android:layout_width="300dp"
@@ -13,7 +14,6 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="0dp"/>
 
-    <!-- LAMBA (AÇIK) -->
     <ImageView
         android:id="@+id/lambaAcik"
         android:layout_width="300dp"
@@ -31,7 +31,6 @@
         android:background="@drawable/light_full_glow"
         android:visibility="gone"/>
 
-
     <LinearLayout
         android:id="@+id/initialButtons"
         android:layout_width="match_parent"
@@ -40,7 +39,7 @@
         android:visibility="gone"
         android:padding="24dp"
         android:layout_below="@id/lambaAcik"
-        android:layout_marginTop="40dp">   <!-- İstersen biraz boşluk verilebilir -->
+        android:layout_marginTop="40dp">
 
         <Button
             android:id="@+id/btnShowLogin"
@@ -61,8 +60,7 @@
             android:textColor="#000000" />
     </LinearLayout>
 
-
-    <!-- GİRİŞ ALANLARI (başta gizli) -->
+    <!-- GİRİŞ ALANLARI -->
     <LinearLayout
         android:id="@+id/loginFields"
         android:layout_width="match_parent"
@@ -71,28 +69,57 @@
         android:layout_alignParentBottom="true"
         android:layout_marginTop="10dp"
         android:orientation="vertical"
+        android:translationY="-80dp"
         android:padding="24dp"
         android:visibility="gone">
 
-        <EditText
-            android:id="@+id/edtLoginUsername"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilLoginUsername"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Kullanıcı adı"
-            android:padding="16dp"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#AAAAAA" />
+            app:errorEnabled="true"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:errorIconTint="@color/error_red"
+            app:boxStrokeErrorColor="@color/error_red"
+            app:boxCornerRadiusBottomStart="12dp"
+            android:textColorHint="#3B2F2A"
+            app:boxCornerRadiusBottomEnd="12dp">
 
-        <EditText
-            android:id="@+id/edtLoginPassword"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtLoginUsername"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Kullanıcı adı"
+                android:padding="15dp"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#4E342E"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilLoginPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:hint="Şifre"
-            android:inputType="textPassword"
-            android:padding="16dp"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#AAAAAA" />
+            app:errorEnabled="true"
+            app:errorIconTint="@color/error_red"
+            app:boxStrokeErrorColor="@color/error_red"
+            app:hintTextColor="@color/error_red"
+            android:textColorHint="#3B2F2A"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusBottomEnd="12dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtLoginPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Şifre"
+                android:inputType="textPassword"
+                android:padding="15dp"
+                android:textColor="#FFFFFF"
+                />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <Button
             android:id="@+id/btnLogin"
@@ -100,19 +127,23 @@
             android:layout_height="60dp"
             android:layout_marginTop="16dp"
             android:backgroundTint="#F0D8C0"
+            android:translationY="-10dp"
             android:text="Giriş Yap"
             android:textColor="#000000" />
+
         <TextView
             android:id="@+id/forgotPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="Şifremi unuttum"
+            android:translationY="-20dp"
             android:gravity="center"
-            android:textColor="#F0D8C0"
-            />
-
+            android:textColor="#F0D8C0" />
     </LinearLayout>
+
+    <!-- FORGOT, NEW PASSWORD, REGISTER ALANLARI da aynı şekilde TextInputLayout ile sarılacak -->
+    <!-- Örnek: forgot email -->
     <LinearLayout
         android:id="@+id/forgot"
         android:layout_width="match_parent"
@@ -124,25 +155,39 @@
         android:padding="24dp"
         android:visibility="gone">
 
-        <EditText
-            android:id="@+id/edtforgotemail"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilForgotEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Email Giriniz"
-            android:padding="16dp"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#AAAAAA" />
+            app:errorEnabled="true"
+            app:errorIconTint="@color/error_red"
+            app:boxStrokeErrorColor="@color/error_red"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            android:textColorHint="#3B2F2A"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusBottomEnd="12dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtforgotemail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Email Giriniz"
+                android:padding="15dp"
+                android:textColor="#FFFFFF"
+                />
+        </com.google.android.material.textfield.TextInputLayout>
+
         <Button
             android:id="@+id/btnSend"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:layout_marginTop="16dp"
             android:backgroundTint="#F0D8C0"
             android:text="Şifre Sıfırlama Talebi Gönder"
-            android:textColor="#000000" />
-
+            android:textColor="#000000"/>
     </LinearLayout>
 
+    <!-- NEW PASSWORD -->
     <LinearLayout
         android:id="@+id/newpassword"
         android:layout_width="match_parent"
@@ -151,94 +196,244 @@
         android:layout_alignParentBottom="true"
         android:layout_marginTop="10dp"
         android:orientation="vertical"
+        android:translationY="-80dp"
         android:padding="24dp"
         android:visibility="gone">
 
-        <EditText
-            android:id="@+id/newpsswrd"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilNewPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Yeni şifrenizi giriniz"
-            android:padding="16dp"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#AAAAAA" />
-        <EditText
-            android:id="@+id/confirmpsswrd"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusBottomEnd="12dp"
+            app:errorIconTint="@color/error_red"
+            android:textColorHint="#3B2F2A"
+            app:boxStrokeErrorColor="@color/error_red"
+            app:errorEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/newpsswrd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Yeni şifrenizi giriniz"
+                android:padding="15dp"
+                android:textColor="#FFFFFF"
+               />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilConfirmPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Tekrar şifrenizi giriniz"
-            android:padding="16dp"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#AAAAAA" />
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusBottomEnd="12dp"
+            app:errorIconTint="@color/error_red"
+            android:textColorHint="#3B2F2A"
+            app:boxStrokeErrorColor="@color/error_red"
+            app:errorEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/confirmpsswrd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Tekrar şifrenizi giriniz"
+                android:padding="15dp"
+                android:textColor="#FFFFFF"
+                />
+        </com.google.android.material.textfield.TextInputLayout>
+
         <Button
             android:id="@+id/btnnewsend"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:layout_marginTop="16dp"
             android:backgroundTint="#F0D8C0"
             android:text="Onayla"
-            android:textColor="#000000" />
-
+            android:textColor="#000000"/>
     </LinearLayout>
 
 
-    <!-- KAYIT ALANLARI (başta gizli) -->
+    <LinearLayout
+        android:id="@+id/information"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/lambaAcik"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical"
+        android:translationY="-80dp"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvEmailNotVerified"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lütfen e-postanızı kontrol ederek hesabınızı doğrulayın ve ardından giriş yapın."
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_input"
+            android:padding="12dp"
+            android:textAlignment="center"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/informationPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/lambaAcik"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical"
+        android:translationY="-80dp"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/infipass"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Lütfen e-postanızı kontrol edin."
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_input"
+            android:padding="12dp"
+            android:textAlignment="center"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <!-- REGISTER FIELDS -->
     <LinearLayout
         android:id="@+id/registerFields"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_below="@id/lambaAcik"
-        android:layout_marginTop="-100dp"
+        android:layout_marginTop="-120dp"
         android:padding="24dp"
         android:layout_alignParentBottom="true"
         android:visibility="gone">
 
-        <EditText
-            android:id="@+id/edtUserName"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilUserName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Kullanıcı Adı"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#AAAAAA"
-            android:padding="16dp"/>
-        <EditText
-            android:id="@+id/name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Adı"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#AAAAAA"
-            android:padding="16dp"/>
-        <EditText
-            android:id="@+id/surname"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Soyadi"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#AAAAAA"
-            android:padding="16dp"/>
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusBottomEnd="12dp"
+            app:errorIconTint="@color/error_red"
+            android:textColorHint="#3B2F2A"
+            app:boxStrokeErrorColor="@color/error_red"
+            app:errorEnabled="true">
 
-        <EditText
-            android:id="@+id/edtRegEmail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Email"
-            android:layout_marginTop="12dp"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#AAAAAA"
-            android:padding="16dp"/>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtUserName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Kullanıcı Adı"
+                android:textColor="#FFFFFF"
+                android:padding="10dp"/>
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <EditText
-            android:id="@+id/edtRegPassword"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Şifre"
-            android:inputType="textPassword"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#AAAAAA"
-            android:layout_marginTop="12dp"
-            android:padding="16dp"/>
+            android:layout_marginTop="0dp"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusBottomEnd="12dp"
+            android:translationY="-5dp"
+            android:textColorHint="#3B2F2A"
+            app:errorIconTint="@color/error_red"
+            app:boxStrokeErrorColor="@color/error_red"
+            app:errorEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Adı"
+                android:textColor="#FFFFFF"
+                android:padding="10dp"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilSurname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusBottomEnd="12dp"
+            android:translationY="-10dp"
+            android:textColorHint="#3B2F2A"
+            app:errorIconTint="@color/error_red"
+            app:boxStrokeErrorColor="@color/error_red"
+            app:errorEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/surname"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Soyadi"
+                android:textColor="#FFFFFF"
+                android:padding="10dp"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilRegEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusBottomEnd="12dp"
+            android:translationY="-15dp"
+            android:textColorHint="#3B2F2A"
+            app:errorIconTint="@color/error_red"
+            app:boxStrokeErrorColor="@color/error_red"
+            app:errorEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtRegEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Email"
+                android:textColor="#FFFFFF"
+                android:padding="10dp"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilRegPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusBottomEnd="12dp"
+            android:translationY="-20dp"
+            android:textColorHint="#3B2F2A"
+            app:errorIconTint="@color/error_red"
+            app:boxStrokeErrorColor="@color/error_red"
+            app:errorEnabled="true">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtRegPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Şifre"
+                android:inputType="textPassword"
+                android:textColor="#FFFFFF"
+                android:padding="10dp"/>
+        </com.google.android.material.textfield.TextInputLayout>
 
         <Button
             android:id="@+id/btnRegister"
@@ -246,14 +441,15 @@
             android:layout_height="60dp"
             android:text="Kayıt Ol"
             android:backgroundTint="#F0D8C0"
+            android:translationY="-30dp"
             android:textColor="#000000"
-            android:layout_marginTop="16dp"/>
+            android:layout_marginTop="0dp"/>
     </LinearLayout>
+
     <ProgressBar
         android:id="@+id/generalProgressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
         android:layout_centerInParent="true"/>
-
 </RelativeLayout>

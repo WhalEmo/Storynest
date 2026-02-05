@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+android:layout_width="match_parent"
+android:layout_height="match_parent">
+
 <androidx.core.widget.NestedScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
@@ -58,7 +62,7 @@
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"/>
 
-        <TextView
+            <TextView
                 android:id="@+id/textkapakekle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -72,7 +76,7 @@
             android:id="@+id/txtKategori"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Kategori"
+            android:text="Kategori seç"
             android:textStyle="bold"
             android:textSize="16sp"
             android:textColor="#1E88E5"
@@ -82,6 +86,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="14sp"
+            android:background="@drawable/bg_input"
             android:layout_marginTop="6dp" />
         <!-- Hikaye İçeriği -->
         <TextView
@@ -119,5 +124,13 @@
             android:textColor="@color/white" />
 
     </LinearLayout>
-
 </androidx.core.widget.NestedScrollView>
+
+<ProgressBar
+    android:id="@+id/generalProgressBar"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:visibility="gone"
+    android:layout_gravity="center"/>
+
+</FrameLayout>

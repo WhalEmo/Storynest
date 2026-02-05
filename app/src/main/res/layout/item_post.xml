@@ -54,7 +54,7 @@
             android:text="Fantastik"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:textColor="#1E88E5"/>
+            android:textColor="#AAAAAA"/>
 
         <!-- KAPAK + BAŞLIK -->
         <LinearLayout

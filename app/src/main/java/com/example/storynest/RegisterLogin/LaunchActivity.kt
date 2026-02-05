@@ -151,8 +151,8 @@ class LaunchActivity : AppCompatActivity() {
                     Log.d("VERIFY", response.body()?.message ?: "success")
                     dontNormalFlow("login")
                 } else {
-                    Log.e("VERIFY", "response error: ${response.code()}")
-                    dontNormalFlow("register")
+                    Toast.makeText(this@LaunchActivity, "Doğrulama linki geçersiz!.", Toast.LENGTH_SHORT).show()
+                    dontNormalFlow("showLogin")
                 }
             }
 
@@ -174,6 +174,7 @@ class LaunchActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     dontNormalFlow("forgotpassword",token)
                 } else {
+                    Toast.makeText(this@LaunchActivity, "Şifre değiştirme linki geçersiz!.", Toast.LENGTH_SHORT).show()
                     dontNormalFlow("login")
                 }
             }

@@ -7,9 +7,11 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
 
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.storynest.ApiClient
@@ -17,6 +19,7 @@ import com.example.storynest.R
 import com.example.storynest.HomePage.BarFragmnets.AddPostFragmnet
 import com.example.storynest.HomePage.HelperFragment.HelperFragment
 import com.example.storynest.ResultWrapper
+import com.example.storynest.UiState
 import com.example.storynest.dataLocal.UserPreferences
 
 class HomePageFragment : Fragment() {
@@ -26,6 +29,7 @@ class HomePageFragment : Fragment() {
     }
     private lateinit var recyclerViewPosts: RecyclerView
     private lateinit var postAdapter: PostAdapter
+    private lateinit var generalProgressBar: ProgressBar
 
 
     override fun onCreateView(
@@ -38,49 +42,80 @@ class HomePageFragment : Fragment() {
     override fun onViewCreated(view: View,savedInstanceState: Bundle?) {
         super.onViewCreated(view,savedInstanceState)
         recyclerViewPosts=view.findViewById(R.id.recyclerViewPosts)
+        generalProgressBar=view.findViewById(R.id.generalProgressBar)
 
         setupRecyclerView()
         setupObservers()
-        viewModel.homePagePosts()
+        viewModel.homePagePosts(reset = true)
     }
 
     private fun setupRecyclerView() {
-        postAdapter = PostAdapter(emptyList(), object : PostAdapter.OnPostInteractionListener {
+        postAdapter = PostAdapter(object : PostAdapter.OnPostInteractionListener {
             override fun onLikeClicked(Id: Long) {
-               viewModel.toggleLike(Id)
+                viewModel.toggleLike(Id)
             }
 
             override fun onReadMoreClicked(post: postResponse) {
-                    parentFragmentManager.beginTransaction()
-                        .replace(R.id.fragment_container, HelperFragment.newInstance(post))
-                        .addToBackStack(null)
-                        .commit()
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, HelperFragment.newInstance(post))
+                    .addToBackStack(null)
+                    .commit()
             }
         })
 
+        val layoutManager = LinearLayoutManager(requireContext())
+
         recyclerViewPosts.apply {
-            layoutManager = LinearLayoutManager(requireContext())
+            this.layoutManager = layoutManager
             adapter = postAdapter
         }
+
+        recyclerViewPosts.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(rv, dx, dy)
+
+                val visibleItemCount = layoutManager.childCount
+                val totalItemCount = layoutManager.itemCount
+                val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+
+                if (!viewModel.isLoadingHome && !viewModel.isLastPageHome) {
+                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount &&
+                        firstVisibleItemPosition >= 0
+                    ) {
+                        viewModel.homePagePosts()
+                    }
+                }
+            }
+        })
     }
 
     private fun setupObservers(){
-        viewModel.homepageposts.observe(viewLifecycleOwner){result->
-            when(result) {
-                is ResultWrapper.Success -> {
-                    postAdapter.updateList(result.data)
-                }
-                is ResultWrapper.Error -> {
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
-                }
-            }
+        observeUiState(viewModel.homepagePosts, generalProgressBar) { data ->
+            postAdapter.submitList(data)
         }
-        viewModel.PostsLike.observe(viewLifecycleOwner){result->
-            when(result){
-                is ResultWrapper.Success -> {
+       viewModel.postsLike.observe(viewLifecycleOwner){ postsLikeList ->
+       }
+
+    }
+    private fun <T> observeUiState(
+        liveData: LiveData<UiState<T>>,
+        progressBar: View,
+        onSuccess: (T) -> Unit = {}
+    ) {
+        liveData.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is UiState.Loading -> progressBar.visibility = View.VISIBLE
+                is UiState.Success -> {
+                    progressBar.visibility = View.GONE
+                    onSuccess(state.data)
                 }
-                is ResultWrapper.Error -> {
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                is UiState.Error -> {
+                    progressBar.visibility = View.GONE
+                    Toast.makeText(requireContext(), "Hata: ${state.message}", Toast.LENGTH_SHORT).show()
+                }
+                is UiState.EmailNotVerified->{
+                }
+                is UiState.EmailSent->{
                 }
             }
         }
