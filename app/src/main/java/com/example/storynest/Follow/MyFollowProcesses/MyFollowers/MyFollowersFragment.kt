@@ -24,6 +24,7 @@ class MyFollowersFragment: Fragment() {
     private lateinit var soundPool: SoundPool
 
     private var acceptSoundId: Int = 0
+    private var cancelSoundId: Int = 0
 
 
     override fun onCreateView(
@@ -50,6 +51,11 @@ class MyFollowersFragment: Fragment() {
         acceptSoundId = soundPool.load(
             requireContext(),
             R.raw.accept,
+            1
+        )
+        cancelSoundId = soundPool.load(
+            requireContext(),
+            R.raw.reject,
             1
         )
 
@@ -106,6 +112,14 @@ class MyFollowersFragment: Fragment() {
     }
 
     private fun onCancelRequest(followId: Long){
+        soundPool.play(
+            cancelSoundId,
+            1f,
+            1f,
+            1,
+            0,
+            1f
+        )
         viewModel.cancelFollowRequest(followId)
     }
 
