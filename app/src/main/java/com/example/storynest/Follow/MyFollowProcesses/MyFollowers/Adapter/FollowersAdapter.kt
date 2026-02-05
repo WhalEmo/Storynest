@@ -2,6 +2,7 @@ package com.example.storynest.Follow.MyFollowProcesses.MyFollowers.Adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -11,7 +12,7 @@ class FollowersAdapter(
     private val onAccept: (FollowersRow.FollowerUserItem) -> Unit,
     private val onReject: (FollowersRow.FollowerUserItem) -> Unit,
     private val onCancelRequest: (FollowersRow.FollowerUserItem) -> Unit
-) : ListAdapter<FollowersRow, RecyclerView.ViewHolder>(DIFF) {
+) : PagingDataAdapter<FollowersRow, RecyclerView.ViewHolder>(DIFF) {
 
     companion object {
 
@@ -45,9 +46,10 @@ class FollowersAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return when(getItem(position)){
+        return when(peek(position)){
             is FollowersRow.FollowerUserItem -> TYPE_ITEM
             is FollowersRow.FollowersHeaderItem -> TYPE_HEADER
+            else -> TYPE_ITEM
         }
     }
 
@@ -90,6 +92,9 @@ class FollowersAdapter(
 
             is FollowersRow.FollowerUserItem -> {
                 (holder as FollowerUserViewHolder).bind(item)
+            }
+            null -> {
+
             }
         }
 

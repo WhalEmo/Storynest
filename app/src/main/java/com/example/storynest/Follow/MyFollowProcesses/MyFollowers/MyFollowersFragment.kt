@@ -6,12 +6,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.storynest.CustomViews.ErrorDialog
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.Adapter.FollowersAdapter
 import com.example.storynest.R
 import com.example.storynest.databinding.MyFollowersFragmentBinding
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class MyFollowersFragment: Fragment() {
 
@@ -75,28 +80,22 @@ class MyFollowersFragment: Fragment() {
             }
         )
         binding.recycler.layoutManager = LinearLayoutManager(requireContext())
-        binding.recycler.adapter = adapter
+        binding.recycler.adapter = adapter.withLoadStateFooter(
+            footer = FollowersLoadStateAdapter{
+                adapter.retry()
+            }
+        )
 
-        viewModel.getMyFollowers()
-
-
-
-        viewModel.rows.observe(viewLifecycleOwner){ rows ->
-            adapter.submitList(rows)
-        }
-
-        viewModel.error.observe(viewLifecycleOwner) { error ->
-            if(!error.isNullOrEmpty()){
-                var errorDialog = ErrorDialog.newInstance(
-                    title = "Bağlantı Hatası",
-                    message = error
-                )
-                errorDialog.setOnOkClickListener{
-                    viewModel.getMyFollowers()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.followers.collectLatest {
+                    adapter.submitData(it)
                 }
-                errorDialog.show(parentFragmentManager, "ErrorDialogTag")
             }
         }
+
+
+
     }
 
     private fun onAccept(userId: Long){

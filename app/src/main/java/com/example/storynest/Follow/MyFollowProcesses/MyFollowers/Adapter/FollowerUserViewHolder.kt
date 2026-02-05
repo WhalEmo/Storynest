@@ -47,8 +47,13 @@ class FollowerUserViewHolder(
         profileImage.load(resource.profile){
             crossfade(true)
         }
-
-        if(resource.followInfo.status == FollowRequestStatus.ACCEPTED){
+        if(resource.myFollower && !resource.followingYou){
+            yourFollowMe.visibility = View.VISIBLE
+            sendMessage.visibility = View.GONE
+            actionContainer.visibility = View.VISIBLE
+            sendingRequest.visibility = View.GONE
+        }
+        else if(resource.followInfo.status == FollowRequestStatus.ACCEPTED){
             yourFollowMe.visibility = View.GONE
             sendMessage.visibility = View.VISIBLE
             actionContainer.visibility = View.GONE

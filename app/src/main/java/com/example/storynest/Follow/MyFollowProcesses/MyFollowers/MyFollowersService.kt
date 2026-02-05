@@ -1,11 +1,18 @@
 package com.example.storynest.Follow.MyFollowProcesses.MyFollowers
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.insertSeparators
+import androidx.paging.map
 import com.example.storynest.ApiClient
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.Adapter.FollowersRow
 import com.example.storynest.Follow.RequestDTO.FollowRequestDTO
 import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
 import com.example.storynest.Notification.FollowResponseDTO
 import com.example.storynest.TestUserProvider
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import retrofit2.Response
 
 class MyFollowersService {
@@ -61,4 +68,26 @@ class MyFollowersService {
     suspend fun cancelFollowRequest(followId: Long): Response<FollowResponseDTO>{
         return followersApiController.cancelFollow(followId)
     }
+
+    fun getFollowers(): Flow<PagingData<FollowersRow>> {
+        return Pager(
+            PagingConfig(pageSize = 5)
+        ) {
+            FollowersPagingSource(followersApiController)
+        }.flow.map { pagingData ->
+            pagingData
+                .map {
+                    FollowersRow.FollowerUserItem(it)
+                }
+                .insertSeparators { before, after ->
+                    if (before == null && after != null) {
+                        FollowersRow.FollowersHeaderItem("Takipçi")
+                    } else {
+                        null
+                    }
+                }
+        }
+    }
+
+
 }
