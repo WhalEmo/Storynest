@@ -4,5 +4,11 @@
     <color name="white">#FFFFFFFF</color>
     <color name="error_red">#4A1212</color>
 
+    <color name="colorOnSecondary">#FFFFFFFF</color>
+    <color name="accept_blue">#4A90E2</color>
+    <color name="colorTextPrimary">#2B2B2B</color>
+    <color name="colorDivider">#D6D3CC</color>
+    <color name="reject_gray">#8E8E93</color>
+
 
 </resources>

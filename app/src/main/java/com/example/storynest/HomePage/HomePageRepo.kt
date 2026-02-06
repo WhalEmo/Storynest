@@ -18,15 +18,6 @@ class HomePageRepo(
             api.addPost(request).execute()
         }
 
-    suspend fun getUserPosts(
-        userId: Long,
-        page: Int,
-        size: Int
-    ): ResultWrapper<List<postResponse>> =
-        safeApiCall {
-            api.getUserPosts(userId, page, size).execute()
-    }
-
     suspend fun toggleLike(
         postId: Long
     ): ResultWrapper<ToggleLikeResponse> =
@@ -51,18 +42,4 @@ class HomePageRepo(
             api.HomePagePosts(page ,size).execute()
         }
 
-    suspend fun deletePost(
-        postId: Long
-    ): ResultWrapper<String> =
-        safeApiCall {
-            api.DeletePost(postId).execute()
-        }
-
-    suspend fun updatePost(
-        postId: Long,
-        request: PostUpdateRequest
-    ): ResultWrapper<String> =
-        safeApiCall {
-            api.updatePost(postId, request).execute()
-        }
 }

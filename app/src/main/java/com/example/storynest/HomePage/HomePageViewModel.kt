@@ -32,11 +32,6 @@ class HomePageViewModel(
 
     private val _homepagePosts = MutableLiveData<UiState<List<postResponse>>>()
     val homepagePosts: LiveData<UiState<List<postResponse>>> = _homepagePosts
-    private val _deletePosts = MutableLiveData<UiState<String>>()
-    val deletePosts: LiveData<UiState<String>> = _deletePosts
-
-    private val _updatePost = MutableLiveData<UiState<String>>()
-    val updatePost: LiveData<UiState<String>> = _updatePost
 
 
     fun addPost(
@@ -60,24 +55,6 @@ class HomePageViewModel(
         }
     }
 
-    fun getUserPosts(
-        userId: Long,
-        page: Int = 0,
-        size: Int = 10
-    ) {
-        _userPosts.value= UiState.Loading
-
-        viewModelScope.launch {
-            val result = repo.getUserPosts(userId, page, size)
-            when (result) {
-                is ResultWrapper.Success -> {
-                    val body = result.data
-                    _userPosts.value = UiState.Success(body)
-                }
-                is ResultWrapper.Error -> _userPosts.value = UiState.Error(result.message)
-            }
-        }
-    }
     fun toggleLike(
         postId: Long
     ) {
@@ -94,21 +71,34 @@ class HomePageViewModel(
         }
     }
 
+    private var currentPageUser = 0
+    private val pageSizeUser = 10
+    var isLoadingUser = false
+    var isLastPageUser = false
     fun getUsersWhoLike(
         postId: Long,
-        page: Int = 0,
-        size: Int = 10
+        reset: Boolean = false
     ){
+        if(isLoadingUser || isLastPageUser)return
+        if(reset) currentPageUser = 0
+
         _usersWhoLike.value= UiState.Loading
+        isLoadingUser=true
+
         viewModelScope.launch {
-            val result=repo.getUsersWhoLike(postId,page,size)
+            val result=repo.getUsersWhoLike(postId,currentPageUser,pageSizeUser)
             when (result) {
                 is ResultWrapper.Success -> {
-                    val body = result.data
-                    _usersWhoLike.value = UiState.Success(body)
+
+                    val currentList = (_usersWhoLike.value as? UiState.Success)?.data ?: emptyList()
+                    val newList = if (reset) result.data else currentList + result.data
+                    _usersWhoLike.value = UiState.Success(newList)
+                    isLastPageUser = result.data.size < pageSizeUser
+                    if (!isLastPageUser) currentPageUser++
                 }
                 is ResultWrapper.Error -> _usersWhoLike.value = UiState.Error(result.message)
             }
+            isLoadingUser=false
         }
     }
 
@@ -140,35 +130,6 @@ class HomePageViewModel(
             isLoadingHome = false
         }
     }
-    fun deletePosts(
-        postId: Long
-    ){
-        _deletePosts.value= UiState.Loading
-        viewModelScope.launch {
-            val result=repo.deletePost(postId)
-            when (result) {
-                is ResultWrapper.Success -> {
-                    val body = result.data
-                    _deletePosts.value = UiState.Success(body)
-                }
-                is ResultWrapper.Error -> _deletePosts.value = UiState.Error(result.message)
-            }
-        }
-    }
-    fun updatePost(
-        postId: Long,
-        request: PostUpdateRequest
-    ){
-        _updatePost.value= UiState.Loading
-        viewModelScope.launch {
-        val result=repo.updatePost(postId,request)
-            when (result) {
-                is ResultWrapper.Success -> {
-                    val body = result.data
-                    _updatePost.value = UiState.Success(body)
-                }
-                is ResultWrapper.Error -> _updatePost.value = UiState.Error(result.message)
-            }
-        }
-    }
+
+
 }

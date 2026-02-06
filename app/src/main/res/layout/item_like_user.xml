@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:id="@+id/likeUserItemRoot"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/bgback"
+    android:padding="15dp"
+    android:gravity="center_vertical">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="0dp">
+
+        <ImageView
+            android:id="@+id/imgUserProfile"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/account_circle_24"/>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Username -->
+    <TextView
+        android:id="@+id/txtUsername"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:text="username"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <LinearLayout
+        android:id="@+id/actionContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/imgUserProfile"
+        app:layout_constraintBottom_toBottomOf="@id/imgUserProfile">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/yourFollowMe"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Takip Et"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorOnSecondary"
+            android:paddingHorizontal="16dp"
+            android:visibility="visible"
+            app:cornerRadius="8dp"
+            app:backgroundTint="@color/accept_blue"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sendingRequest"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="İstek Gönderildi"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorTextPrimary"
+            android:visibility="gone"
+            android:paddingHorizontal="16dp"
+            app:cornerRadius="8dp"
+            app:backgroundTint="@color/colorDivider"/>
+    </LinearLayout>
+
+    <!-- Message Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/sendMessage"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:text="Mesaj Gönder"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="@color/colorOnSecondary"
+        android:visibility="gone"
+        app:cornerRadius="8dp"
+        app:backgroundTint="@color/reject_gray"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/imgUserProfile"
+        app:layout_constraintBottom_toBottomOf="@id/imgUserProfile"/>
+
+</LinearLayout>

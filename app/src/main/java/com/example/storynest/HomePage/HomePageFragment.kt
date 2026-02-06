@@ -18,6 +18,7 @@ import com.example.storynest.ApiClient
 import com.example.storynest.R
 import com.example.storynest.HomePage.BarFragmnets.AddPostFragmnet
 import com.example.storynest.HomePage.HelperFragment.HelperFragment
+import com.example.storynest.HomePage.PostLikeUser.LikeUsersBottomSheet
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
 import com.example.storynest.dataLocal.UserPreferences
@@ -61,6 +62,13 @@ class HomePageFragment : Fragment() {
                     .addToBackStack(null)
                     .commit()
             }
+
+            override fun getLikeUsers(postId: Long) {
+                LikeUsersBottomSheet
+                    .newInstance(postId)
+                    .show(parentFragmentManager, "LikeUsersBottomSheet")
+            }
+
         })
 
         val layoutManager = LinearLayoutManager(requireContext())

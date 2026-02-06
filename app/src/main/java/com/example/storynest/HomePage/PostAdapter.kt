@@ -28,6 +28,8 @@ class PostAdapter(
     interface OnPostInteractionListener {
         fun onLikeClicked(Id: Long)
         fun onReadMoreClicked(post: postResponse)
+
+        fun getLikeUsers(Id: Long)
     }
 
     companion object {
@@ -101,6 +103,9 @@ class PostAdapter(
 
         holder.txtReadMore.setOnClickListener {
             listener.onReadMoreClicked(post)
+        }
+        holder.txtLikeCount.setOnClickListener {
+            listener.getLikeUsers(post.post_id)
         }
         holder.btnComment.setOnClickListener {
 

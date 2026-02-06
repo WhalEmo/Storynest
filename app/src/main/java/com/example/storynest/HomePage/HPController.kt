@@ -36,20 +36,14 @@ data class UserResponse(
     val profile: String?,
     val date: String?,
     val biography: String?,
-    val emailVerified: Boolean
-)
-data class PostUpdateRequest(
-    val postName:String,
-    val contents:String,
-    val categories:String,
-    val coverImage:String,
+    val emailVerified: Boolean,
+    val isFollowing: Boolean
 )
 
 data class ToggleLikeResponse(
     val message: String? = null,
     val error: String? = null
 )
-
 
 interface HPController {
     @POST("/api/posts/addPost")
@@ -63,7 +57,7 @@ interface HPController {
     ): Call<List<postResponse>>
 
 
-    @POST("api/posts/{postId}/like")
+    @POST("/api/posts/{postId}/like")
     fun toggleLike(@Path("postId") postId: Long): Call<ToggleLikeResponse>
 
 
@@ -80,18 +74,6 @@ interface HPController {
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
     ): Call<List<postResponse>>
-
-    @DELETE("/api/posts/{postId}/deletePost")
-    fun DeletePost(
-        @Path("postId") postId: Long,
-    ): Call<String>
-
-    @PUT("/api/posts/{postId}/updatePost")
-    fun updatePost(
-        @Path("postId") postId: Long,
-        @Body postUpdateRequest: PostUpdateRequest
-    ): Call<String>
-
 }
 
 
