@@ -21,7 +21,7 @@ class FollowersPagingSource(
             val page = params.key ?: 0
             val response = apiController.getUserFollowed(page, params.loadSize)
             val loadSize = params.loadSize
-            val pageSize = 5
+            val pageSize = 20
 
 
 

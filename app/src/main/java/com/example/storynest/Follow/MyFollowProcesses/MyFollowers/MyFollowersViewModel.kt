@@ -16,6 +16,9 @@ import com.example.storynest.Notification.FollowResponseDTO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -32,29 +35,36 @@ class MyFollowersViewModel: ViewModel() {
     private val followUpdates =
         MutableStateFlow<Map<Long, FollowResponseDTO>>(emptyMap())
 
+    val pagingFollowers = createPagingFlow()
 
-    val followers = pagingGetFollowers()
 
+    init {
+        viewModelScope.launch {
+            pagingFollowers.first()
+        }
+    }
 
-    private fun pagingGetFollowers(): Flow<PagingData<FollowersRow>>{
-        return service.getFollowers()
-            .combine(followUpdates){ pagingData, followMap ->
+    val followers: Flow<PagingData<FollowersRow>> =
+        followUpdates.flatMapLatest { followMap ->
+            pagingFollowers.map { pagingData ->
                 pagingData.map { row ->
-                    if(row is FollowerUserItem){
-                        val update =
-                            followUpdates.value?.get(row.followUserResponseDTO.followInfo.id)
-                        if(update != null){
-                            row.copy(followUserResponseDTO =
-                                row.followUserResponseDTO.copy(
-                                    followInfo = update,
-                                    followingYou = update.status == FollowRequestStatus.ACCEPTED
-                                            || update.status == FollowRequestStatus.PENDING
+                    if (row is FollowerUserItem) {
+                        val update = followMap[row.followUserResponseDTO.id]
+                        if (update != null) {
+                            row.copy(
+                                followUserResponseDTO = row.followUserResponseDTO.copy(
+                                    followInfo = update
                                 )
                             )
                         } else row
                     } else row
                 }
             }
+        }
+
+
+    private fun createPagingFlow(): Flow<PagingData<FollowersRow>>{
+        return service.getFollowers()
             .cachedIn(viewModelScope)
     }
 
@@ -66,7 +76,7 @@ class MyFollowersViewModel: ViewModel() {
                 if (response.isSuccessful){
                     response.body().let { followResponseDTO ->
                         if(followResponseDTO != null){
-                            followUpdates.value = followUpdates.value.orEmpty() + (followResponseDTO.id to followResponseDTO)
+                            followUpdates.value = followUpdates.value.orEmpty() + (followResponseDTO.requested.userId to followResponseDTO)
                         }
                     }
                 }
@@ -85,12 +95,12 @@ class MyFollowersViewModel: ViewModel() {
 
     fun cancelFollowRequest(followId: Long){
         viewModelScope.launch {
-            val response = service.cancelFollowRequest(followId)
             try {
+                val response = service.cancelFollowRequest(followId)
                 if (response.isSuccessful){
                     val responseBody = response.body()
                     if(responseBody?.status == FollowRequestStatus.CANCEL){
-                        followUpdates.value = followUpdates.value.orEmpty() + (followId to responseBody)
+                        followUpdates.value = followUpdates.value.orEmpty() + (responseBody.requested.userId to responseBody)
                     }
                 }
             }

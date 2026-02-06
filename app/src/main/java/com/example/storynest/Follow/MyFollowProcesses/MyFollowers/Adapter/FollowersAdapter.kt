@@ -11,7 +11,8 @@ import com.example.storynest.R
 class FollowersAdapter(
     private val onAccept: (FollowersRow.FollowerUserItem) -> Unit,
     private val onReject: (FollowersRow.FollowerUserItem) -> Unit,
-    private val onCancelRequest: (FollowersRow.FollowerUserItem) -> Unit
+    private val onCancelRequest: (FollowersRow.FollowerUserItem) -> Unit,
+    private val onUnFollowMy: (FollowersRow.FollowerUserItem) -> Unit
 ) : PagingDataAdapter<FollowersRow, RecyclerView.ViewHolder>(DIFF) {
 
     companion object {
@@ -28,7 +29,9 @@ class FollowersAdapter(
                 return when {
                     oldItem is FollowersRow.FollowerUserItem &&
                             newItem is FollowersRow.FollowerUserItem ->
-                        oldItem.followUserResponseDTO.id == newItem.followUserResponseDTO.id
+                        oldItem.followUserResponseDTO.id ==
+                                newItem.followUserResponseDTO.id
+
 
                     oldItem is FollowersRow.FollowersHeaderItem &&
                             newItem is FollowersRow.FollowersHeaderItem ->
@@ -41,9 +44,24 @@ class FollowersAdapter(
             override fun areContentsTheSame(
                 oldItem: FollowersRow,
                 newItem: FollowersRow
-            ): Boolean = oldItem == newItem
+            ): Boolean {
+                return when {
+                    oldItem is FollowersRow.FollowerUserItem &&
+                            newItem is FollowersRow.FollowerUserItem ->
+                        oldItem.followUserResponseDTO.followInfo.status ==
+                                newItem.followUserResponseDTO.followInfo.status
+
+                    oldItem is FollowersRow.FollowersHeaderItem &&
+                            newItem is FollowersRow.FollowersHeaderItem ->
+                        oldItem.title == newItem.title
+
+                    else -> true
+                }
+            }
+
         }
     }
+
 
     override fun getItemViewType(position: Int): Int {
         return when(peek(position)){
@@ -74,7 +92,7 @@ class FollowersAdapter(
                     parent,
                     false
                 )
-                FollowerUserViewHolder(view, onAccept, onReject, onCancelRequest)
+                FollowerUserViewHolder(view, onAccept, onReject, onCancelRequest, onUnFollowMy)
             }
             else -> throw IllegalArgumentException("Unknown viewType")
         }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="70dp"
+    xmlns:tools="http://schemas.android.com/tools"
     android:paddingHorizontal="16dp"
     android:background="?attr/selectableItemBackground">
 
@@ -69,6 +69,7 @@
         android:id="@+id/actionContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/imgProfile"
@@ -101,24 +102,37 @@
             android:paddingHorizontal="16dp"
             app:cornerRadius="8dp"
             app:backgroundTint="@color/colorDivider"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sendMessage"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Mesaj Gönder"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorOnSecondary"
+            android:visibility="gone"
+            app:cornerRadius="8dp"
+            app:backgroundTint="@color/reject_gray"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/imgProfile"
+            app:layout_constraintBottom_toBottomOf="@id/imgProfile"/>
+
+        <ImageButton
+        android:id="@+id/unFollow"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/unfollow"
+        android:scaleType="centerInside"
+            android:layout_marginStart="10dp"
+        app:tint="#000000"
+        tools:ignore="ContentDescription" />
+
     </LinearLayout>
 
-    <!-- Message Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/sendMessage"
-        style="@style/Widget.Material3.Button.TonalButton"
-        android:layout_width="wrap_content"
-        android:layout_height="36dp"
-        android:text="Mesaj Gönder"
-        android:textSize="13sp"
-        android:textStyle="bold"
-        android:textColor="@color/colorOnSecondary"
-        android:visibility="gone"
-        app:cornerRadius="8dp"
-        app:backgroundTint="@color/reject_gray"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/imgProfile"
-        app:layout_constraintBottom_toBottomOf="@id/imgProfile"/>
+
 
 
     <androidx.constraintlayout.widget.Barrier
@@ -126,7 +140,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="start"
-        app:constraint_referenced_ids="actionContainer,sendMessage"/>
+        app:constraint_referenced_ids="actionContainer"/>
 
     <!-- Bottom Divider -->
     <View

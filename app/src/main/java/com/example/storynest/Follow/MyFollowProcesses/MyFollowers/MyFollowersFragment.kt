@@ -11,10 +11,14 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.storynest.CustomViews.ConfirmDialog
 import com.example.storynest.CustomViews.ErrorDialog
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.Adapter.FollowersAdapter
+import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.Adapter.FollowersRow
+import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
 import com.example.storynest.R
 import com.example.storynest.databinding.MyFollowersFragmentBinding
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -77,19 +81,30 @@ class MyFollowersFragment: Fragment() {
                 onCancelRequest(
                     it.followUserResponseDTO.followInfo.id
                 )
+            },
+            onUnFollowMy = {
+                onUnFollowMy(
+                    it.followUserResponseDTO
+                )
             }
         )
+
         binding.recycler.layoutManager = LinearLayoutManager(requireContext())
+        binding.recycler.itemAnimator = null
+        binding.recycler.setHasFixedSize(true)
         binding.recycler.adapter = adapter.withLoadStateFooter(
             footer = FollowersLoadStateAdapter{
                 adapter.retry()
             }
         )
 
+
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.followers.collectLatest {
-                    adapter.submitData(it)
+                viewModel.followers.collectLatest { pagingData ->
+                    delay(50)
+                    adapter.submitData(pagingData)
                 }
             }
         }
@@ -120,6 +135,20 @@ class MyFollowersFragment: Fragment() {
             1f
         )
         viewModel.cancelFollowRequest(followId)
+    }
+
+    private fun onUnFollowMy(usrResponse: FollowUserResponseDTO){
+        ConfirmDialog(
+            title = "Takipçiyi Çıkar?",
+            message = "${usrResponse.username} kullanıcıyı takipten çıkarmak istiyor musunuz?",
+            imageUrl = usrResponse.profile,
+            onConfirm = {
+
+            }
+        ).show(
+            parentFragmentManager,
+            "ConfirmDialog"
+        )
     }
 
 

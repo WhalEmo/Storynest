@@ -18,10 +18,11 @@ import retrofit2.Response
 class MyFollowersService {
     private lateinit var token: String
 
+    private var pagingSource: FollowersPagingSource? = null
+
     init {
         token = TestUserProvider.STATIC_TOKEN
     }
-
     val followersApiController = ApiClient.getClient(token).create(FollowersApiController::class.java)
 
     suspend fun getMyFollowers(page: Int = 0, size: Int = 20): List<FollowersRow> {
@@ -71,9 +72,15 @@ class MyFollowersService {
 
     fun getFollowers(): Flow<PagingData<FollowersRow>> {
         return Pager(
-            PagingConfig(pageSize = 5)
+            PagingConfig(
+                pageSize = 20,
+                enablePlaceholders = false,
+                initialLoadSize = 20,
+                prefetchDistance = 10
+            )
         ) {
             FollowersPagingSource(followersApiController)
+                .also { pagingSource = it }
         }.flow.map { pagingData ->
             pagingData
                 .map {
@@ -89,5 +96,8 @@ class MyFollowersService {
         }
     }
 
+    fun invalidateFollowers() {
+        pagingSource?.invalidate()
+    }
 
 }
