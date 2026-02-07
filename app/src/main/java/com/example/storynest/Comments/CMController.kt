@@ -25,7 +25,8 @@ data class commentResponse(
     val contents:String,
     var numberof_likes: Int,
     val date: String,
-    var parentCommentId:Long
+    var parentCommentId:Long,
+    var isLiked: Boolean
 )
 data class UserResponse(
     val id: Long,
@@ -46,6 +47,12 @@ data class StringResponse(
     val message: String? = null,
     val error: String? = null
 )
+data class SubCommentPagingState(
+    var currentPage: Int = 0,
+    var isLoading: Boolean = false,
+    var isLastPage: Boolean = false
+)
+
 
 interface CMController{
     @POST("/api/comments/addComment")
@@ -63,7 +70,7 @@ interface CMController{
 
     @GET("/api/comments/subCommentsGet")
      fun subCommentsGet(
-        @Query("postId") postId: Long,
+        @Query("parentCommentId") postId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
     ): Call<List<commentResponse>>

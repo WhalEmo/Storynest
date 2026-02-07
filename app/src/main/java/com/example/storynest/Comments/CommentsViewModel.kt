@@ -23,6 +23,8 @@ class CommentsViewModel(
 
     private val _postSubComments= MutableLiveData<UiState<List<commentResponse>>>()
     val postSubComments: LiveData<UiState<List<commentResponse>>> = _postSubComments
+    private val pageSizeSubComment = 10
+    private val subCommentPagingMap = mutableMapOf<Long, SubCommentPagingState>()
 
     private val _commentsLike = MutableLiveData<UiState<StringResponse>>()
     val postsLike: LiveData<UiState<StringResponse>> = _commentsLike
@@ -113,36 +115,49 @@ class CommentsViewModel(
     }
 
 
-    private var currentPageSubComment = 0
-    private val pageSizeSubComment = 10
-    var isLoadingSubComment = false
-    var isLastPageSubComment = false
-    fun subCommentsGet(
-        postId: Long,
-        reset: Boolean = false
-    ){
-        if(isLoadingSubComment || isLastPageSubComment)return
-        if(reset) currentPageSubComment = 0
 
-        _postSubComments.value= UiState.Loading
-        isLoadingSubComment=true
+
+    fun subCommentsGet(
+        parentCommentId: Long,
+        reset: Boolean = false,
+        onResult: (List<commentResponse>) -> Unit
+    ) {
+        val state = subCommentPagingMap.getOrPut(parentCommentId) {
+            SubCommentPagingState()
+        }
+
+        if (state.isLoading || state.isLastPage) return
+        if (reset) {
+            state.currentPage = 0
+            state.isLastPage = false
+        }
+
+        state.isLoading = true
 
         viewModelScope.launch {
-            val result=repo.subCommentsGet(postId,currentPageSubComment,pageSizeSubComment)
-            when(result){
-                is ResultWrapper.Success -> {
+            val result = repo.subCommentsGet(
+                parentCommentId,
+                state.currentPage,
+                pageSizeSubComment
+            )
 
-                    val currentList = (_postSubComments.value as? UiState.Success)?.data ?: emptyList()
-                    val newList = if (reset) result.data else currentList + result.data
-                    _postSubComments.value = UiState.Success(newList)
-                    isLastPageSubComment = result.data.size < pageSizeSubComment
-                    if (!isLastPageSubComment) currentPageSubComment++
+            when (result) {
+                is ResultWrapper.Success -> {
+                    val newList = result.data
+                    onResult(newList)
+
+                    state.isLastPage = newList.size < pageSizeSubComment
+                    if (!state.isLastPage) state.currentPage++
                 }
-                is ResultWrapper.Error -> _postSubComments.value = UiState.Error(result.message)
+
+                is ResultWrapper.Error -> {
+                    onResult(emptyList())
+                }
             }
-            isLoadingSubComment=false
+            state.isLoading = false
         }
     }
+
     fun toggleLike(
         commentId: Long
     ) {

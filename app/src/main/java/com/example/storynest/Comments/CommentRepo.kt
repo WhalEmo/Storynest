@@ -26,12 +26,12 @@ class CommentRepo(
         }
 
     suspend fun subCommentsGet(
-        postId: Long,
+        parentCommentId: Long,
         page: Int = 0,
         size: Int = 10
     ): ResultWrapper<List<commentResponse>> =
         safeApiCall {
-            api.subCommentsGet(postId,page,size).execute()
+            api.subCommentsGet(parentCommentId,page,size).execute()
         }
 
     suspend fun toggleLike(

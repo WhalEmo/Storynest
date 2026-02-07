@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="12dp"
+    android:paddingVertical="10dp">
+
+    <!-- Profil Foto -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/imgProfile"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/ppfoto"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/account_circle_24"
+            android:scaleType="centerCrop"/>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Kullanıcı Adı -->
+    <TextView
+        android:id="@+id/txtUsername"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="beyzatakca"
+        android:textStyle="bold"
+        android:textSize="13sp"
+        android:textColor="@color/black"
+        app:layout_constraintStart_toEndOf="@id/imgProfile"
+        app:layout_constraintTop_toTopOf="@id/imgProfile"
+        android:layout_marginStart="8dp"/>
+
+    <!-- Yorum -->
+    <TextView
+        android:id="@+id/txtComment"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Bu gönderi gerçekten çok güzel olmuş 🔥"
+        android:textSize="13sp"
+        android:textColor="@color/black"
+        android:layout_marginTop="2dp"
+        app:layout_constraintStart_toStartOf="@id/txtUsername"
+        app:layout_constraintTop_toBottomOf="@id/txtUsername"
+        app:layout_constraintEnd_toStartOf="@id/btnLike"/>
+
+    <!-- Zaman -->
+    <TextView
+        android:id="@+id/txtTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="2s"
+        android:textSize="11sp"
+        android:textColor="@color/gray"
+        android:layout_marginTop="6dp"
+        app:layout_constraintStart_toStartOf="@id/txtComment"
+        app:layout_constraintTop_toBottomOf="@id/txtComment"/>
+
+    <!-- Yanıtla -->
+    <TextView
+        android:id="@+id/txtReply"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Yanıtla"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textColor="@color/gray"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@id/txtTime"
+        app:layout_constraintBaseline_toBaselineOf="@id/txtTime"/>
+
+    <!-- Beğeni (Kalp) -->
+    <ImageView
+        android:id="@+id/btnLike"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/baseline_favorite_border_24"
+        app:layout_constraintTop_toTopOf="@id/txtUsername"
+        app:layout_constraintEnd_toEndOf="parent"/>
+    <TextView
+        android:id="@+id/txtLikeCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="120"
+        android:textStyle="bold"
+        android:textSize="11sp"
+        android:layout_marginStart="0dp"
+        app:layout_constraintTop_toTopOf="@id/txtComment"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Yanıtları Gör -->
+    <TextView
+        android:id="@+id/txtViewReplies"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="2 yanıtı gör"
+        android:textSize="11sp"
+        android:textColor="@color/gray"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="44dp"
+        app:layout_constraintStart_toStartOf="@id/txtComment"
+        app:layout_constraintTop_toBottomOf="@id/txtTime"/>
+    <!-- Alt yorumlar container -->
+    <LinearLayout
+        android:id="@+id/subCommentsContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:layout_marginStart="44dp"
+        android:layout_marginTop="4dp"
+        app:layout_constraintStart_toStartOf="@id/txtComment"
+        app:layout_constraintTop_toBottomOf="@id/txtViewReplies">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvSubComments"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"/>
+    </LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

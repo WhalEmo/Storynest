@@ -90,6 +90,9 @@ class PostAdapter(
         )
 
         holder.btnLike.setOnClickListener {
+            val newList = currentList.toMutableList()
+            val post = newList[holder.bindingAdapterPosition]
+
             if (post.liked) {
                 post.liked = false
                 post.numberof_likes--
@@ -97,7 +100,7 @@ class PostAdapter(
                 post.liked = true
                 post.numberof_likes++
             }
-            notifyItemChanged(position)
+            submitList(newList)
             listener.onLikeClicked(post.post_id)
         }
 
