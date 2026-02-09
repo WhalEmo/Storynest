@@ -39,13 +39,12 @@ class CommentsViewModel(
     val updateComment: LiveData<UiState<StringResponse>> = _updateComments
 
     fun addComment(
-        commentId: Long,
         postId: Long,
-        userId: Long,
+        userId: Long?,
         contents: String,
-        parentCommentId: Long
+        parentCommentId: Long?
     ){
-        val request= commentRequest(commentId,postId,userId,contents,parentCommentId)
+        val request= commentRequest(postId,userId,contents,parentCommentId)
         _addCommentResult.value= UiState.Loading
 
         viewModelScope.launch {
@@ -61,13 +60,12 @@ class CommentsViewModel(
     }
 
     fun addSubComment(
-        commentId: Long,
         postId: Long,
-        userId: Long,
+        userId: Long?,
         contents: String,
         parentCommentId: Long
     ){
-        val request= commentRequest(commentId,postId,userId,contents,parentCommentId)
+        val request= commentRequest(postId,userId,contents,parentCommentId)
         _addSubCommentResult.value= UiState.Loading
 
         viewModelScope.launch {

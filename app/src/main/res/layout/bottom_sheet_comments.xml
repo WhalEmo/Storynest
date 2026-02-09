@@ -41,4 +41,81 @@
 
     </FrameLayout>
 
+    <LinearLayout
+        android:id="@+id/replyinput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="8dp"
+        android:background="#F5F5F5"
+        android:visibility="gone">
+
+        <!-- Yanıt oku -->
+        <ImageView
+            android:id="@+id/imgReplyArrow"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginEnd="6dp"
+            android:src="@drawable/reply"
+           />
+
+        <!-- Yanıtlanan kullanıcı -->
+        <TextView
+            android:id="@+id/txtReplyingTo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="username yanıtlanıyor"
+            android:textSize="12sp"
+            android:textColor="#444444"/>
+
+        <!-- İptal -->
+        <ImageView
+            android:id="@+id/btnCancelReply"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/delete"
+            />
+    </LinearLayout>
+
+    <!-- Comment input -->
+    <LinearLayout
+        android:id="@+id/commentinput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="#FFFFFF"
+        android:visibility="visible"
+        android:elevation="8dp">
+
+        <ImageView
+            android:id="@+id/imgProfile"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/account_circle_24"
+            android:layout_marginEnd="8dp"/>
+
+        <EditText
+            android:id="@+id/etComment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Yorum ekle..."
+            android:background="@null"
+            android:maxLines="4"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/btnSend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gönder"
+            android:textColor="@color/accept_blue"
+            android:textStyle="bold"
+            android:padding="8dp"/>
+    </LinearLayout>
+
+
 </LinearLayout>

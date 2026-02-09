@@ -11,17 +11,16 @@ import retrofit2.http.Query
 
 
 data class commentRequest(
-    val commentId: Long,
     val postId: Long,
-    val userId: Long,
+    val userId: Long?,
     val contents: String,
-    val parentCommentId: Long
+    val parentCommentId: Long?
 )
 data class commentResponse(
     val commentId:Long,
+    val parentCommentUsername:String?,
     val postId:Long,
     val user: UserResponse,
-    val postName:String,
     val contents:String,
     var numberof_likes: Int,
     val date: String,

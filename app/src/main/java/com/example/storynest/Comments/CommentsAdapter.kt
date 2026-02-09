@@ -20,97 +20,170 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-
-class CommentsAdapter(private val listener:OnCommentInteractionListener):
-        ListAdapter<commentResponse, CommentsAdapter.CommentViewHolder>(DiffCallback) {
+class CommentsAdapter(
+    private val listener: OnCommentInteractionListener
+) : ListAdapter<commentResponse, CommentsAdapter.CommentViewHolder>(DiffCallback) {
+    private val holderMap = mutableMapOf<Long, CommentViewHolder>()
 
     interface OnCommentInteractionListener {
         fun onLikeClicked(commentId: Long)
         fun onReplyClicked(comment: commentResponse)
-        fun onViewReplys(commentId: Long, reset: Boolean, onResult: (List<commentResponse>) -> Unit)
+        fun onViewReplys(
+            commentId: Long,
+            reset: Boolean,
+            onResult: (List<commentResponse>) -> Unit
+        )
     }
 
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): CommentViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CommentViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_comment, parent, false)
         return CommentViewHolder(view)
     }
 
+    fun addCommentOptimistic(comment: commentResponse) {
+        val newList = currentList.toMutableList()
+        newList.add(0, comment)
+        submitList(newList)
+    }
+    fun addSubCommentOptimistic(
+        parentCommentId: Long,
+        subComment: commentResponse
+    ) {
+        val holder = holderMap[parentCommentId] ?: return
+
+        val newList = holder.subAdapter.currentList.toMutableList()
+        newList.add(0, subComment)
+
+        holder.subAdapter.submitList(newList)
+        holder.rvSubComments.visibility = View.VISIBLE
+    }
+    fun removeOptimistic() {
+        val newList = currentList.toMutableList()
+        val index = newList.indexOfFirst { it.commentId > 1_000_000_000_000 }
+
+        if (index != -1) {
+            newList.removeAt(index)
+            submitList(newList)
+        }
+    }
+    fun updateSubComments(
+        parentCommentId: Long,
+        newSubComments: List<commentResponse>
+    ) {
+        val holder = holderMap[parentCommentId] ?: return
+
+        val mergedList = holder.subAdapter.currentList.toMutableList().apply {
+            clear()
+            addAll(newSubComments)
+        }
+
+        holder.subAdapter.submitList(mergedList)
+        holder.rvSubComments.visibility = View.VISIBLE
+    }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: CommentViewHolder, position: Int) {
-        val comments = getItem(position)
+        val comment = getItem(position)
 
         Glide.with(holder.itemView.context)
-            .load(comments.user.profile)
+            .load(comment.user.profile)
             .placeholder(R.drawable.account_circle_24)
             .error(R.drawable.account_circle_24)
             .circleCrop()
             .into(holder.ppfoto)
 
-        holder.txtUsername.text=comments.user.username
-        holder.txtComment.text=comments.contents
-        holder.txtTime.text = formatPostDate(comments.date)
-        holder.txtLikeCount.text=comments.numberof_likes.toString()
+        holder.txtUsername.text = comment.user.username
+        holder.txtComment.text = comment.contents
+        holder.txtTime.text = formatPostDate(comment.date)
+        holder.txtLikeCount.text = comment.numberof_likes.toString()
 
         holder.btnLike.setImageResource(
-            if (comments.isLiked) R.drawable.baseline_favorite_24
-            else R.drawable.baseline_favorite_border_24
+            if (comment.isLiked)
+                R.drawable.baseline_favorite_24
+            else
+                R.drawable.baseline_favorite_border_24
         )
 
         holder.btnLike.setOnClickListener {
             val newList = currentList.toMutableList()
-            val comments = newList[holder.bindingAdapterPosition]
+            val item = newList[holder.bindingAdapterPosition]
 
-            if (comments.isLiked) {
-                comments.isLiked = false
-                comments.numberof_likes--
+            if (item.isLiked) {
+                item.isLiked = false
+                item.numberof_likes--
             } else {
-                comments.isLiked = true
-                comments.numberof_likes++
+                item.isLiked = true
+                item.numberof_likes++
             }
+
             submitList(newList)
-            listener.onLikeClicked(comments.commentId)
+            listener.onLikeClicked(item.commentId)
         }
 
         holder.txtReply.setOnClickListener {
-            listener.onReplyClicked(comments)
+            listener.onReplyClicked(comment)
         }
+
         holder.txtViewReplies.setOnClickListener {
+            holder.rvSubComments.visibility = View.VISIBLE
 
-            val subAdapter = SubCommentsAdapter()
-            val subLayoutManager = LinearLayoutManager(holder.itemView.context)
+            listener.onViewReplys(comment.commentId, reset = true) { subComments ->
+                holder.subAdapter.submitList(subComments)
+            }
+        }
 
-            holder.rvSubComments.apply {
-                layoutManager = subLayoutManager
+        holder.bindScrollListener(comment.commentId)
+
+        holderMap[comment.commentId] = holder
+    }
+
+    inner class CommentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        val ppfoto: ImageView = itemView.findViewById(R.id.ppfoto)
+        val txtUsername: TextView = itemView.findViewById(R.id.txtUsername)
+        val txtComment: TextView = itemView.findViewById(R.id.txtComment)
+        val txtTime: TextView = itemView.findViewById(R.id.txtTime)
+        val txtReply: TextView = itemView.findViewById(R.id.txtReply)
+        val btnLike: ImageView = itemView.findViewById(R.id.btnLike)
+        val txtLikeCount: TextView = itemView.findViewById(R.id.txtLikeCount)
+        val txtViewReplies: TextView = itemView.findViewById(R.id.txtViewReplies)
+        val rvSubComments: RecyclerView = itemView.findViewById(R.id.rvSubComments)
+
+        val subAdapter = SubCommentsAdapter(listener)
+        private val layoutManager = LinearLayoutManager(itemView.context)
+
+        private var isScrollListenerAdded = false
+
+        init {
+            rvSubComments.apply {
                 adapter = subAdapter
-                visibility = View.VISIBLE
+                layoutManager = this@CommentViewHolder.layoutManager
+                visibility = View.GONE
             }
+        }
 
-            listener.onViewReplys(comments.commentId, reset = true) { subComments ->
-                subAdapter.submitList(subComments)
-            }
+        fun bindScrollListener(commentId: Long) {
+            if (isScrollListenerAdded) return
+            isScrollListenerAdded = true
 
-            holder.rvSubComments.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            rvSubComments.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
                     super.onScrolled(rv, dx, dy)
 
-                    val visibleItemCount = subLayoutManager.childCount
-                    val totalItemCount = subLayoutManager.itemCount
-                    val firstVisibleItemPosition =
-                        subLayoutManager.findFirstVisibleItemPosition()
+                    val visibleItemCount = layoutManager.childCount
+                    val totalItemCount = layoutManager.itemCount
+                    val firstVisibleItem =
+                        layoutManager.findFirstVisibleItemPosition()
 
-                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount &&
-                        firstVisibleItemPosition >= 0
+                    if (visibleItemCount + firstVisibleItem >= totalItemCount &&
+                        firstVisibleItem >= 0
                     ) {
-                        listener.onViewReplys(comments.commentId, reset = false) { newList ->
-                            val merged =
-                                subAdapter.currentList.toMutableList().apply {
-                                    addAll(newList)
-                                }
+                        listener.onViewReplys(commentId, reset = false) { newList ->
+                            val merged = subAdapter.currentList.toMutableList().apply {
+                                addAll(newList)
+                            }
                             subAdapter.submitList(merged)
                         }
                     }
@@ -118,42 +191,30 @@ class CommentsAdapter(private val listener:OnCommentInteractionListener):
             })
         }
     }
-    inner class CommentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val ppfoto: ImageView=itemView.findViewById(R.id.ppfoto)
-        val txtUsername: TextView=itemView.findViewById(R.id.txtUsername)
-        val txtComment: TextView=itemView.findViewById(R.id.txtComment)
-        val txtTime: TextView=itemView.findViewById(R.id.txtTime)
-        val txtReply: TextView=itemView.findViewById(R.id.txtReply)
-        val btnLike: ImageView=itemView.findViewById(R.id.btnLike)
-        val txtLikeCount: TextView=itemView.findViewById(R.id.txtLikeCount)
-        val txtViewReplies: TextView=itemView.findViewById(R.id.txtViewReplies)
-        val rvSubComments: RecyclerView=itemView.findViewById(R.id.rvSubComments)
 
-    }
     companion object {
         private val DiffCallback = object : DiffUtil.ItemCallback<commentResponse>() {
             override fun areItemsTheSame(
                 oldItem: commentResponse,
                 newItem: commentResponse
-            )=oldItem.commentId == newItem.commentId
+            ) = oldItem.commentId == newItem.commentId
 
             override fun areContentsTheSame(
                 oldItem: commentResponse,
                 newItem: commentResponse
-            )= oldItem == newItem
+            ) = oldItem == newItem
         }
     }
 
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun formatPostDate(postDate: String): String {
-
         val parser = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
 
         val postUtc = LocalDateTime.parse(postDate, parser)
             .atZone(ZoneOffset.UTC)
 
         val postTr = postUtc.withZoneSameInstant(ZoneId.of("Europe/Istanbul"))
-
         val nowTr = ZonedDateTime.now(ZoneId.of("Europe/Istanbul"))
 
         val days = ChronoUnit.DAYS.between(postTr, nowTr)
@@ -161,10 +222,7 @@ class CommentsAdapter(private val listener:OnCommentInteractionListener):
         val minutes = ChronoUnit.MINUTES.between(postTr, nowTr)
 
         return when {
-            days >= 7 -> {
-                val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-                postTr.format(formatter)
-            }
+            days >= 7 -> postTr.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
             days >= 1 -> "$days gün"
             hours >= 1 -> "$hours saat"
             minutes >= 1 -> "$minutes dakika"

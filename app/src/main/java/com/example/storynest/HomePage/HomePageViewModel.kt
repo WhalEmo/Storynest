@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.storynest.ApiClient
 import com.example.storynest.RegisterLogin.LoginResponse
-import com.example.storynest.RegisterLogin.UserStaticClass
+import com.example.storynest.dataLocal.UserStaticClass
 
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState

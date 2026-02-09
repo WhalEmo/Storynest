@@ -15,13 +15,12 @@ import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.storynest.ApiClient
+import com.example.storynest.Comments.CommentBottomFragment
 import com.example.storynest.R
-import com.example.storynest.HomePage.BarFragmnets.AddPostFragmnet
 import com.example.storynest.HomePage.HelperFragment.HelperFragment
 import com.example.storynest.HomePage.PostLikeUser.LikeUsersBottomSheet
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
-import com.example.storynest.dataLocal.UserPreferences
 
 class HomePageFragment : Fragment() {
     private val homePageRepo by lazy { HomePageRepo(ApiClient.postApi) }
@@ -67,6 +66,12 @@ class HomePageFragment : Fragment() {
                 LikeUsersBottomSheet
                     .newInstance(postId)
                     .show(parentFragmentManager, "LikeUsersBottomSheet")
+            }
+
+            override fun clickComment(postId: Long) {
+                CommentBottomFragment
+                    .newInstance(postId)
+                    .show(parentFragmentManager,"CommentBottomFragment")
             }
 
         })

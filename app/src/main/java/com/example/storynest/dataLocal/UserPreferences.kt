@@ -20,6 +20,8 @@ class UserPreferences private constructor(private val context: Context) {
         private val USER_ID = stringPreferencesKey("id")
         private val TOKEN = stringPreferencesKey("token")
         private val EMAIL = stringPreferencesKey("email")
+        private val PROFILE_PHOTO = stringPreferencesKey("profile_photo")
+
 
         // Singleton getInstance metodu
         fun getInstance(context: Context): UserPreferences {
@@ -35,6 +37,7 @@ class UserPreferences private constructor(private val context: Context) {
     val id: Flow<Long?> = context.dataStore.data.map { it[USER_ID]?.toLongOrNull() } // String -> Long
     val token: Flow<String?> = context.dataStore.data.map { it[TOKEN] }
     val email: Flow<String?> = context.dataStore.data.map { it[EMAIL] }
+    val profilePhoto: Flow<String?> = context.dataStore.data.map { it[PROFILE_PHOTO] }
 
     suspend fun saveUser(
         username: String,
@@ -42,7 +45,8 @@ class UserPreferences private constructor(private val context: Context) {
         name: String,
         surname: String,
         id: Long,
-        email: String
+        email: String,
+        profilePhoto: String
     ) {
         context.dataStore.edit { prefs ->
             prefs[USERNAME] = username
@@ -51,6 +55,7 @@ class UserPreferences private constructor(private val context: Context) {
             prefs[SURNAME] = surname
             prefs[USER_ID] = id.toString()
             prefs[EMAIL] = email
+            prefs[PROFILE_PHOTO] = profilePhoto
         }
     }
 

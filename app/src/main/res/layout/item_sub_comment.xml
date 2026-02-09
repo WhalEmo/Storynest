@@ -42,9 +42,9 @@
         android:id="@+id/txtCommentTag"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="emrullja"
-        android:textSize="11sp"
-        android:textColor="@color/gray"
+        android:text="emrullah"
+        android:textSize="13sp"
+        android:textColor="@color/accept_blue"
         android:layout_marginStart="6dp"
         app:layout_constraintStart_toStartOf="@id/txtUsername"
         app:layout_constraintTop_toBottomOf="@id/txtUsername"
@@ -105,37 +105,5 @@
         android:layout_marginStart="0dp"
         app:layout_constraintTop_toTopOf="@id/txtComment"
         app:layout_constraintEnd_toEndOf="parent"/>
-
-    <!-- Yanıtları Gör -->
-    <TextView
-        android:id="@+id/txtViewReplies"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="2 yanıtı gör"
-        android:textSize="11sp"
-        android:textColor="@color/gray"
-        android:layout_marginTop="4dp"
-        android:layout_marginStart="40dp"
-        app:layout_constraintStart_toStartOf="@id/txtCommentTag"
-        app:layout_constraintTop_toBottomOf="@id/txtTime"/>
-    <!-- Alt yorumlar container -->
-    <LinearLayout
-        android:id="@+id/subCommentsContainer"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="gone"
-        android:layout_marginStart="44dp"
-        android:layout_marginTop="4dp"
-        app:layout_constraintStart_toStartOf="@id/txtComment"
-        app:layout_constraintTop_toBottomOf="@id/txtViewReplies">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvSubComments"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false"/>
-    </LinearLayout>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

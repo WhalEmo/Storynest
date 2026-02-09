@@ -11,10 +11,12 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.storynest.Comments.CommentsAdapter.OnCommentInteractionListener
 import com.example.storynest.R
 
-class SubCommentsAdapter :
+class SubCommentsAdapter(private val listener:OnCommentInteractionListener) :
     ListAdapter<commentResponse, SubCommentsAdapter.SubCommentViewHolder>(DiffCallback) {
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SubCommentViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -37,6 +39,7 @@ class SubCommentsAdapter :
         holder.txtComment.text = comment.contents
         holder.txtTime.text = formatPostDate(comment.date)
         holder.txtLikeCount.text = comment.numberof_likes.toString()
+        holder.txtCommentTag.text=comment.parentCommentUsername
 
         holder.btnLike.setImageResource(
             if (comment.isLiked) R.drawable.baseline_favorite_24
@@ -55,16 +58,23 @@ class SubCommentsAdapter :
                 subComment.numberof_likes++
             }
             submitList(newList)
+            listener.onLikeClicked(subComment.commentId)
+        }
+
+        holder.txtReply.setOnClickListener {
+            listener.onReplyClicked(comment)
         }
     }
 
     inner class SubCommentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val ppFoto: ImageView = itemView.findViewById(R.id.ppFoto)
+        val ppFoto: ImageView = itemView.findViewById(R.id.ppfoto)
         val txtUsername: TextView = itemView.findViewById(R.id.txtUsername)
         val txtComment: TextView = itemView.findViewById(R.id.txtComment)
         val txtTime: TextView = itemView.findViewById(R.id.txtTime)
         val btnLike: ImageView = itemView.findViewById(R.id.btnLike)
         val txtLikeCount: TextView = itemView.findViewById(R.id.txtLikeCount)
+        val txtCommentTag: TextView=itemView.findViewById(R.id.txtCommentTag)
+        val txtReply: TextView=itemView.findViewById(R.id.txtReply)
     }
 
     companion object {

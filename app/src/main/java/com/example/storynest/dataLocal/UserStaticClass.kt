@@ -1,4 +1,4 @@
-package com.example.storynest.RegisterLogin
+package com.example.storynest.dataLocal
 
 object  UserStaticClass {
     var userId: Long? = null
@@ -6,5 +6,6 @@ object  UserStaticClass {
     var name:String?=null
     var surname:String?=null
     var email:String?=null
+    var ppfoto:String?=null
 
 }

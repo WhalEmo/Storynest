@@ -15,6 +15,7 @@ import com.example.storynest.ApiClient
 import com.example.storynest.MainActivity
 import com.example.storynest.R
 import com.example.storynest.dataLocal.UserPreferences
+import com.example.storynest.dataLocal.UserStaticClass
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -120,6 +121,8 @@ class LaunchActivity : AppCompatActivity() {
                 UserStaticClass.username=userPrefs.username.firstOrNull()
                 UserStaticClass.surname=userPrefs.surname.firstOrNull()
                 UserStaticClass.email=userPrefs.email.firstOrNull()
+                UserStaticClass.ppfoto=userPrefs.profilePhoto.firstOrNull()
+
                 ApiClient.updateToken(token)
                 startActivity(Intent(this@LaunchActivity, MainActivity::class.java))
             }

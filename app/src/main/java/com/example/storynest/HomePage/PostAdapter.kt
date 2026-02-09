@@ -30,6 +30,7 @@ class PostAdapter(
         fun onReadMoreClicked(post: postResponse)
 
         fun getLikeUsers(Id: Long)
+        fun clickComment(Id: Long);
     }
 
     companion object {
@@ -63,7 +64,6 @@ class PostAdapter(
     override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
         val post = getItem(position)
 
-        // Profil ve cover image yükleme (Glide)
         Glide.with(holder.itemView.context)
             .load(post.user.profile)
             .placeholder(R.drawable.account_circle_24)
@@ -111,7 +111,7 @@ class PostAdapter(
             listener.getLikeUsers(post.post_id)
         }
         holder.btnComment.setOnClickListener {
-
+            listener.clickComment(post.post_id)
         }
     }
 
