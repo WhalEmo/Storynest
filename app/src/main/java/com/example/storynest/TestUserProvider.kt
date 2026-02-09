@@ -1,6 +1,6 @@
 package com.example.storynest
 
 object TestUserProvider {
-    const val STATIC_TOKEN  = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlbXJ1bGxhaDIiLCJpYXQiOjE3NzAzNzk5NDcsImV4cCI6MTc3MDQ2NjM0N30.tcOsXw9aB-0MHLlqRT5pDRX9yGi8vFIadVYcqitLvCA"
+    const val STATIC_TOKEN  = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlbXJ1bGxhaDIiLCJpYXQiOjE3NzA2NTA0OTUsImV4cCI6MTg3MDY1MDQ5NX0.inSHfbmhOBsGBkkcV1cGrbipB-3WYuLSzfz2E1i0q3s"
     var STATIC_USER_ID = 3
 }

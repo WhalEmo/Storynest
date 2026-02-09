@@ -1,5 +1,6 @@
 package com.example.storynest.Follow.MyFollowProcesses.MyFollowers
 
+import android.util.Log
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -7,6 +8,7 @@ import androidx.paging.insertSeparators
 import androidx.paging.map
 import com.example.storynest.ApiClient
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.Adapter.FollowersRow
+import com.example.storynest.Follow.RequestDTO.FollowDTO
 import com.example.storynest.Follow.RequestDTO.FollowRequestDTO
 import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
 import com.example.storynest.Notification.FollowResponseDTO
@@ -96,8 +98,15 @@ class MyFollowersService {
         }
     }
 
-    fun invalidateFollowers() {
-        pagingSource?.invalidate()
+    suspend fun removeFollower(userId: Long): Response<FollowDTO> {
+        Log.e("userId", userId.toString())
+        val request = FollowDTO(
+            followingId = TestUserProvider.STATIC_USER_ID.toLong(),
+            followedId = userId,
+            followed = true
+        )
+        Log.e("request", request.toString())
+        return followersApiController.removeFollower(request)
     }
 
 }

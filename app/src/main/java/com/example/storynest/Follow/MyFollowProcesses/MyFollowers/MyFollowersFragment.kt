@@ -13,6 +13,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.storynest.CustomViews.ConfirmDialog
 import com.example.storynest.CustomViews.ErrorDialog
+import com.example.storynest.CustomViews.InfoMessage
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.Adapter.FollowersAdapter
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.Adapter.FollowersRow
 import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
@@ -75,7 +76,7 @@ class MyFollowersFragment: Fragment() {
                 )
             },
             onReject = {
-
+                sendMessage()
             },
             onCancelRequest = {
                 onCancelRequest(
@@ -143,11 +144,26 @@ class MyFollowersFragment: Fragment() {
             message = "${usrResponse.username} kullanıcıyı takipten çıkarmak istiyor musunuz?",
             imageUrl = usrResponse.profile,
             onConfirm = {
-
+                viewModel.removeFollower(
+                    usrResponse.id,
+                    {
+                        InfoMessage.show(
+                            requireActivity(),
+                            "Takipçiden Çıkarıldı"
+                        )
+                    }
+                )
             }
         ).show(
             parentFragmentManager,
             "ConfirmDialog"
+        )
+    }
+
+    private fun sendMessage(){
+        InfoMessage.show(
+            requireActivity(),
+            "Mesaj gönderilme henüz desteklenmiyor"
         )
     }
 

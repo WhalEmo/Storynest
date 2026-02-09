@@ -1,12 +1,14 @@
 package com.example.storynest.Follow.MyFollowProcesses.MyFollowers
 
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.filter
 import androidx.paging.map
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.Adapter.FollowersRow
 import com.example.storynest.TestUserProvider
@@ -35,6 +37,8 @@ class MyFollowersViewModel: ViewModel() {
     private val followUpdates =
         MutableStateFlow<Map<Long, FollowResponseDTO>>(emptyMap())
 
+    private val removedUserIds = MutableStateFlow<Set<Long>>(emptySet())
+
     val pagingFollowers = createPagingFlow()
 
 
@@ -43,7 +47,7 @@ class MyFollowersViewModel: ViewModel() {
             pagingFollowers.first()
         }
     }
-
+/*
     val followers: Flow<PagingData<FollowersRow>> =
         followUpdates.flatMapLatest { followMap ->
             pagingFollowers.map { pagingData ->
@@ -60,6 +64,34 @@ class MyFollowersViewModel: ViewModel() {
                     } else row
                 }
             }
+        }*/
+
+    val followers: Flow<PagingData<FollowersRow>> =
+        combine(
+            pagingFollowers,
+            followUpdates,
+            removedUserIds
+        ){pagindata, followMap, removedIds ->
+            pagindata
+                .filter {
+                    row ->
+                    if (row is FollowerUserItem){
+                        !removedIds.contains(row.followUserResponseDTO.id)
+                    } else true
+                }
+                .map {
+                    row ->
+                    if(row is FollowerUserItem){
+                        val update = followMap[row.followUserResponseDTO.id]
+                        if(update != null){
+                            row.copy(
+                                followUserResponseDTO = row.followUserResponseDTO.copy(
+                                    followInfo = update
+                                )
+                            )
+                        }else row
+                    }else row
+                }
         }
 
 
@@ -116,4 +148,29 @@ class MyFollowersViewModel: ViewModel() {
         }
     }
 
+    fun removeFollower(
+        userId: Long,
+        onRemoved: () -> Unit
+    ){
+        viewModelScope.launch {
+            try {
+                val response = service.removeFollower(userId)
+                Log.e("response", response.toString())
+                if(response.isSuccessful){
+                    val responseBody = response.body()
+                    removedUserIds.value = removedUserIds.value.orEmpty() + (responseBody?.followedId ?: 0)
+                    onRemoved.invoke()
+                }
+            }
+            catch (e: HttpException){
+                _error.value = "Sunucuya bağlanılamadı (HTTP ${e.code()})"
+            }
+            catch (e: IOException) {
+                _error.value = "İnternet bağlantısı yok!"
+            }
+            catch (e: Exception) {
+                _error.value = "Beklenmeyen bir hata oluştu"
+            }
+        }
+    }
 }

@@ -17,7 +17,7 @@ class FollowerUserViewHolder(
     private val onAccept: (FollowersRow.FollowerUserItem) -> Unit,
     private val onSendMessage: (FollowersRow.FollowerUserItem) -> Unit,
     private val onCancelRequest: (FollowersRow.FollowerUserItem) -> Unit,
-    private val onUnFollowMy: (FollowersRow.FollowerUserItem) -> Unit
+    private val onUnFollowMy: (FollowersRow.FollowerUserItem) -> Unit,
 ): RecyclerView.ViewHolder(itemView) {
 
     private val profileImage =
@@ -37,7 +37,8 @@ class FollowerUserViewHolder(
 
     private var currentItem: FollowersRow.FollowerUserItem? = null
 
-    private var isFirstBind = true
+    private var lastItemId: Long? = null
+    private var lastTargetViewId: Int? = null
 
 
     init {
@@ -59,6 +60,7 @@ class FollowerUserViewHolder(
         currentItem = resource
 
         val itemBody = resource.followUserResponseDTO
+        val itemId = itemBody.id
 
         username.text = itemBody.username
         biography.text = itemBody.biography
@@ -67,29 +69,35 @@ class FollowerUserViewHolder(
             size(64)
             crossfade(false)
             placeholder(R.drawable.placeholder)
-            allowHardware(true)
         }
-        val target = resolveTargetView(resource.followUserResponseDTO)
 
-        if (isFirstBind) {
-            listOf(yourFollowMe, sendMessage, sendingRequest).forEach {
-                it.visibility = if (it == target) View.VISIBLE else View.GONE
-                it.alpha = 1f
-            }
-            isFirstBind = false
+        val target = resolveTargetView(itemBody)
+        val targetId = target.id
+
+        if (lastItemId != itemId) {
+            setDirectState(target)
+            lastItemId = itemId
+            lastTargetViewId = targetId
             return
         }
 
+        if (lastTargetViewId == targetId) return
+
         animateSwitchTo(target)
+
+        lastTargetViewId = targetId
     }
+
 
 
     private fun animateSwitchTo(target: View) {
         val allViews = listOf(yourFollowMe, sendMessage, sendingRequest)
-
         val current = allViews.firstOrNull { it.visibility == View.VISIBLE }
 
         if (current == target) return
+
+        current?.animate()?.cancel()
+        target.animate().cancel()
 
         current?.animate()
             ?.alpha(0f)
@@ -109,12 +117,22 @@ class FollowerUserViewHolder(
             ?.start()
     }
 
+
     private fun resolveTargetView(resource: FollowUserResponseDTO): View {
         return when {
             resource.myFollower && !resource.followingYou -> yourFollowMe
             resource.followInfo.status == FollowRequestStatus.ACCEPTED -> sendMessage
             resource.followInfo.status == FollowRequestStatus.PENDING -> sendingRequest
             else -> yourFollowMe
+        }
+    }
+
+
+    private fun setDirectState(target: View) {
+        listOf(yourFollowMe, sendMessage, sendingRequest).forEach {
+            it.animate().cancel()
+            it.alpha = 1f
+            it.visibility = if (it == target) View.VISIBLE else View.GONE
         }
     }
 

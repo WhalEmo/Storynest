@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import coil.load
 import com.example.storynest.CustomViews.ErrorDialog
+import com.example.storynest.CustomViews.InfoMessage
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.MyFollowersFragment
 import com.example.storynest.Notification.NotificationFragment
 import com.example.storynest.R
@@ -91,6 +92,11 @@ class MyProfileFragment : Fragment(){
 
         viewModel.error.observe(viewLifecycleOwner){ error ->
             if(!error.isNullOrEmpty()){
+                InfoMessage.show(
+                    requireActivity(),
+                    error
+                )
+                /*
                 var errorDialog = ErrorDialog.newInstance(
                     title = "Bağlantı Hatası",
                     message = error
@@ -98,7 +104,7 @@ class MyProfileFragment : Fragment(){
                 errorDialog.setOnOkClickListener{
                     viewModel.getMyProfile()
                 }
-                errorDialog.show(parentFragmentManager, "ErrorDialogTag")
+                errorDialog.show(parentFragmentManager, "ErrorDialogTag")*/
             }
         }
     }
