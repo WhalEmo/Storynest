@@ -57,7 +57,7 @@ class LikeUsersBottomSheet: BottomSheetDialogFragment()  {
         viewModel.getUsersWhoLike(postId,reset = true)
     }
     private fun setUpRecyclerView(){
-        Likeadapter= LikeUsersAdapter(object : LikeUsersAdapter.OnPostInteractionListener{
+        Likeadapter= LikeUsersAdapter(object : LikeUsersAdapter.OnUserInteractionListener{
             override fun onFollowClicked(Id: Long) {
 
             }

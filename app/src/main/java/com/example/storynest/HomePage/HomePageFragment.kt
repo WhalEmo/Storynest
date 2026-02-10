@@ -3,6 +3,7 @@ package com.example.storynest.HomePage
 import android.media.Image
 import androidx.fragment.app.viewModels
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -63,6 +64,7 @@ class HomePageFragment : Fragment() {
             }
 
             override fun getLikeUsers(postId: Long) {
+                Log.d("POST_FRAGMENT", "Opening LikeUsersBottomSheet for $postId")
                 LikeUsersBottomSheet
                     .newInstance(postId)
                     .show(parentFragmentManager, "LikeUsersBottomSheet")

@@ -28,8 +28,10 @@ class SubCommentsAdapter(private val listener:OnCommentInteractionListener) :
     override fun onBindViewHolder(holder: SubCommentViewHolder, position: Int) {
         val comment = getItem(position)
 
+        val profileUrl = comment.user?.profile
+
         Glide.with(holder.itemView.context)
-            .load(comment.user.profile)
+            .load(profileUrl)
             .placeholder(R.drawable.account_circle_24)
             .error(R.drawable.account_circle_24)
             .circleCrop()

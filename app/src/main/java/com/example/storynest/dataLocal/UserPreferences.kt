@@ -46,7 +46,7 @@ class UserPreferences private constructor(private val context: Context) {
         surname: String,
         id: Long,
         email: String,
-        profilePhoto: String
+        profilePhoto: String?
     ) {
         context.dataStore.edit { prefs ->
             prefs[USERNAME] = username
@@ -55,7 +55,7 @@ class UserPreferences private constructor(private val context: Context) {
             prefs[SURNAME] = surname
             prefs[USER_ID] = id.toString()
             prefs[EMAIL] = email
-            prefs[PROFILE_PHOTO] = profilePhoto
+            prefs[PROFILE_PHOTO] = profilePhoto ?: ""
         }
     }
 

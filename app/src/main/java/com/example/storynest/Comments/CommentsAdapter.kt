@@ -23,7 +23,6 @@ import java.time.temporal.ChronoUnit
 class CommentsAdapter(
     private val listener: OnCommentInteractionListener
 ) : ListAdapter<commentResponse, CommentsAdapter.CommentViewHolder>(DiffCallback) {
-    private val holderMap = mutableMapOf<Long, CommentViewHolder>()
 
     interface OnCommentInteractionListener {
         fun onLikeClicked(commentId: Long)
@@ -39,47 +38,6 @@ class CommentsAdapter(
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_comment, parent, false)
         return CommentViewHolder(view)
-    }
-
-    fun addCommentOptimistic(comment: commentResponse) {
-        val newList = currentList.toMutableList()
-        newList.add(0, comment)
-        submitList(newList)
-    }
-    fun addSubCommentOptimistic(
-        parentCommentId: Long,
-        subComment: commentResponse
-    ) {
-        val holder = holderMap[parentCommentId] ?: return
-
-        val newList = holder.subAdapter.currentList.toMutableList()
-        newList.add(0, subComment)
-
-        holder.subAdapter.submitList(newList)
-        holder.rvSubComments.visibility = View.VISIBLE
-    }
-    fun removeOptimistic() {
-        val newList = currentList.toMutableList()
-        val index = newList.indexOfFirst { it.commentId > 1_000_000_000_000 }
-
-        if (index != -1) {
-            newList.removeAt(index)
-            submitList(newList)
-        }
-    }
-    fun updateSubComments(
-        parentCommentId: Long,
-        newSubComments: List<commentResponse>
-    ) {
-        val holder = holderMap[parentCommentId] ?: return
-
-        val mergedList = holder.subAdapter.currentList.toMutableList().apply {
-            clear()
-            addAll(newSubComments)
-        }
-
-        holder.subAdapter.submitList(mergedList)
-        holder.rvSubComments.visibility = View.VISIBLE
     }
 
 
@@ -107,36 +65,72 @@ class CommentsAdapter(
         )
 
         holder.btnLike.setOnClickListener {
-            val newList = currentList.toMutableList()
-            val item = newList[holder.bindingAdapterPosition]
+            val position = holder.bindingAdapterPosition
+            val oldItem = currentList[position]
 
-            if (item.isLiked) {
-                item.isLiked = false
-                item.numberof_likes--
-            } else {
-                item.isLiked = true
-                item.numberof_likes++
-            }
+            val newItem = oldItem.copy(
+                isLiked = !oldItem.isLiked,
+                numberof_likes = if (oldItem.isLiked)
+                    oldItem.numberof_likes - 1
+                else
+                    oldItem.numberof_likes + 1
+            )
+
+            val newList = currentList.toMutableList()
+            newList[position] = newItem
 
             submitList(newList)
-            listener.onLikeClicked(item.commentId)
+            listener.onLikeClicked(oldItem.commentId)
         }
 
         holder.txtReply.setOnClickListener {
             listener.onReplyClicked(comment)
         }
 
-        holder.txtViewReplies.setOnClickListener {
-            holder.rvSubComments.visibility = View.VISIBLE
+        holder.rvSubComments.visibility =
+            if (comment.isRepliesVisible) View.VISIBLE else View.GONE
 
-            listener.onViewReplys(comment.commentId, reset = true) { subComments ->
+        comment.replies?.let {
+            holder.subAdapter.submitList(it)
+        }
+
+        holder.txtViewReplies.setOnClickListener {
+
+            val position = holder.bindingAdapterPosition
+            if (position == RecyclerView.NO_POSITION) return@setOnClickListener
+
+            val oldItem = currentList[position]
+
+            val toggledItem = oldItem.copy(
+                isRepliesVisible = !oldItem.isRepliesVisible
+            )
+
+            val newList = currentList.toMutableList()
+            newList[position] = toggledItem
+
+            submitList(newList)
+
+            if (toggledItem.replies != null) {
+                holder.subAdapter.submitList(toggledItem.replies)
+                return@setOnClickListener
+            }
+            listener.onViewReplys(oldItem.commentId, reset = true) { subComments ->
+
+                val updatedItem = toggledItem.copy(
+                    replies = subComments
+                )
+
+                val updatedList = newList.toMutableList()
+                updatedList[position] = updatedItem
+
+                submitList(updatedList)
                 holder.subAdapter.submitList(subComments)
             }
         }
 
+
         holder.bindScrollListener(comment.commentId)
 
-        holderMap[comment.commentId] = holder
     }
 
     inner class CommentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -154,7 +148,6 @@ class CommentsAdapter(
         val subAdapter = SubCommentsAdapter(listener)
         private val layoutManager = LinearLayoutManager(itemView.context)
 
-        private var isScrollListenerAdded = false
 
         init {
             rvSubComments.apply {
@@ -165,8 +158,7 @@ class CommentsAdapter(
         }
 
         fun bindScrollListener(commentId: Long) {
-            if (isScrollListenerAdded) return
-            isScrollListenerAdded = true
+            rvSubComments.clearOnScrollListeners()
 
             rvSubComments.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
@@ -181,15 +173,32 @@ class CommentsAdapter(
                         firstVisibleItem >= 0
                     ) {
                         listener.onViewReplys(commentId, reset = false) { newList ->
-                            val merged = subAdapter.currentList.toMutableList().apply {
+
+                            val position = bindingAdapterPosition
+                            if (position == RecyclerView.NO_POSITION) return@onViewReplys
+
+                            val oldItem = currentList[position]
+
+                            val merged = oldItem.replies.orEmpty().toMutableList().apply {
                                 addAll(newList)
                             }
+
+                            val updatedItem = oldItem.copy(
+                                replies = merged
+                            )
+
+                            val updatedList = currentList.toMutableList()
+                            updatedList[position] = updatedItem
+
+                            submitList(updatedList)
                             subAdapter.submitList(merged)
                         }
+
                     }
                 }
             })
         }
+
     }
 
     companion object {

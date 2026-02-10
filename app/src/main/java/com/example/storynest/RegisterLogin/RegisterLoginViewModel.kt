@@ -42,7 +42,8 @@ class RegisterLoginViewModel(
                         name = body.user.name,
                         surname = body.user.surname,
                         id = body.user.id,
-                        email = body.user.email
+                        email = body.user.email ,
+                        profilePhoto =body.user.profile
                     )
                     ApiClient.updateToken(body.token)
                     _loginState.value = UiState.Success(body)

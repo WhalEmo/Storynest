@@ -29,8 +29,8 @@ class CommentsViewModel(
     private val _commentsLike = MutableLiveData<UiState<StringResponse>>()
     val postsLike: LiveData<UiState<StringResponse>> = _commentsLike
 
-    private val _usersWhoLike = MutableLiveData<UiState<List<UserResponse>>>()
-    val usersWhoLike: LiveData<UiState<List<UserResponse>>> = _usersWhoLike
+    private val _usersWhoLike = MutableLiveData<UiState<List<userResponseDto>>>()
+    val usersWhoLike: LiveData<UiState<List<userResponseDto>>> = _usersWhoLike
 
     private val _deleteComments = MutableLiveData<UiState<StringResponse>>()
     val deleteComment: LiveData<UiState<StringResponse>> = _deleteComments

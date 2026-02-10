@@ -20,14 +20,16 @@ data class commentResponse(
     val commentId:Long,
     val parentCommentUsername:String?,
     val postId:Long,
-    val user: UserResponse,
+    val user: userResponseDto,
     val contents:String,
     var numberof_likes: Int,
     val date: String,
     var parentCommentId:Long,
-    var isLiked: Boolean
+    var isLiked: Boolean,
+    val replies: List<commentResponse>? = null,
+    val isRepliesVisible: Boolean = false
 )
-data class UserResponse(
+data class userResponseDto(
     val id: Long,
     val username: String,
     val email: String,
@@ -82,7 +84,7 @@ interface CMController{
         @Path("commentId") commentId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
-    ): Call<List<UserResponse>>
+    ): Call<List<userResponseDto>>
 
     @DELETE("/api/comments/{commentId}/deleteComment")
      fun deleteComment(

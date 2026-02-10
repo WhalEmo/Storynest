@@ -2,6 +2,7 @@ package com.example.storynest.HomePage
 
 
 import android.os.Build
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -90,24 +91,30 @@ class PostAdapter(
         )
 
         holder.btnLike.setOnClickListener {
-            val newList = currentList.toMutableList()
-            val post = newList[holder.bindingAdapterPosition]
+            val index = holder.bindingAdapterPosition
+            val oldPost = currentList[index]
 
-            if (post.liked) {
-                post.liked = false
-                post.numberof_likes--
-            } else {
-                post.liked = true
-                post.numberof_likes++
-            }
+            val updatedPost = oldPost.copy(
+                liked = !oldPost.liked,
+                numberof_likes = if (oldPost.liked)
+                    oldPost.numberof_likes - 1
+                else
+                    oldPost.numberof_likes + 1
+            )
+
+            val newList = currentList.toMutableList()
+            newList[index] = updatedPost
+
             submitList(newList)
-            listener.onLikeClicked(post.post_id)
+            listener.onLikeClicked(updatedPost.post_id)
         }
+
 
         holder.txtReadMore.setOnClickListener {
             listener.onReadMoreClicked(post)
         }
         holder.txtLikeCount.setOnClickListener {
+            Log.d("POST_ADAPTER", "Like count clicked: ${post.post_id}")
             listener.getLikeUsers(post.post_id)
         }
         holder.btnComment.setOnClickListener {

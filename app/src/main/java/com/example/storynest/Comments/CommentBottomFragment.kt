@@ -59,7 +59,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View,savedInstanceState: Bundle?) {
         super.onViewCreated(view,savedInstanceState)
-        rvComment=view.findViewById(R.id.rvLikeUsers)
+        rvComment=view.findViewById(R.id.rvComment)
         progressBar=view.findViewById(R.id.progressBar)
         txtEmpty=view.findViewById(R.id.txtEmpty)
         commentinput=view.findViewById(R.id.commentinput)
@@ -67,6 +67,10 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
         imgProfile=view.findViewById(R.id.imgProfile)
         etComment=view.findViewById(R.id.etComment)
         btnSend=view.findViewById(R.id.btnSend)
+
+        replyinput=view.findViewById(R.id.replyinput)
+        txtReplyingTo=view.findViewById(R.id.txtReplyingTo)
+        btnCancelReply=view.findViewById(R.id.btnCancelReply)
 
         setUpRecyclerView()
         setupObserves()
@@ -136,49 +140,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             }
         }
 
-        observeUiState(viewModel.postSubComments,progressBar){data->
-        }
-        viewModel.addCommentResult.observe(viewLifecycleOwner) { result ->
-            when (result) {
 
-                is UiState.Success -> {
-                    viewModel.commentsGet(postId)
-                }
-
-                is UiState.Error -> {
-                    commentAdapter.removeOptimistic()
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
-                }
-
-                is UiState.Loading -> {
-                }
-
-                is UiState.EmailNotVerified -> {
-                }
-                is UiState.EmailSent -> {
-                }
-            }
-        }
-
-        viewModel.addSubCommentResult.observe(viewLifecycleOwner) { result ->
-            when (result) {
-                is UiState.Success -> {
-                    viewModel.subCommentsGet(commentforReply.commentId, reset = true) { list ->
-                        commentAdapter.updateSubComments(
-                            parentCommentId = commentforReply.commentId,
-                            newSubComments = list
-                        )
-                    }
-                }
-
-                is UiState.Error -> {
-                    commentAdapter.removeOptimistic()
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
-                }
-
-                else -> {}
-            }
-        }
     }
 
     private fun clicks(){
@@ -193,7 +155,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             val commentText=etComment.text.toString()
             if (commentText.isEmpty()) return@setOnClickListener
 
-            val tempUser = UserResponse(
+            val tempUser = userResponseDto(
                 id = UserStaticClass.userId ?:0L,
                 username = UserStaticClass.username ?: "",
                 email = UserStaticClass.email ?: "",
