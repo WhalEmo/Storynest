@@ -38,4 +38,5 @@ class FollowersLoadStateViewHolder(
             return FollowersLoadStateViewHolder(binding, retry)
         }
     }
+
 }

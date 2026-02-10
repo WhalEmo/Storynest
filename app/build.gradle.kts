@@ -75,7 +75,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.11")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
-
+    implementation("com.airbnb.android:lottie:6.4.0")
     implementation("androidx.paging:paging-runtime-ktx:3.2.1")
 
 }
