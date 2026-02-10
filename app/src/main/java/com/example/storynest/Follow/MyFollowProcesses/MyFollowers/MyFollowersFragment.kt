@@ -111,8 +111,7 @@ class MyFollowersFragment: Fragment() {
                 adapter.retry()
             }
         )
-
-        setupRetry()
+        
 
         adapter.addLoadStateListener { loadState ->
 
@@ -146,7 +145,6 @@ class MyFollowersFragment: Fragment() {
                 }
             }
 
-            render(uiState)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -215,113 +213,6 @@ class MyFollowersFragment: Fragment() {
         )
     }
 
-    private fun render(state: FollowersUiState) = with(binding) {
-
-        emptyLayout.isVisible = state is FollowersUiState.Empty
-
-        when(state){
-            is FollowersUiState.Loading -> showLoading()
-            is FollowersUiState.Error -> showError(state.message)
-            is FollowersUiState.Content -> showContent()
-            else -> hideOverlays()
-        }
-    }
-
-    private fun setupRetry() {
-        binding.retryButton.setOnClickListener {
-            showLoading()
-            adapter.retry()
-        }
-    }
-
-    private fun showContent() = with(binding){
-        hideLoadingWithDelay {
-            recycler.recyclerFadeIn()
-        }
-    }
-
-
-    private fun showLoading() = with(binding){
-        loadingStartTime = System.currentTimeMillis()
-        errorLayout.fadeOut{
-            errorAnimation.cancelAnimation()
-        }
-        progressBar.fadeIn {
-            progressBar.playAnimation()
-        }
-    }
-
-    private fun showError(message: String) = with(binding){
-        progressBar.fadeOut{
-            progressBar.cancelAnimation()
-        }
-        errorText.text = message
-        errorLayout.fadeIn{
-            errorAnimation.playAnimation()
-        }
-    }
-    private fun hideOverlays() = with(binding){
-        progressBar.fadeOut{
-            progressBar.cancelAnimation()
-        }
-        errorLayout.fadeOut {
-            errorAnimation.cancelAnimation()
-        }
-    }
-
-    private fun View.fadeIn(
-        duration: Long = 200,
-        onStart: (() -> Unit)? = null
-    ) {
-        animate().cancel()
-        alpha = 0f
-        isVisible = true
-        onStart?.invoke()
-        animate().alpha(1f).setDuration(duration).start()
-    }
-
-    private fun View.recyclerFadeIn(
-        duration: Long = 200,
-        onStart: (() -> Unit)? = null
-    ) {
-        if(isVisible) return
-        animate().cancel()
-        alpha = 0f
-        isVisible = true
-        onStart?.invoke()
-        animate().alpha(1f).setDuration(duration).start()
-    }
-
-
-    private fun View.fadeOut(
-        duration: Long = 200,
-        onEnd: (() -> Unit)? = null
-    ) {
-        animate().cancel()
-        animate().alpha(0f).setDuration(duration).withEndAction {
-            isVisible = false
-            onEnd?.invoke()
-        }.start()
-    }
-
-    private fun hideLoadingWithDelay(onEnd: () -> Unit) = with(binding) {
-        val elapsed = System.currentTimeMillis() - loadingStartTime
-        val remaining = MIN_LOADING_DURATION - elapsed
-
-        if (remaining > 0) {
-            progressBar.postDelayed({
-                onEnd
-                progressBar.fadeOut {
-                    progressBar.cancelAnimation()
-                }
-            }, remaining)
-        } else {
-            progressBar.fadeOut {
-                progressBar.cancelAnimation()
-                onEnd()
-            }
-        }
-    }
 
 
 }
