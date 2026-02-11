@@ -40,7 +40,7 @@ class SubCommentsAdapter(private val listener:OnCommentInteractionListener) :
         holder.txtUsername.text = comment.user.username
         holder.txtComment.text = comment.contents
         holder.txtTime.text = formatPostDate(comment.date)
-        holder.txtLikeCount.text = comment.numberof_likes.toString()
+        holder.txtLikeCount.text = comment.number_of_like.toString()
         holder.txtCommentTag.text=comment.parentCommentUsername
 
         holder.btnLike.setImageResource(
@@ -54,13 +54,13 @@ class SubCommentsAdapter(private val listener:OnCommentInteractionListener) :
 
             if (subComment.isLiked) {
                 subComment.isLiked = false
-                subComment.numberof_likes--
+                subComment.number_of_like--
             } else {
                 subComment.isLiked = true
-                subComment.numberof_likes++
+                subComment.number_of_like++
             }
             submitList(newList)
-            listener.onLikeClicked(subComment.commentId)
+            listener.onLikeClicked(subComment.comment_id)
         }
 
         holder.txtReply.setOnClickListener {
@@ -84,7 +84,7 @@ class SubCommentsAdapter(private val listener:OnCommentInteractionListener) :
             override fun areItemsTheSame(
                 oldItem: commentResponse,
                 newItem: commentResponse
-            ) = oldItem.commentId == newItem.commentId
+            ) = oldItem.comment_id == newItem.comment_id
 
             override fun areContentsTheSame(
                 oldItem: commentResponse,
@@ -95,7 +95,6 @@ class SubCommentsAdapter(private val listener:OnCommentInteractionListener) :
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun formatPostDate(postDate: String): String {
-        // Aynı CommentsAdapter'daki formatPostDate fonksiyonu
         val parser = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
         val postUtc = java.time.LocalDateTime.parse(postDate, parser)
             .atZone(java.time.ZoneOffset.UTC)

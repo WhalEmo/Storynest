@@ -1,5 +1,6 @@
 package com.example.storynest.Comments
 
+import com.google.gson.annotations.SerializedName
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -17,15 +18,16 @@ data class commentRequest(
     val parentCommentId: Long?
 )
 data class commentResponse(
-    val commentId:Long,
+    val comment_id:Long,
     val parentCommentUsername:String?,
-    val postId:Long,
+    val post_id:Long,
     val user: userResponseDto,
     val contents:String,
-    var numberof_likes: Int,
+    var number_of_like: Int,
     val date: String,
     var parentCommentId:Long,
-    var isLiked: Boolean,
+    @SerializedName(value = "isLiked", alternate = ["liked"])
+    var isLiked: Boolean = false,
     val replies: List<commentResponse>? = null,
     val isRepliesVisible: Boolean = false
 )
@@ -45,56 +47,55 @@ data class update(
     val contents:String
 )
 data class StringResponse(
+    @SerializedName("message")
     val message: String? = null,
+
+    @SerializedName("error")
     val error: String? = null
-)
-data class SubCommentPagingState(
-    var currentPage: Int = 0,
-    var isLoading: Boolean = false,
-    var isLastPage: Boolean = false
 )
 
 
 interface CMController{
     @POST("/api/comments/addComment")
-     fun addComment(@Body request: commentRequest): Call<commentResponse>
+    suspend fun addComment(@Body request: commentRequest): commentResponse
 
     @POST("/api/comments/addSubComment")
-     fun addSubComment(@Body request: commentRequest): Call<commentResponse>
+     suspend fun addSubComment(@Body request: commentRequest): commentResponse
 
     @GET("/api/comments/commentsGet")
-     fun commentsGet(
+    suspend fun commentsGet(
         @Query("postId") postId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
-    ): Call<List<commentResponse>>
+    ): List<commentResponse>
+
 
     @GET("/api/comments/subCommentsGet")
-     fun subCommentsGet(
+     suspend fun subCommentsGet(
         @Query("parentCommentId") postId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
-    ): Call<List<commentResponse>>
+    ): List<commentResponse>
 
     @POST("/api/comments/{commentId}/like")
-     fun toggleLike(@Path("commentId") commentId: Long): Call<StringResponse>
+     suspend fun toggleLike(@Path("commentId") commentId: Long): StringResponse
 
     @GET("/api/comments/{commentId}/getUsersWhoLike")
-     fun getUsersWhoLike(
+     suspend fun getUsersWhoLike(
         @Path("commentId") commentId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
-    ): Call<List<userResponseDto>>
+    ): List<userResponseDto>
 
     @DELETE("/api/comments/{commentId}/deleteComment")
-     fun deleteComment(
+     suspend fun deleteComment(
         @Path("commentId") commentId: Long
-    ): Call<StringResponse>
+    ): StringResponse
 
     @PUT("/api/comments/{commentId}/updateComment")
-     fun updateComment(
+     suspend fun updateComment(
         @Path("commentId") commentId: Long,
         @Body request: update
-    ): Call<StringResponse>
+    ): StringResponse
 
 }

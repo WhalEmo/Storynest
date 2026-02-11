@@ -11,7 +11,11 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -20,6 +24,8 @@ import com.example.storynest.R
 import com.example.storynest.UiState
 import com.example.storynest.dataLocal.UserStaticClass
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class CommentBottomFragment: BottomSheetDialogFragment() {
     private val CommentRepo by lazy { CommentRepo(ApiClient.commentApi) }
@@ -75,8 +81,6 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
         setUpRecyclerView()
         setupObserves()
         clicks()
-        viewModel.commentsGet(postId,reset = true)
-
     }
 
     private fun setUpRecyclerView(){
@@ -98,47 +102,40 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                 reset: Boolean,
                 onResult: (List<commentResponse>) -> Unit
             ) {
-                viewModel.subCommentsGet(commentId, reset, onResult)
+                //viewModel.subCommentsGet(commentId, reset, onResult)
             }
         })
+
         val layoutManager = LinearLayoutManager(requireContext())
         rvComment.apply {
             this.layoutManager = layoutManager
-            adapter = commentAdapter
+            this.adapter = commentAdapter.withLoadStateFooter(
+                footer = CommentLoadStateAdapter { commentAdapter.retry() }
+            )
+        }
+        commentAdapter.addLoadStateListener { loadState ->
+            progressBar.visibility = if (loadState.source.refresh is LoadState.Loading) View.VISIBLE else View.GONE
+            val isListEmpty = loadState.source.refresh is LoadState.NotLoading && commentAdapter.itemCount == 0
+             txtEmpty.visibility = if (isListEmpty) View.VISIBLE else View.GONE
+            val errorState = loadState.source.refresh as? LoadState.Error
+            if (errorState != null) {
+                txtEmpty.visibility = View.VISIBLE
+                txtEmpty.text = "İnternet bağlantısı yok veya bir hata oluştu."
+            } else if (!isListEmpty) {
+                txtEmpty.text = "Henüz yorum yapılmamış."
+            }
         }
 
-
-        rvComment.addOnScrollListener(object : RecyclerView.OnScrollListener(){
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-
-                val visibleItemCount=layoutManager.childCount
-                val totalItemCount=layoutManager.itemCount
-                val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
-
-                if(!viewModel.isLoadingComment && !viewModel.isLastPageComment){
-                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount &&
-                        firstVisibleItemPosition >= 0
-                    ) {
-                        viewModel.commentsGet(postId)
-                    }
+        lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.getComments(postId).collectLatest { pagingData ->
+                    commentAdapter.submitData(pagingData)
                 }
             }
-        })
+        }
+
     }
     private fun setupObserves(){
-        observeUiState(viewModel.postComments,progressBar){ data ->
-            if(data.isEmpty()){
-                progressBar.visibility = View.GONE
-                rvComment.visibility = View.GONE
-                txtEmpty.visibility = View.VISIBLE
-            }else {
-                progressBar.visibility = View.GONE
-                txtEmpty.visibility = View.GONE
-                rvComment.visibility = View.VISIBLE
-                commentAdapter.submitList(data)
-            }
-        }
 
 
     }
@@ -155,50 +152,11 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             val commentText=etComment.text.toString()
             if (commentText.isEmpty()) return@setOnClickListener
 
-            val tempUser = userResponseDto(
-                id = UserStaticClass.userId ?:0L,
-                username = UserStaticClass.username ?: "",
-                email = UserStaticClass.email ?: "",
-                name = UserStaticClass.name ?: "",
-                surname = UserStaticClass.surname ?: "",
-                profile = UserStaticClass.ppfoto,
-                date = null,
-                biography = null,
-                emailVerified = true,
-                isFollowing = false
-            )
             if (replyinput.visibility == View.VISIBLE) {
-                val tempSubComment = commentResponse(
-                    commentId = System.currentTimeMillis(),
-                    parentCommentUsername = commentforReply.user.username,
-                    postId = postId,
-                    user = tempUser,
-                    contents = commentText,
-                    numberof_likes = 0,
-                    date = "Şimdi",
-                    parentCommentId = commentforReply.commentId,
-                    isLiked = false
-                )
-                viewModel.addSubComment(postId, UserStaticClass.userId,commentText,commentforReply.commentId)
-                commentAdapter.addSubCommentOptimistic(
-                    parentCommentId = commentforReply.commentId,
-                    subComment = tempSubComment
-                )
+                viewModel.addSubComment(postId, UserStaticClass.userId,commentText,commentforReply.comment_id)
             } else {
-                val tempComment = commentResponse(
-                    commentId = System.currentTimeMillis(),
-                    parentCommentUsername = null,
-                    postId = postId,
-                    user = tempUser,
-                    contents = commentText,
-                    numberof_likes = 0,
-                    date = "Şimdi",
-                    parentCommentId = 0L,
-                    isLiked = false
-                )
 
                 viewModel.addComment(postId, UserStaticClass.userId,commentText,null)
-                commentAdapter.addCommentOptimistic(tempComment)
             }
 
             etComment.text.clear()

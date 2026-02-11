@@ -15,14 +15,14 @@ class HomePageRepo(
 ) {
     suspend fun addPost(request: postRequest): ResultWrapper<postResponse> =
         safeApiCall {
-            api.addPost(request).execute()
+            api.addPost(request)
         }
 
     suspend fun toggleLike(
         postId: Long
     ): ResultWrapper<ToggleLikeResponse> =
         safeApiCall {
-            api.toggleLike(postId).execute()
+            api.toggleLike(postId)
         }
     suspend fun getUsersWhoLike(
         postId: Long,
@@ -30,7 +30,7 @@ class HomePageRepo(
         size: Int = 10
     ):ResultWrapper<List<UserResponse>> =
         safeApiCall {
-            api.getUsersWhoLike(postId, page, size).execute()
+            api.getUsersWhoLike(postId, page, size)
         }
 
 
@@ -39,7 +39,7 @@ class HomePageRepo(
         size: Int = 10
     ): ResultWrapper<List<postResponse>> =
         safeApiCall {
-            api.HomePagePosts(page ,size).execute()
+            api.HomePagePosts(page ,size)
         }
 
 }

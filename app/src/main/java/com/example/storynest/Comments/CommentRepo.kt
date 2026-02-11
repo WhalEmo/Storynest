@@ -1,19 +1,23 @@
 package com.example.storynest.Comments
 
+import android.util.Log
 import com.example.storynest.ResultWrapper
 import com.example.storynest.safeApiCall
 
 class CommentRepo(
     private val api: CMController
 ) {
-    suspend fun addComment(request: commentRequest): ResultWrapper<commentResponse> =
+
+    suspend fun addComment(request: commentRequest)
+            : ResultWrapper<commentResponse> =
         safeApiCall {
-            api.addComment(request).execute()
+            api.addComment(request)
         }
 
-    suspend fun addSubComment(request: commentRequest): ResultWrapper<commentResponse> =
+    suspend fun addSubComment(request: commentRequest)
+            : ResultWrapper<commentResponse> =
         safeApiCall {
-            api.addSubComment(request).execute()
+            api.addSubComment(request)
         }
 
     suspend fun commentsGet(
@@ -22,7 +26,7 @@ class CommentRepo(
         size: Int = 10
     ): ResultWrapper<List<commentResponse>> =
         safeApiCall {
-            api.commentsGet(postId,page,size).execute()
+            api.commentsGet(postId, page, size)
         }
 
     suspend fun subCommentsGet(
@@ -31,30 +35,30 @@ class CommentRepo(
         size: Int = 10
     ): ResultWrapper<List<commentResponse>> =
         safeApiCall {
-            api.subCommentsGet(parentCommentId,page,size).execute()
+            api.subCommentsGet(parentCommentId, page, size)
         }
 
     suspend fun toggleLike(
         commentId: Long
     ): ResultWrapper<StringResponse> =
         safeApiCall {
-            api.toggleLike(commentId).execute()
+            api.toggleLike(commentId)
         }
 
     suspend fun getUsersWhoLike(
         commentId: Long,
         page: Int = 0,
         size: Int = 10
-    ):ResultWrapper<List<userResponseDto>> =
+    ): ResultWrapper<List<userResponseDto>> =
         safeApiCall {
-            api.getUsersWhoLike(commentId, page, size).execute()
+            api.getUsersWhoLike(commentId, page, size)
         }
 
     suspend fun deleteComment(
         commentId: Long
     ): ResultWrapper<StringResponse> =
         safeApiCall {
-            api.deleteComment(commentId).execute()
+            api.deleteComment(commentId)
         }
 
     suspend fun updateComment(
@@ -62,7 +66,6 @@ class CommentRepo(
         request: update
     ): ResultWrapper<StringResponse> =
         safeApiCall {
-            api.updateComment(commentId,request).execute()
+            api.updateComment(commentId, request)
         }
-
 }

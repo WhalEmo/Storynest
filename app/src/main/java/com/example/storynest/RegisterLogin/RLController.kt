@@ -46,22 +46,22 @@ data class ResetPasswordRequest(
 
 interface RLController {
     @POST("/api/users/login")
-    fun login(@Body request: loginRequest): Call<LoginResponse>
+    suspend fun login(@Body request: loginRequest): LoginResponse
 
     @POST("/api/users/register")
-    fun register(@Body request: registerRequest): Call<UserResponse>
+    suspend fun register(@Body request: registerRequest): UserResponse
 
     @GET("/auth/verify")
-    fun verify(@Query("token") token: String): Call<VerifyResponse>
+    suspend fun verify(@Query("token") token: String): VerifyResponse
 
     @POST("/auth/forgotPassword")
-    fun forgotPassword(@Query("email") email: String): Call<VerifyResponse>
+    suspend fun forgotPassword(@Query("email") email: String): VerifyResponse
 
 
     @GET("/auth/reset-password")
-    fun verifyResetPassword(@Query("token") token: String): Call<VerifyResponse>
+    suspend fun verifyResetPassword(@Query("token") token: String): VerifyResponse
 
     @POST("/auth/savePassword")
-    fun saveNewPassword(@Query("token") token: String, @Body request: ResetPasswordRequest): Call<VerifyResponse>
+    suspend fun saveNewPassword(@Query("token") token: String, @Body request: ResetPasswordRequest):VerifyResponse
 
 }

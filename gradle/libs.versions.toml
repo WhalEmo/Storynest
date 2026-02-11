@@ -13,6 +13,8 @@ legacySupportV4 = "1.0.0"
 lifecycleLivedataKtx = "2.9.4"
 lifecycleViewmodelKtx = "2.9.4"
 fragmentKtx = "1.5.6"
+pagingCommon = "3.4.0"
+pagingRuntimeKtx = "3.4.0"
 
 [libraries]
 androidxCoreKtx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -27,6 +29,8 @@ legacySupportV4 = { group = "androidx.legacy", name = "legacy-support-v4", versi
 lifecycleLivedataKtx = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycleLivedataKtx" }
 lifecycleViewmodelKtx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 fragmentKtx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
+pagingCommon = { group = "androidx.paging", name = "paging-common", version.ref = "pagingCommon" }
+pagingRuntimeKtx = { group = "androidx.paging", name = "paging-runtime-ktx", version.ref = "pagingRuntimeKtx" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

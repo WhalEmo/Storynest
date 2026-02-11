@@ -144,49 +144,40 @@ class LaunchActivity : AppCompatActivity() {
     private fun verifyEmail(token: String) {
         Log.d("VERIFY", "verifyEmail çağrıldı")
 
-        ApiClient.api.verify(token).enqueue(object : Callback<VerifyResponse> {
-
-            override fun onResponse(
-                call: Call<VerifyResponse>,
-                response: Response<VerifyResponse>
-            ) {
-                if (response.isSuccessful) {
-                    Log.d("VERIFY", response.body()?.message ?: "success")
-                    dontNormalFlow("login")
-                } else {
-                    Toast.makeText(this@LaunchActivity, "Doğrulama linki geçersiz!.", Toast.LENGTH_SHORT).show()
-                    dontNormalFlow("showLogin")
-                }
+        lifecycleScope.launch {
+            try {
+                val result = ApiClient.api.verify(token) // suspend çağrı
+                Log.d("VERIFY", result.message ?: "success")
+                dontNormalFlow("login")
+            } catch (e: Exception) {
+                Log.e("VERIFY", "network error", e)
+                Toast.makeText(
+                    this@LaunchActivity,
+                    "Doğrulama linki geçersiz veya internet yok!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                dontNormalFlow("showLogin")
             }
-
-            override fun onFailure(call: Call<VerifyResponse>, t: Throwable) {
-                Log.e("VERIFY", "network error", t)
-            }
-        })
+        }
     }
 
     private fun verifyPassword(token: String) {
-        Log.d("VERIFY", "verifyEmail çağrıldı")
+        Log.d("VERIFY", "verifyPassword çağrıldı")
 
-        ApiClient.api.verifyResetPassword(token).enqueue(object : Callback<VerifyResponse> {
-
-            override fun onResponse(
-                call: Call<VerifyResponse>,
-                response: Response<VerifyResponse>
-            ) {
-                if (response.isSuccessful) {
-                    dontNormalFlow("forgotpassword",token)
-                } else {
-                    Toast.makeText(this@LaunchActivity, "Şifre değiştirme linki geçersiz!.", Toast.LENGTH_SHORT).show()
-                    dontNormalFlow("login")
-                }
+        lifecycleScope.launch {
+            try {
+                val result = ApiClient.api.verifyResetPassword(token) // suspend
+                dontNormalFlow("forgotpassword", token)
+            } catch (e: Exception) {
+                Log.e("VERIFY", "network error", e)
+                Toast.makeText(
+                    this@LaunchActivity,
+                    "Şifre değiştirme linki geçersiz veya internet yok!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                dontNormalFlow("login")
             }
-            override fun onFailure(call: Call<VerifyResponse>, t: Throwable) {
-                Log.e("VERIFY", "network error", t)
-            }
-        })
+        }
     }
-
-
 
 }

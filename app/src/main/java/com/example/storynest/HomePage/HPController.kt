@@ -47,33 +47,33 @@ data class ToggleLikeResponse(
 
 interface HPController {
     @POST("/api/posts/addPost")
-    fun addPost(@Body request: postRequest): Call<postResponse>
+    suspend fun addPost(@Body request: postRequest): postResponse
 
     @GET("/api/posts/getUserPosts")
-    fun getUserPosts(
+    suspend fun getUserPosts(
         @Query("userId") userId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
-    ): Call<List<postResponse>>
+    ): List<postResponse>
 
 
     @POST("/api/posts/{postId}/like")
-    fun toggleLike(@Path("postId") postId: Long): Call<ToggleLikeResponse>
+    suspend fun toggleLike(@Path("postId") postId: Long): ToggleLikeResponse
 
 
     @GET("/api/posts/{postId}/getUsersWhoLike")
-    fun getUsersWhoLike(
+    suspend fun getUsersWhoLike(
         @Path("postId") postId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
-    ): Call<List<UserResponse>>
+    ):List<UserResponse>
 
 
     @GET("/api/posts/HomePagePosts")
-    fun HomePagePosts(
+    suspend fun HomePagePosts(
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
-    ): Call<List<postResponse>>
+    ): List<postResponse>
 }
 
 

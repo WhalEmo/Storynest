@@ -1,39 +1,38 @@
 package com.example.storynest
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-public suspend fun <T> safeApiCall(
-    call: suspend () -> retrofit2.Response<T>
+suspend fun <T> safeApiCall(
+    call: suspend () -> T
 ): ResultWrapper<T> {
-    return try {
-        val response = withContext(Dispatchers.IO) { call() }
 
-        if (response.isSuccessful) {
-            val body = response.body()
-            if (body != null) {
-                ResultWrapper.Success(body)
-            } else {
-                ResultWrapper.Error(
-                    "Boş response",
-                    ErrorType.EMPTY_RESPONSE
-                )
-            }
-        } else {
-            ResultWrapper.Error(
-                parseErrorBody(response.errorBody()?.string()),
-                ErrorType.SERVER_ERROR
-            )
+    return try {
+
+        val result = withContext(Dispatchers.IO) {
+            call()
         }
+
+        ResultWrapper.Success(result)
+
     } catch (e: java.io.IOException) {
+
         ResultWrapper.Error(
             "İnternet bağlantısı yok",
             ErrorType.NETWORK_ERROR
         )
+
+    } catch (e: retrofit2.HttpException) {
+
+        val errorBody = e.response()?.errorBody()?.string()
+        Log.e("API_ERROR", "HTTP Hatası: ${e.code()} - $errorBody") // DETAYLI HATA LOGU
+        ResultWrapper.Error(e.message(), ErrorType.SERVER_ERROR)
+
     } catch (e: Exception) {
-        ResultWrapper.Error(
-            e.message ?: "Bilinmeyen hata",
-            ErrorType.SERVER_ERROR
-        )
+
+        Log.e("API_ERROR", "Bilinmeyen Hata: ${e.localizedMessage}")
+        e.printStackTrace() // Tüm hata yığınını yazdır
+        ResultWrapper.Error(e.message ?: "Bilinmeyen hata", ErrorType.SERVER_ERROR)
     }
 }

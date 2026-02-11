@@ -12,17 +12,17 @@ class RegisterLoginRepo(
 ) {
     suspend fun login(request: loginRequest): ResultWrapper<LoginResponse> =
         safeApiCall {
-            api.login(request).execute()
+            api.login(request)
         }
 
     suspend fun register(request: registerRequest): ResultWrapper<UserResponse> =
         safeApiCall {
-            api.register(request).execute()
+            api.register(request)
         }
 
     suspend fun resetPassword(email: String): ResultWrapper<String> =
         safeApiCall {
-            api.forgotPassword(email).execute()
+            api.forgotPassword(email)
         }.mapSuccess {
             "Emailinize şifre sıfırlama linki gönderildi."
         }
@@ -32,7 +32,7 @@ class RegisterLoginRepo(
         request: ResetPasswordRequest
     ): ResultWrapper<String> =
         safeApiCall {
-            api.saveNewPassword(token, request).execute()
+            api.saveNewPassword(token, request)
         }.mapSuccess {
             it.message
         }

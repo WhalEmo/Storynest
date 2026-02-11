@@ -1,11 +1,20 @@
 package com.example.storynest.Comments
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import com.example.storynest.ApiClient
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 
@@ -21,10 +30,14 @@ class CommentsViewModel(
     private val _postComments= MutableLiveData<UiState<List<commentResponse>>>()
     val postComments: LiveData<UiState<List<commentResponse>>> = _postComments
 
-    private val _postSubComments= MutableLiveData<UiState<List<commentResponse>>>()
-    val postSubComments: LiveData<UiState<List<commentResponse>>> = _postSubComments
     private val pageSizeSubComment = 10
-    private val subCommentPagingMap = mutableMapOf<Long, SubCommentPagingState>()
+    private val _subCommentsState =
+        MutableStateFlow<Map<Long, UiState<List<commentResponse>>>>(emptyMap())
+
+    val subCommentsState:
+            StateFlow<Map<Long, UiState<List<commentResponse>>>> =
+        _subCommentsState
+
 
     private val _commentsLike = MutableLiveData<UiState<StringResponse>>()
     val postsLike: LiveData<UiState<StringResponse>> = _commentsLike
@@ -38,6 +51,8 @@ class CommentsViewModel(
     private val _updateComments = MutableLiveData<UiState<StringResponse>>()
     val updateComment: LiveData<UiState<StringResponse>> = _updateComments
 
+
+
     fun addComment(
         postId: Long,
         userId: Long?,
@@ -49,12 +64,26 @@ class CommentsViewModel(
 
         viewModelScope.launch {
             val result=repo.addComment(request)
-            when (result) {
-                is ResultWrapper.Success -> {
-                    val body = result.data
-                    _addCommentResult.value = UiState.Success(body)
-                }
-                is ResultWrapper.Error -> _addCommentResult.value = UiState.Error(result.message)
+                when (result) {
+
+                    is ResultWrapper.Success -> {
+
+                        val newComment = result.data
+
+                        val currentList =
+                            (_postComments.value as? UiState.Success)?.data
+                                ?: emptyList()
+
+                        val updatedList = listOf(newComment) + currentList
+
+                        _postComments.value = UiState.Success(updatedList)
+
+                        _addCommentResult.value = UiState.Success(newComment)
+                    }
+
+                    is ResultWrapper.Error -> {
+                        _addCommentResult.value = UiState.Error(result.message)
+                    }
             }
         }
     }
@@ -80,81 +109,24 @@ class CommentsViewModel(
         }
     }
 
-    private var currentPageComment = 0
-    private val pageSizeComment = 10
-    var isLoadingComment = false
-    var isLastPageComment = false
-
-    fun commentsGet(
-        postId: Long,
-        reset: Boolean = false
-    ){
-        if(isLoadingComment || isLastPageComment)return
-        if(reset) currentPageComment = 0
-
-        _postComments.value= UiState.Loading
-        isLoadingComment=true
-
-        viewModelScope.launch {
-            val result=repo.commentsGet(postId,currentPageComment,pageSizeComment)
-            when(result){
-                is ResultWrapper.Success -> {
-
-                    val currentList = (_postComments.value as? UiState.Success)?.data ?: emptyList()
-                    val newList = if (reset) result.data else currentList + result.data
-                    _postComments.value = UiState.Success(newList)
-                    isLastPageComment = result.data.size < pageSizeComment
-                    if (!isLastPageComment) currentPageComment++
-                }
-                is ResultWrapper.Error -> _postComments.value = UiState.Error(result.message)
-            }
-            isLoadingComment=false
-        }
-    }
+    private val api = ApiClient.commentApi
 
 
-
-
-    fun subCommentsGet(
-        parentCommentId: Long,
-        reset: Boolean = false,
-        onResult: (List<commentResponse>) -> Unit
-    ) {
-        val state = subCommentPagingMap.getOrPut(parentCommentId) {
-            SubCommentPagingState()
-        }
-
-        if (state.isLoading || state.isLastPage) return
-        if (reset) {
-            state.currentPage = 0
-            state.isLastPage = false
-        }
-
-        state.isLoading = true
-
-        viewModelScope.launch {
-            val result = repo.subCommentsGet(
-                parentCommentId,
-                state.currentPage,
-                pageSizeSubComment
-            )
-
-            when (result) {
-                is ResultWrapper.Success -> {
-                    val newList = result.data
-                    onResult(newList)
-
-                    state.isLastPage = newList.size < pageSizeSubComment
-                    if (!state.isLastPage) state.currentPage++
-                }
-
-                is ResultWrapper.Error -> {
-                    onResult(emptyList())
+    fun getComments(postId: Long): Flow<PagingData<commentResponse>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 20,
+                enablePlaceholders = false,
+                prefetchDistance = 3
+            ),
+            pagingSourceFactory = {
+                CommentPagingSource { page, size ->
+                    api.commentsGet(postId, page, size)
                 }
             }
-            state.isLoading = false
-        }
+        ).flow.cachedIn(viewModelScope)
     }
+
 
     fun toggleLike(
         commentId: Long
@@ -162,6 +134,7 @@ class CommentsViewModel(
         _commentsLike.value= UiState.Loading
         viewModelScope.launch {
             val result=repo.toggleLike(commentId)
+            Log.d("API_CHECK", "İstek atılan Comment ID: $commentId")
             when (result) {
                 is ResultWrapper.Success -> {
                     val body = result.data
