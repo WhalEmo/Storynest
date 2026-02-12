@@ -96,6 +96,6 @@ interface CMController{
      suspend fun updateComment(
         @Path("commentId") commentId: Long,
         @Body request: update
-    ): StringResponse
+    ): commentResponse
 
 }

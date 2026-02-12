@@ -1,15 +1,18 @@
 package com.example.storynest.Comments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
@@ -24,6 +27,7 @@ import com.example.storynest.R
 import com.example.storynest.UiState
 import com.example.storynest.dataLocal.UserStaticClass
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.internal.ViewUtils.hideKeyboard
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -50,6 +54,8 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
     private lateinit var commentforReply: commentResponse
 
     private var postId: Long = -1L
+    private var shouldScrollToTop = false
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,19 +87,56 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
         setUpRecyclerView()
         setupObserves()
         clicks()
+        viewModel.setPostId(postId)
     }
 
-    private fun setUpRecyclerView(){
-        commentAdapter= CommentsAdapter(object : CommentsAdapter.OnCommentInteractionListener{
+    data class OptionItem(val title: String, val iconRes: Int, val action: () -> Unit)
+    private fun setUpRecyclerView() {
+        commentAdapter = CommentsAdapter(object : CommentsAdapter.OnCommentInteractionListener {
             override fun onLikeClicked(commentId: Long) {
                 viewModel.toggleLike(commentId)
             }
+
+            override fun onLongClicked(commentId: Long) {
+                val options = listOf(
+                    OptionItem("Sil", R.drawable.trash) { viewModel.deleteComment(commentId) },
+                    OptionItem("Güncelle", R.drawable.edit) { showUpdateDialog(commentId) }
+                )
+
+                val adapter = object : ArrayAdapter<OptionItem>(
+                    requireContext(),
+                    R.layout.dialog_option_item,
+                    options
+                ) {
+                    override fun getView(
+                        position: Int,
+                        convertView: View?,
+                        parent: ViewGroup
+                    ): View {
+                        val view = convertView ?: LayoutInflater.from(context)
+                            .inflate(R.layout.dialog_option_item, parent, false)
+                        val item = options[position]
+                        val title = view.findViewById<TextView>(R.id.title)
+                        val icon = view.findViewById<ImageView>(R.id.icon)
+                        title.text = item.title
+                        icon.setImageResource(item.iconRes)
+                        return view
+                    }
+                }
+                AlertDialog.Builder(requireContext())
+                    .setAdapter(adapter) { dialog, which ->
+                        options[which].action()
+                    }
+                    .show()
+
+            }
+
             override fun onReplyClicked(comment: commentResponse) {
-                commentforReply=comment
-                replyinput.visibility=View.VISIBLE
-                txtReplyingTo.text=comment.parentCommentUsername
+                commentforReply = comment
+                replyinput.visibility = View.VISIBLE
+                txtReplyingTo.text = comment.parentCommentUsername
                 btnCancelReply.setOnClickListener {
-                    replyinput.visibility= View.GONE
+                    replyinput.visibility = View.GONE
                 }
             }
 
@@ -114,9 +157,15 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             )
         }
         commentAdapter.addLoadStateListener { loadState ->
-            progressBar.visibility = if (loadState.source.refresh is LoadState.Loading) View.VISIBLE else View.GONE
-            val isListEmpty = loadState.source.refresh is LoadState.NotLoading && commentAdapter.itemCount == 0
-             txtEmpty.visibility = if (isListEmpty) View.VISIBLE else View.GONE
+            if (loadState.refresh is LoadState.NotLoading && shouldScrollToTop) {
+                rvComment.scrollToPosition(0)
+                shouldScrollToTop = false
+            }
+            progressBar.visibility =
+                if (loadState.source.refresh is LoadState.Loading) View.VISIBLE else View.GONE
+            val isListEmpty =
+                loadState.source.refresh is LoadState.NotLoading && commentAdapter.itemCount == 0
+            txtEmpty.visibility = if (isListEmpty) View.VISIBLE else View.GONE
             val errorState = loadState.source.refresh as? LoadState.Error
             if (errorState != null) {
                 txtEmpty.visibility = View.VISIBLE
@@ -125,16 +174,57 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                 txtEmpty.text = "Henüz yorum yapılmamış."
             }
         }
-
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.getComments(postId).collectLatest { pagingData ->
-                    commentAdapter.submitData(pagingData)
+
+                launch {
+                    viewModel.comments.collectLatest { pagingData ->
+                        commentAdapter.submitData(pagingData)
+                    }
                 }
+
+                launch {
+                    viewModel.commentAddState.collect { success ->
+                        if (success) {
+                            shouldScrollToTop = true
+                            rvComment.post {
+                                commentAdapter.refresh()
+                            }
+
+                        } else {
+                            Toast.makeText(
+                                requireContext(),
+                                "Yorum eklenemedi",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+
             }
         }
-
     }
+
+        private fun showUpdateDialog(commentId: Long) {
+        val editText = EditText(requireContext())
+        editText.hint = "Yorumu güncelle"
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Yorumu Düzenle")
+            .setView(editText)
+            .setPositiveButton("Güncelle") { dialog, _ ->
+                val newText = editText.text.toString()
+                if (newText.isNotBlank()) {
+                    viewModel.updateComment(commentId, newText)
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("İptal") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
     private fun setupObserves(){
 
 

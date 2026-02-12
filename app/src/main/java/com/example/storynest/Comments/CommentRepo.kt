@@ -64,7 +64,7 @@ class CommentRepo(
     suspend fun updateComment(
         commentId: Long,
         request: update
-    ): ResultWrapper<StringResponse> =
+    ): ResultWrapper<commentResponse> =
         safeApiCall {
             api.updateComment(commentId, request)
         }

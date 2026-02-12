@@ -3,11 +3,13 @@ package com.example.storynest.Comments
 import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.DiffUtil
@@ -30,6 +32,7 @@ class CommentsAdapter(
 
     interface OnCommentInteractionListener {
         fun onLikeClicked(commentId: Long)
+        fun onLongClicked(commentId: Long)
         fun onReplyClicked(comment: commentResponse)
         fun onViewReplys(
             commentId: Long,
@@ -80,8 +83,6 @@ class CommentsAdapter(
                 holder.btnLike.setImageResource(R.drawable.baseline_favorite_border_24)
             }
             holder.txtLikeCount.text = current.number_of_like.toString()
-
-            // 2. Arka planda API'ye haber ver
             listener.onLikeClicked(current.comment_id)
         }
 
@@ -92,7 +93,11 @@ class CommentsAdapter(
 
         holder.txtViewReplies.setOnClickListener {
 
+        }
 
+        holder.layout.setOnLongClickListener {
+           listener.onLongClicked(comment.comment_id)
+            true
         }
 
 
@@ -109,7 +114,7 @@ class CommentsAdapter(
         val txtLikeCount: TextView = itemView.findViewById(R.id.txtLikeCount)
         val txtViewReplies: TextView = itemView.findViewById(R.id.txtViewReplies)
         val rvSubComments: RecyclerView = itemView.findViewById(R.id.rvSubComments)
-
+        val layout: ConstraintLayout=itemView.findViewById(R.id.layout)
         val subAdapter = SubCommentsAdapter(listener)
         private val layoutManager = LinearLayoutManager(itemView.context)
 
@@ -130,14 +135,21 @@ class CommentsAdapter(
             override fun areItemsTheSame(
                 oldItem: commentResponse,
                 newItem: commentResponse
-            ): Boolean = oldItem.comment_id == newItem.comment_id
+            ): Boolean {
+                val same = oldItem.comment_id == newItem.comment_id
+                return same
+            }
 
             override fun areContentsTheSame(
                 oldItem: commentResponse,
                 newItem: commentResponse
-            ): Boolean = oldItem == newItem
+            ): Boolean {
+                val same = oldItem.contents.equals(newItem.contents)
+                return same
+            }
         }
     }
+
 
 
     @RequiresApi(Build.VERSION_CODES.O)
