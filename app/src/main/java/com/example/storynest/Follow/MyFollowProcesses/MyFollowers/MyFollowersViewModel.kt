@@ -10,24 +10,23 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
-import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.Adapter.FollowersRow
+import com.example.storynest.Follow.FollowRepository
+import com.example.storynest.Follow.FollowRow
 import com.example.storynest.TestUserProvider
-import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.Adapter.FollowersRow.FollowerUserItem
+import com.example.storynest.Follow.FollowRow.FollowUserItem
 import com.example.storynest.Notification.FollowRequestStatus
 import com.example.storynest.Notification.FollowResponseDTO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
 
 class MyFollowersViewModel: ViewModel() {
-    private val service: MyFollowersService = MyFollowersService()
+    private val service: FollowRepository = FollowRepository()
 
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
@@ -47,26 +46,8 @@ class MyFollowersViewModel: ViewModel() {
             pagingFollowers.first()
         }
     }
-/*
-    val followers: Flow<PagingData<FollowersRow>> =
-        followUpdates.flatMapLatest { followMap ->
-            pagingFollowers.map { pagingData ->
-                pagingData.map { row ->
-                    if (row is FollowerUserItem) {
-                        val update = followMap[row.followUserResponseDTO.id]
-                        if (update != null) {
-                            row.copy(
-                                followUserResponseDTO = row.followUserResponseDTO.copy(
-                                    followInfo = update
-                                )
-                            )
-                        } else row
-                    } else row
-                }
-            }
-        }*/
 
-    val followers: Flow<PagingData<FollowersRow>> =
+    val followers: Flow<PagingData<FollowRow>> =
         combine(
             pagingFollowers,
             followUpdates,
@@ -75,18 +56,22 @@ class MyFollowersViewModel: ViewModel() {
             pagindata
                 .filter {
                     row ->
-                    if (row is FollowerUserItem){
+                    if (row is FollowUserItem){
                         !removedIds.contains(row.followUserResponseDTO.id)
                     } else true
                 }
                 .map {
                     row ->
-                    if(row is FollowerUserItem){
+                    if(row is FollowUserItem){
                         val update = followMap[row.followUserResponseDTO.id]
                         if(update != null){
+                            Log.e("update", row.toString())
+                            Log.e("update", update.toString())
                             row.copy(
                                 followUserResponseDTO = row.followUserResponseDTO.copy(
-                                    followInfo = update
+                                    followInfo = update,
+                                    followingYou = update.status == FollowRequestStatus.ACCEPTED
+                                            || update.status == FollowRequestStatus.PENDING
                                 )
                             )
                         }else row
@@ -95,7 +80,7 @@ class MyFollowersViewModel: ViewModel() {
         }
 
 
-    private fun createPagingFlow(): Flow<PagingData<FollowersRow>>{
+    private fun createPagingFlow(): Flow<PagingData<FollowRow>>{
         return service.getFollowers()
             .cachedIn(viewModelScope)
     }

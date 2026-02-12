@@ -1,4 +1,4 @@
-package com.example.storynest.Follow.MyFollowProcesses.MyFollowers
+package com.example.storynest.Follow
 
 import com.example.storynest.Follow.RequestDTO.FollowDTO
 import com.example.storynest.Follow.RequestDTO.FollowRequestDTO
@@ -6,14 +6,13 @@ import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
 import com.example.storynest.Notification.FollowResponseDTO
 import retrofit2.Response
 import retrofit2.http.Body
-import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-interface FollowersApiController {
+interface FollowApiController {
 
     @GET("follow/userFollowed")
     suspend fun getUserFollowed(

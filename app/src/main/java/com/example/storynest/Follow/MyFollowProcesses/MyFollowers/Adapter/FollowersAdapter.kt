@@ -4,37 +4,38 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.storynest.Follow.Base.HeaderViewHolder
+import com.example.storynest.Follow.FollowRow
 import com.example.storynest.R
 
 class FollowersAdapter(
-    private val onAccept: (FollowersRow.FollowerUserItem) -> Unit,
-    private val onReject: (FollowersRow.FollowerUserItem) -> Unit,
-    private val onCancelRequest: (FollowersRow.FollowerUserItem) -> Unit,
-    private val onUnFollowMy: (FollowersRow.FollowerUserItem) -> Unit
-) : PagingDataAdapter<FollowersRow, RecyclerView.ViewHolder>(DIFF) {
+    private val onAccept: (FollowRow.FollowUserItem) -> Unit,
+    private val onReject: (FollowRow.FollowUserItem) -> Unit,
+    private val onCancelRequest: (FollowRow.FollowUserItem) -> Unit,
+    private val onUnFollowMy: (FollowRow.FollowUserItem) -> Unit
+) : PagingDataAdapter<FollowRow, RecyclerView.ViewHolder>(DIFF) {
 
     companion object {
 
         private const val TYPE_HEADER = 0
         private const val TYPE_ITEM = 1
 
-        val DIFF = object : DiffUtil.ItemCallback<FollowersRow>() {
+        val DIFF = object : DiffUtil.ItemCallback<FollowRow>() {
 
             override fun areItemsTheSame(
-                oldItem: FollowersRow,
-                newItem: FollowersRow
+                oldItem: FollowRow,
+                newItem: FollowRow
             ): Boolean {
                 return when {
-                    oldItem is FollowersRow.FollowerUserItem &&
-                            newItem is FollowersRow.FollowerUserItem ->
+                    oldItem is FollowRow.FollowUserItem &&
+                            newItem is FollowRow.FollowUserItem ->
                         oldItem.followUserResponseDTO.id ==
                                 newItem.followUserResponseDTO.id
 
 
-                    oldItem is FollowersRow.FollowersHeaderItem &&
-                            newItem is FollowersRow.FollowersHeaderItem ->
+                    oldItem is FollowRow.FollowHeaderItem &&
+                            newItem is FollowRow.FollowHeaderItem ->
                         oldItem.title == newItem.title
 
                     else -> false
@@ -42,17 +43,17 @@ class FollowersAdapter(
             }
 
             override fun areContentsTheSame(
-                oldItem: FollowersRow,
-                newItem: FollowersRow
+                oldItem: FollowRow,
+                newItem: FollowRow
             ): Boolean {
                 return when {
-                    oldItem is FollowersRow.FollowerUserItem &&
-                            newItem is FollowersRow.FollowerUserItem ->
+                    oldItem is FollowRow.FollowUserItem &&
+                            newItem is FollowRow.FollowUserItem ->
                         oldItem.followUserResponseDTO.followInfo.status ==
                                 newItem.followUserResponseDTO.followInfo.status
 
-                    oldItem is FollowersRow.FollowersHeaderItem &&
-                            newItem is FollowersRow.FollowersHeaderItem ->
+                    oldItem is FollowRow.FollowHeaderItem &&
+                            newItem is FollowRow.FollowHeaderItem ->
                         oldItem.title == newItem.title
 
                     else -> true
@@ -65,8 +66,8 @@ class FollowersAdapter(
 
     override fun getItemViewType(position: Int): Int {
         return when(peek(position)){
-            is FollowersRow.FollowerUserItem -> TYPE_ITEM
-            is FollowersRow.FollowersHeaderItem -> TYPE_HEADER
+            is FollowRow.FollowUserItem -> TYPE_ITEM
+            is FollowRow.FollowHeaderItem -> TYPE_HEADER
             else -> TYPE_ITEM
         }
     }
@@ -104,11 +105,11 @@ class FollowersAdapter(
     ) {
         when(val item = getItem(position)){
 
-            is FollowersRow.FollowersHeaderItem -> {
+            is FollowRow.FollowHeaderItem -> {
                 (holder as HeaderViewHolder).bind(item)
             }
 
-            is FollowersRow.FollowerUserItem -> {
+            is FollowRow.FollowUserItem -> {
                 (holder as FollowerUserViewHolder).bind(item)
             }
             null -> {

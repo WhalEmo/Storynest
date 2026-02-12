@@ -141,6 +141,7 @@ class MyFollowersFragment: Fragment() {
                 }
 
                 else -> {
+                    binding.recycler.recyclerFadeIn()
                     FollowersUiState.Content
                 }
             }
@@ -155,9 +156,6 @@ class MyFollowersFragment: Fragment() {
                 }
             }
         }
-
-
-
     }
 
     private fun onAccept(userId: Long){
@@ -213,6 +211,15 @@ class MyFollowersFragment: Fragment() {
         )
     }
 
-
-
+    private fun View.recyclerFadeIn(
+        duration: Long = 200,
+        onStart: (() -> Unit)? = null
+    ) {
+        if(isVisible) return
+        animate().cancel()
+        alpha = 0f
+        isVisible = true
+        onStart?.invoke()
+        animate().alpha(1f).setDuration(duration).start()
+    }
 }

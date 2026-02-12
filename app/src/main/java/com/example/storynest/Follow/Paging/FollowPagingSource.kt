@@ -1,11 +1,12 @@
-package com.example.storynest.Follow.MyFollowProcesses.MyFollowers
+package com.example.storynest.Follow.Paging
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import com.example.storynest.Follow.FollowApiController
 import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
 
-class FollowersPagingSource(
-    private val apiController: FollowersApiController
+class FollowPagingSource(
+    private val loadAction: suspend (page: Int, size: Int) -> List<FollowUserResponseDTO>
 ): PagingSource<Int, FollowUserResponseDTO>() {
 
 
@@ -19,14 +20,10 @@ class FollowersPagingSource(
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, FollowUserResponseDTO> {
         return try {
             val page = params.key ?: 0
-            val response = apiController.getUserFollowed(page, params.loadSize)
+            val data = loadAction(page, params.loadSize)
             val loadSize = params.loadSize
             val pageSize = 20
 
-
-
-            // !isSuccess
-            val data = response.body().orEmpty()
 
             val pageLoaded = loadSize / pageSize
             LoadResult.Page(
