@@ -13,6 +13,8 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.widget.addTextChangedListener
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
@@ -27,8 +29,12 @@ import com.example.storynest.R
 import com.example.storynest.UiState
 import com.example.storynest.dataLocal.UserStaticClass
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.internal.ViewUtils.hideKeyboard
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
 
 class CommentBottomFragment: BottomSheetDialogFragment() {
@@ -88,6 +94,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
         setupObserves()
         clicks()
         viewModel.setPostId(postId)
+
     }
 
     data class OptionItem(val title: String, val iconRes: Int, val action: () -> Unit)
@@ -97,10 +104,10 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                 viewModel.toggleLike(commentId)
             }
 
-            override fun onLongClicked(commentId: Long) {
+            override fun onLongClicked(commentId: Long,commentContents:String) {
                 val options = listOf(
                     OptionItem("Sil", R.drawable.trash) { viewModel.deleteComment(commentId) },
-                    OptionItem("Güncelle", R.drawable.edit) { showUpdateDialog(commentId) }
+                    OptionItem("Güncelle", R.drawable.edit) { showUpdateDialog(commentId,commentContents) }
                 )
 
                 val adapter = object : ArrayAdapter<OptionItem>(
@@ -123,11 +130,13 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                         return view
                     }
                 }
-                AlertDialog.Builder(requireContext())
+                val dialog = MaterialAlertDialogBuilder(requireContext())
                     .setAdapter(adapter) { dialog, which ->
                         options[which].action()
                     }
-                    .show()
+                    .create()
+                dialog.window?.setBackgroundDrawableResource(R.drawable.dialog_rounded_bg)
+                dialog.show()
 
             }
 
@@ -149,6 +158,17 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             }
         })
 
+        commentAdapter.registerAdapterDataObserver(
+            object : RecyclerView.AdapterDataObserver() {
+                override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                    if (positionStart == 0) {
+                        rvComment.scrollToPosition(0)
+                    }
+                }
+            }
+        )
+
+
         val layoutManager = LinearLayoutManager(requireContext())
         rvComment.apply {
             this.layoutManager = layoutManager
@@ -156,40 +176,20 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                 footer = CommentLoadStateAdapter { commentAdapter.retry() }
             )
         }
-        commentAdapter.addLoadStateListener { loadState ->
-            if (loadState.refresh is LoadState.NotLoading && shouldScrollToTop) {
-                rvComment.scrollToPosition(0)
-                shouldScrollToTop = false
-            }
-            progressBar.visibility =
-                if (loadState.source.refresh is LoadState.Loading) View.VISIBLE else View.GONE
-            val isListEmpty =
-                loadState.source.refresh is LoadState.NotLoading && commentAdapter.itemCount == 0
-            txtEmpty.visibility = if (isListEmpty) View.VISIBLE else View.GONE
-            val errorState = loadState.source.refresh as? LoadState.Error
-            if (errorState != null) {
-                txtEmpty.visibility = View.VISIBLE
-                txtEmpty.text = "İnternet bağlantısı yok veya bir hata oluştu."
-            } else if (!isListEmpty) {
-                txtEmpty.text = "Henüz yorum yapılmamış."
-            }
-        }
+
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
                 launch {
-                    viewModel.comments.collectLatest { pagingData ->
-                        commentAdapter.submitData(pagingData)
+                    viewModel.comments.collectLatest {
+                        commentAdapter.submitData(it)
                     }
                 }
 
                 launch {
+
                     viewModel.commentAddState.collect { success ->
                         if (success) {
-                            shouldScrollToTop = true
-                            rvComment.post {
-                                commentAdapter.refresh()
-                            }
 
                         } else {
                             Toast.makeText(
@@ -200,29 +200,97 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                         }
                     }
                 }
+                launch {
+                    commentAdapter.loadStateFlow
+                        .distinctUntilChangedBy { it.refresh }
+                        .collectLatest { loadStates ->
+
+                            val refreshState = loadStates.refresh
+                            val isRefreshing = refreshState is LoadState.Loading
+
+                            progressBar.visibility =
+                                if (isRefreshing) View.VISIBLE else View.GONE
+
+
+                            val isListEmpty =
+                                loadStates.refresh is LoadState.NotLoading &&
+                                        commentAdapter.itemCount == 0
+
+                            txtEmpty.visibility =
+                                if (isListEmpty) View.VISIBLE else View.GONE
+
+                            // Error
+                            val errorState =
+                                loadStates.refresh as? LoadState.Error
+
+                            if (errorState != null) {
+                                txtEmpty.visibility = View.VISIBLE
+                                txtEmpty.text =
+                                    "İnternet bağlantısı yok veya bir hata oluştu."
+                            } else if (!isListEmpty) {
+                                txtEmpty.text = "Henüz yorum yapılmamış."
+                            }
+                        }
+                }
 
             }
         }
     }
 
-        private fun showUpdateDialog(commentId: Long) {
-        val editText = EditText(requireContext())
-        editText.hint = "Yorumu güncelle"
+    private fun showUpdateDialog(commentId: Long, commentContents: String) {
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Yorumu Düzenle")
-            .setView(editText)
-            .setPositiveButton("Güncelle") { dialog, _ ->
-                val newText = editText.text.toString()
-                if (newText.isNotBlank()) {
+        val view = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_update_comment, null)
+
+        val textInputLayout = view.findViewById<TextInputLayout>(R.id.textInputLayout)
+        val editText = view.findViewById<TextInputEditText>(R.id.editComment)
+
+        editText.setText(commentContents)
+        editText.setSelection(commentContents.length)
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(view)
+            .setPositiveButton("Güncelle", null)
+            .setNegativeButton("İptal") { dialogInterface, _ ->
+                dialogInterface.dismiss()
+            }
+            .create()
+
+        dialog.setOnShowListener {
+            val button = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+
+            fun updateButtonState() {
+                val currentText = editText.text.toString()
+                val trimmedCurrent = currentText.trim()
+                val trimmedOriginal = commentContents.trim()
+
+                val enableButton = trimmedCurrent.isNotEmpty() && trimmedCurrent != trimmedOriginal
+
+                button.isEnabled = enableButton
+                button.alpha = if (enableButton) 1f else 0.5f
+            }
+
+            updateButtonState()
+
+            editText.addTextChangedListener { editable ->
+                val currentText = editable.toString()
+
+                if (currentText.length > 250) {
+                    editText.setText(currentText.substring(0, 250))
+                    editText.setSelection(250)
+                }
+
+                updateButtonState()
+            }
+            button.setOnClickListener {
+                val newText = editText.text.toString().trim()
+                if (newText != commentContents.trim()) {
                     viewModel.updateComment(commentId, newText)
                 }
                 dialog.dismiss()
             }
-            .setNegativeButton("İptal") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .show()
+        }
+        dialog.show()
     }
 
     private fun setupObserves(){
@@ -238,9 +306,25 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             .circleCrop()
             .into(imgProfile)
 
+
+        btnSend.isEnabled = false
+        btnSend.alpha = 0.5f
+
+        etComment.doOnTextChanged { text, _, _, _ ->
+            val hasText = !text.isNullOrBlank()
+            btnSend.isEnabled = hasText
+            btnSend.alpha = if (hasText) 1.0f else 0.5f
+        }
+
         btnSend.setOnClickListener {
-            val commentText=etComment.text.toString()
+            val commentText = etComment.text.toString().trim()
+
             if (commentText.isEmpty()) return@setOnClickListener
+
+            if (commentText.length > 250) {
+                etComment.error = "En fazla 250 karakter yazabilirsiniz"
+                return@setOnClickListener
+            }
 
             if (replyinput.visibility == View.VISIBLE) {
                 viewModel.addSubComment(postId, UserStaticClass.userId,commentText,commentforReply.comment_id)

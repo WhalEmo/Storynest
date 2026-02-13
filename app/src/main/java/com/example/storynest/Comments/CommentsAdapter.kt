@@ -1,9 +1,7 @@
 package com.example.storynest.Comments
 
 import android.os.Build
-import android.util.Log
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -11,12 +9,10 @@ import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.paging.PagingDataAdapter
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.storynest.HomePage.PostAdapter.Companion.DIFF_CALLBACK
 import com.example.storynest.R
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -27,12 +23,12 @@ import java.time.temporal.ChronoUnit
 
 class CommentsAdapter(
     private val listener: OnCommentInteractionListener
-) : PagingDataAdapter<commentResponse, CommentsAdapter.CommentViewHolder>(DIFF_CALLBACK){
+) : PagingDataAdapter<commentResponse, CommentsAdapter.CommentViewHolder>(DIFF_CALLBACK) {
 
 
     interface OnCommentInteractionListener {
         fun onLikeClicked(commentId: Long)
-        fun onLongClicked(commentId: Long)
+        fun onLongClicked(commentId: Long,commentContents:String)
         fun onReplyClicked(comment: commentResponse)
         fun onViewReplys(
             commentId: Long,
@@ -63,14 +59,23 @@ class CommentsAdapter(
         holder.txtUsername.text = comment.user.username
         holder.txtComment.text = comment.contents
         holder.txtTime.text = formatPostDate(comment.date)
-        holder.txtLikeCount.text = comment.number_of_like.toString()
+        holder.txtLikeCount.text = formatLike(comment.number_of_like)
 
-        Log.d("LIKE_DEBUG", "Yorum: ${comment.contents} - isLiked Verisi: ${comment.isLiked}")
-        if(comment.isLiked){
+        if (comment.isLiked) {
             holder.btnLike.setImageResource(R.drawable.baseline_favorite_24)
-        }else{
+        } else {
             holder.btnLike.setImageResource(R.drawable.baseline_favorite_border_24)
         }
+
+        if(comment.isEdited){
+            holder.txtEdited.visibility=View.VISIBLE
+            holder.txtEditDate.visibility= View.VISIBLE
+            holder.txtEditDate.text=formatPostDate(comment.updateDate)
+        }else{
+            holder.txtEdited.visibility= View.GONE
+            holder.txtEditDate.visibility= View.GONE
+        }
+
         holder.btnLike.setOnClickListener {
             val current = getItem(holder.bindingAdapterPosition) ?: return@setOnClickListener
 
@@ -96,10 +101,9 @@ class CommentsAdapter(
         }
 
         holder.layout.setOnLongClickListener {
-           listener.onLongClicked(comment.comment_id)
+            listener.onLongClicked(comment.comment_id,comment.contents)
             true
         }
-
 
     }
 
@@ -114,7 +118,9 @@ class CommentsAdapter(
         val txtLikeCount: TextView = itemView.findViewById(R.id.txtLikeCount)
         val txtViewReplies: TextView = itemView.findViewById(R.id.txtViewReplies)
         val rvSubComments: RecyclerView = itemView.findViewById(R.id.rvSubComments)
-        val layout: ConstraintLayout=itemView.findViewById(R.id.layout)
+        val layout: ConstraintLayout = itemView.findViewById(R.id.layout)
+        val txtEdited: TextView=itemView.findViewById(R.id.txtEdited)
+        val txtEditDate: TextView=itemView.findViewById(R.id.txtEditDate)
         val subAdapter = SubCommentsAdapter(listener)
         private val layoutManager = LinearLayoutManager(itemView.context)
 
@@ -145,15 +151,17 @@ class CommentsAdapter(
                 newItem: commentResponse
             ): Boolean {
                 val same = oldItem.contents.equals(newItem.contents)
+                        &&oldItem.isEdited.equals(newItem.isEdited)
+                        && oldItem.updateDate == newItem.updateDate
+
                 return same
             }
         }
     }
 
 
-
     @RequiresApi(Build.VERSION_CODES.O)
-    fun formatPostDate(postDate: String): String {
+    fun formatPostDate(postDate: String?): String {
 
         val postUtc = LocalDateTime.parse(
             postDate,
@@ -174,5 +182,28 @@ class CommentsAdapter(
             minutes >= 1 -> "$minutes dakika"
             else -> "Şimdi"
         }
+    }
+
+    private fun formatLike(likeCount: Int): String {
+        return when {
+            likeCount < 9_999 -> {
+                likeCount.toString()
+            }
+
+            likeCount < 1_000_000 -> {
+                val value = likeCount / 1_000.0
+                formatDecimal(value) + "Bin"
+            }
+
+            else -> {
+                val value = likeCount / 1_000_000.0
+                formatDecimal(value) + "M"
+            }
+        }
+    }
+
+    private fun formatDecimal(value: Double): String {
+        val formatted = String.format("%.1f", value)
+        return formatted.replace(".0", "").replace(".", ",")
     }
 }

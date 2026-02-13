@@ -10,10 +10,12 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.filter
+import androidx.paging.insertHeaderItem
 import androidx.paging.map
 import com.example.storynest.ApiClient
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,12 +25,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
 class CommentsViewModel(
     private val repo: CommentRepo
-) : ViewModel(){
+) : ViewModel() {
 
     private val _commentAddState = MutableSharedFlow<Boolean>()
     val commentAddState = _commentAddState.asSharedFlow()
@@ -36,7 +40,7 @@ class CommentsViewModel(
     private val _addSubCommentResult = MutableLiveData<UiState<commentResponse>>()
     val addSubCommentResult: LiveData<UiState<commentResponse>> = _addSubCommentResult
 
-    private val _postComments= MutableLiveData<UiState<List<commentResponse>>>()
+    private val _postComments = MutableLiveData<UiState<List<commentResponse>>>()
     val postComments: LiveData<UiState<List<commentResponse>>> = _postComments
 
     private val _subCommentsState =
@@ -49,7 +53,6 @@ class CommentsViewModel(
 
     private val _updatedComments = MutableStateFlow<Map<Long, commentResponse>>(emptyMap())
     val updatedComments: StateFlow<Map<Long, commentResponse>> = _updatedComments.asStateFlow()
-
 
 
     private val _postId = MutableStateFlow<Long?>(null)
@@ -79,18 +82,21 @@ class CommentsViewModel(
         userId: Long?,
         contents: String,
         parentCommentId: Long?
-    ){
-        val request= commentRequest(postId,userId,contents,parentCommentId)
+    ) {
+        val request = commentRequest(postId, userId, contents, parentCommentId)
         viewModelScope.launch {
-            val result=repo.addComment(request)
+            val result = repo.addComment(request)
             when (result) {
 
                 is ResultWrapper.Success -> {
                     _commentAddState.emit(true)
+                    _newComments.update { currentList ->
+                        listOf(result.data) + currentList
+                    }
                 }
 
                 is ResultWrapper.Error -> {
-                   _commentAddState.emit(false)
+                    _commentAddState.emit(false)
                 }
             }
         }
@@ -101,21 +107,23 @@ class CommentsViewModel(
         userId: Long?,
         contents: String,
         parentCommentId: Long
-    ){
-        val request= commentRequest(postId,userId,contents,parentCommentId)
-        _addSubCommentResult.value= UiState.Loading
+    ) {
+        val request = commentRequest(postId, userId, contents, parentCommentId)
+        _addSubCommentResult.value = UiState.Loading
 
         viewModelScope.launch {
-            val result=repo.addSubComment(request)
+            val result = repo.addSubComment(request)
             when (result) {
                 is ResultWrapper.Success -> {
                     val body = result.data
                     _addSubCommentResult.value = UiState.Success(body)
                 }
+
                 is ResultWrapper.Error -> _addSubCommentResult.value = UiState.Error(result.message)
             }
         }
     }
+
     private val api = ApiClient.commentApi
 
 
@@ -135,19 +143,36 @@ class CommentsViewModel(
         ).flow.cachedIn(viewModelScope)
     }
 
+    private val _newComments = MutableStateFlow<List<commentResponse>>(emptyList())
+    val newComments = _newComments.asStateFlow()
+
+
+
     val comments: Flow<PagingData<commentResponse>> =
         combine(
             pagingComments,
             removedCommentIds,
-            updatedComments
-        ) { pagingData, removedIds, updates ->
-            pagingData
-                .filter { comment -> !removedIds.contains(comment.comment_id) }
+            updatedComments,
+            newComments
+        ) { pagingData, removedIds, updates, newItems ->
+
+            var baseData = pagingData
+                .filter { !removedIds.contains(it.comment_id) }
                 .map { comment ->
                     updates[comment.comment_id]?.let { updated ->
-                        comment.copy(contents = updated.contents)
-                    } ?: comment.copy()
+                        comment.copy(
+                            contents = updated.contents,
+                            isEdited = updated.isEdited,
+                            updateDate = updated.updateDate
+                        )
+                    } ?: comment
                 }
+
+            newItems.reversed().forEach { newItem ->
+                baseData = baseData.insertHeaderItem(item = newItem)
+            }
+
+            baseData
         }
 
     fun deleteComment(commentId: Long) {
@@ -186,8 +211,6 @@ class CommentsViewModel(
             }
         }
     }
-
-
 
 
     fun toggleLike(

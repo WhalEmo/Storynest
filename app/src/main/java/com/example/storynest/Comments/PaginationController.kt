@@ -21,7 +21,7 @@ class CommentPagingSource(
             val response = apiCall(position, params.loadSize)
             LoadResult.Page(
                 data = response,
-                prevKey = if (position == 1) null else position - 1,
+                prevKey = if (position == 0) null else position - 1,
                 nextKey = if (response.isEmpty()) null else position + 1
             )
         } catch (e: Exception) {

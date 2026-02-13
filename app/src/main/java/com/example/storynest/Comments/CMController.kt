@@ -25,9 +25,12 @@ data class commentResponse(
     val contents:String,
     var number_of_like: Int,
     val date: String,
+    var updateDate: String?,
     var parentCommentId:Long,
     @SerializedName(value = "isLiked", alternate = ["liked"])
     var isLiked: Boolean = false,
+    @SerializedName(value = "isEdited", alternate = ["edited"])
+    var isEdited: Boolean=false,
     val replies: List<commentResponse>? = null,
     val isRepliesVisible: Boolean = false
 )
