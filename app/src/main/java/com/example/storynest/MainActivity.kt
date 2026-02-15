@@ -5,7 +5,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.storynest.Profile.MyProfile
+import androidx.fragment.app.Fragment
+import com.example.storynest.Profile.ProfileData
+import com.example.storynest.Profile.ProfileFragment
+import com.example.storynest.Profile.ProfileMode
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,7 +23,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         val at = "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=800"
-        val myProfile: MyProfile = MyProfile(
+        val profileData: ProfileData = ProfileData(
             id = 1,
             username = "emrullah.dev",
             email = "emrullah@example.com",
@@ -31,10 +34,26 @@ class MainActivity : AppCompatActivity() {
             followers = 128,
             following = 89
         )
-
+        navigateTo(
+            ProfileFragment.newInstance(
+                mode = ProfileMode.MY_PROFILE
+            )
+        )
 
     }
 
+    fun navigateTo(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.enter_from_right,
+                R.anim.exit_to_left,
+                R.anim.enter_from_left,
+                R.anim.exit_to_right
+            )
+            .replace(R.id.nav_host, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
 
 
 
