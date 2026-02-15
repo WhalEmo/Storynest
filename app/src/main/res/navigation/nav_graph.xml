@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/profileFragment">
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.storynest.Profile.ProfileFragment">
+
+        <action
+            android:id="@+id/action_profile_to_followList"
+            app:destination="@id/followListFragment"
+            app:enterAnim="@anim/enter_from_right"
+            app:exitAnim="@anim/exit_to_left"
+            app:popEnterAnim="@anim/enter_from_left"
+            app:popExitAnim="@anim/exit_to_right"
+            />
+        <action
+            android:id="@+id/action_profile_to_notification"
+            app:destination="@id/notificationFragment"
+            app:enterAnim="@anim/enter_from_right"
+            app:exitAnim="@anim/exit_to_left"
+            app:popEnterAnim="@anim/enter_from_left"
+            app:popExitAnim="@anim/exit_to_right"
+            />
+        <action
+            android:id="@+id/action_profile_to_settings"
+            app:destination="@id/settingsFragment"
+            app:enterAnim="@anim/enter_from_right"
+            app:exitAnim="@anim/exit_to_left"
+            app:popEnterAnim="@anim/enter_from_left"
+            app:popExitAnim="@anim/exit_to_right"
+            />
+    </fragment>
+
+    <fragment
+        android:id="@+id/notificationFragment"
+        android:name="com.example.storynest.Notification.NotificationFragment">
+    </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.storynest.Settings.SettingsFragment">
+    </fragment>
+
+
+
+    <fragment
+        android:id="@+id/followListFragment"
+        android:name="com.example.storynest.Follow.FollowListFragment">
+
+        <argument
+            android:name="type"
+            app:argType="string" />
+
+        <argument
+            android:name="userId"
+            app:argType="long" />
+    </fragment>
+
+</navigation>

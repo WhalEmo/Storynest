@@ -1,5 +1,4 @@
-package com.example.storynest.Follow.MyFollowProcesses.MyFollowers
-
+package com.example.storynest.Follow
 
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -10,12 +9,9 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
-import com.example.storynest.Follow.FollowRepository
-import com.example.storynest.Follow.FollowRow
-import com.example.storynest.TestUserProvider
-import com.example.storynest.Follow.FollowRow.FollowUserItem
 import com.example.storynest.Notification.FollowRequestStatus
 import com.example.storynest.Notification.FollowResponseDTO
+import com.example.storynest.TestUserProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -24,8 +20,7 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
-
-class MyFollowersViewModel: ViewModel() {
+class FollowViewModel: ViewModel() {
     private val service: FollowRepository = FollowRepository()
 
     private val _error = MutableLiveData<String>()
@@ -52,19 +47,17 @@ class MyFollowersViewModel: ViewModel() {
             pagingFollowers,
             followUpdates,
             removedUserIds
-        ){pagindata, followMap, removedIds ->
+        ) { pagindata, followMap, removedIds ->
             pagindata
-                .filter {
-                    row ->
-                    if (row is FollowUserItem){
+                .filter { row ->
+                    if (row is FollowRow.FollowUserItem) {
                         !removedIds.contains(row.followUserResponseDTO.id)
                     } else true
                 }
-                .map {
-                    row ->
-                    if(row is FollowUserItem){
+                .map { row ->
+                    if (row is FollowRow.FollowUserItem) {
                         val update = followMap[row.followUserResponseDTO.id]
-                        if(update != null){
+                        if (update != null) {
                             Log.e("update", row.toString())
                             Log.e("update", update.toString())
                             row.copy(
@@ -74,13 +67,13 @@ class MyFollowersViewModel: ViewModel() {
                                             || update.status == FollowRequestStatus.PENDING
                                 )
                             )
-                        }else row
-                    }else row
+                        } else row
+                    } else row
                 }
         }
 
 
-    private fun createPagingFlow(): Flow<PagingData<FollowRow>>{
+    private fun createPagingFlow(): Flow<PagingData<FollowRow>> {
         return service.getFollowers()
             .cachedIn(viewModelScope)
     }

@@ -8,18 +8,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import coil.load
-import com.example.storynest.CustomViews.ErrorDialog
 import com.example.storynest.CustomViews.InfoMessage
-import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.MyFollowersFragment
-import com.example.storynest.Notification.NotificationFragment
-import com.example.storynest.R
-import com.example.storynest.Settings.SettingsFragment
-import com.example.storynest.TestUserProvider
+import com.example.storynest.Follow.FollowType
 import com.example.storynest.databinding.MyProfileFragmentBinding
 
 
-class MyProfileFragment : Fragment(){
+class ProfileFragment : Fragment(){
 
     private var _binding: MyProfileFragmentBinding? = null
     private val binding get() = _binding!!
@@ -28,8 +24,8 @@ class MyProfileFragment : Fragment(){
     private var myProfile: MyProfile? = null
 
     companion object {
-        fun newInstance(myProfile : MyProfile) : MyProfileFragment{
-            val fragment = MyProfileFragment()
+        fun newInstance(myProfile : MyProfile) : ProfileFragment{
+            val fragment = ProfileFragment()
             val bundle = Bundle()
             bundle.putSerializable("myprofile", myProfile)
             fragment.arguments = bundle
@@ -67,13 +63,22 @@ class MyProfileFragment : Fragment(){
         settingsButtonAnimation()
 
         binding.notificationBook.setOnClickListener {
-            val notificationFragment = NotificationFragment()
-            fragmentAnimation(notificationFragment)
+            val action =
+                ProfileFragmentDirections
+                    .actionProfileToNotification()
+            findNavController().navigate(action)
         }
 
         binding.followersContainer.setOnClickListener {
-            val myFollowersFragment = MyFollowersFragment()
-            fragmentAnimation(myFollowersFragment)
+
+            val action =
+                ProfileFragmentDirections
+                    .actionProfileToFollowList(
+                        FollowType.MY_FOLLOWERS.name,
+                        0
+                    )
+
+            findNavController().navigate(action)
         }
 
 
@@ -136,19 +141,10 @@ class MyProfileFragment : Fragment(){
                         .scaleY(1f)
                         .setDuration(150)
                         .start()
-
-                    val settingsFragment = SettingsFragment()
-                    parentFragmentManager.beginTransaction()
-                        .setCustomAnimations(
-                            R.anim.enter_from_right,
-                            R.anim.exit_to_left,
-                            R.anim.enter_from_left,
-                            R.anim.exit_to_right
-                        )
-                        .replace(R.id.fragmentContainer, SettingsFragment())
-                        .addToBackStack(null)
-                        .commit()
-
+                    val action =
+                        ProfileFragmentDirections
+                            .actionProfileToSettings()
+                    findNavController().navigate(action)
                     true
                 }
 
@@ -166,17 +162,5 @@ class MyProfileFragment : Fragment(){
         }
     }
 
-    private fun fragmentAnimation(fragment: Fragment){
-        parentFragmentManager.beginTransaction()
-            .setCustomAnimations(
-                R.anim.enter_from_right,
-                R.anim.exit_to_left,
-                R.anim.enter_from_left,
-                R.anim.exit_to_right
-            )
-            .replace(R.id.fragmentContainer, fragment)
-            .addToBackStack(null)
-            .commit()
-    }
 
 }

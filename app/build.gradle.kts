@@ -8,6 +8,7 @@ val devBaseUrl = localProps.getProperty("DEV_BASE_URL_V2") ?: ""
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
+    id("androidx.navigation.safeargs.kotlin")
 }
 
 
@@ -77,5 +78,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
     implementation("com.airbnb.android:lottie:6.4.0")
     implementation("androidx.paging:paging-runtime-ktx:3.2.1")
+
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
 
 }

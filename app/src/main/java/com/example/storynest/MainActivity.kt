@@ -6,9 +6,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.storynest.Profile.MyProfile
-import com.example.storynest.Profile.MyProfileFragment
 
 class MainActivity : AppCompatActivity() {
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -30,10 +31,8 @@ class MainActivity : AppCompatActivity() {
             followers = 128,
             following = 89
         )
-        val myProfileFragment = MyProfileFragment.newInstance(myProfile)
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer,myProfileFragment )
-            .commit()
+
+
     }
 
 
