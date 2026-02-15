@@ -68,4 +68,13 @@ class CommentRepo(
         safeApiCall {
             api.updateComment(commentId, request)
         }
+
+
+    suspend fun pin(
+        commentId: Long
+    ): ResultWrapper<commentResponse> =
+        safeApiCall {
+            api.pinComment(commentId)
+        }
+
 }

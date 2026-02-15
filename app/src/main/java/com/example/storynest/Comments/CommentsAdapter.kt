@@ -28,7 +28,7 @@ class CommentsAdapter(
 
     interface OnCommentInteractionListener {
         fun onLikeClicked(commentId: Long)
-        fun onLongClicked(commentId: Long,commentContents:String)
+        fun onLongClicked(commentId: Long,commentContents:String,userId: Long,postUserId:Long,onPinnedAlready: (() -> Unit)? = null)
         fun onReplyClicked(comment: commentResponse)
         fun onViewReplys(
             commentId: Long,
@@ -67,6 +67,12 @@ class CommentsAdapter(
             holder.btnLike.setImageResource(R.drawable.baseline_favorite_border_24)
         }
 
+        if(comment.isPinned){
+            holder.imgPin.visibility=View.VISIBLE
+        }else{
+            holder.imgPin.visibility=View.GONE
+        }
+
         if(comment.isEdited){
             holder.txtEdited.visibility=View.VISIBLE
             holder.txtEditDate.visibility= View.VISIBLE
@@ -101,9 +107,12 @@ class CommentsAdapter(
         }
 
         holder.layout.setOnLongClickListener {
-            listener.onLongClicked(comment.comment_id,comment.contents)
+            listener.onLongClicked(comment.comment_id,comment.contents,comment.user.id,comment.postUserId){
+               holder.imgPin.visibility= View.VISIBLE
+            }
             true
         }
+
 
     }
 
@@ -121,6 +130,7 @@ class CommentsAdapter(
         val layout: ConstraintLayout = itemView.findViewById(R.id.layout)
         val txtEdited: TextView=itemView.findViewById(R.id.txtEdited)
         val txtEditDate: TextView=itemView.findViewById(R.id.txtEditDate)
+        val imgPin: ImageView=itemView.findViewById(R.id.imgPin)
         val subAdapter = SubCommentsAdapter(listener)
         private val layoutManager = LinearLayoutManager(itemView.context)
 

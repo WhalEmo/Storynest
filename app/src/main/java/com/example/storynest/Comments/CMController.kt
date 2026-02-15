@@ -2,9 +2,11 @@ package com.example.storynest.Comments
 
 import com.google.gson.annotations.SerializedName
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -21,6 +23,7 @@ data class commentResponse(
     val comment_id:Long,
     val parentCommentUsername:String?,
     val post_id:Long,
+    val postUserId:Long,
     val user: userResponseDto,
     val contents:String,
     var number_of_like: Int,
@@ -32,7 +35,9 @@ data class commentResponse(
     @SerializedName(value = "isEdited", alternate = ["edited"])
     var isEdited: Boolean=false,
     val replies: List<commentResponse>? = null,
-    val isRepliesVisible: Boolean = false
+    val isRepliesVisible: Boolean = false,
+    @SerializedName(value = "isPinned", alternate = ["pinned"])
+    var isPinned: Boolean=false
 )
 data class userResponseDto(
     val id: Long,
@@ -100,5 +105,12 @@ interface CMController{
         @Path("commentId") commentId: Long,
         @Body request: update
     ): commentResponse
+
+
+    @PATCH("/api/comments/{commentId}/pin")
+    suspend fun pinComment(
+        @Path("commentId") commentId: Long
+    ): commentResponse
+
 
 }

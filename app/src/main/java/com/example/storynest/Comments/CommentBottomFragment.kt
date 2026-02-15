@@ -1,5 +1,6 @@
 package com.example.storynest.Comments
 
+import android.content.ClipboardManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -30,9 +31,12 @@ import com.example.storynest.UiState
 import com.example.storynest.dataLocal.UserStaticClass
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.internal.ViewUtils.hideKeyboard
+import android.content.ClipData
+import android.content.Context
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
@@ -60,7 +64,6 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
     private lateinit var commentforReply: commentResponse
 
     private var postId: Long = -1L
-    private var shouldScrollToTop = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,11 +107,50 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                 viewModel.toggleLike(commentId)
             }
 
-            override fun onLongClicked(commentId: Long,commentContents:String) {
-                val options = listOf(
-                    OptionItem("Sil", R.drawable.trash) { viewModel.deleteComment(commentId) },
-                    OptionItem("Güncelle", R.drawable.edit) { showUpdateDialog(commentId,commentContents) }
-                )
+            override fun onLongClicked(
+                commentId: Long,
+                commentContents: String,
+                userId: Long,
+                postUserId: Long,
+                onPinnedAlready: (() -> Unit)?
+            ) {
+                val options=mutableListOf<OptionItem>()
+                if(userId== UserStaticClass.userId){
+                    options.add(
+                        OptionItem("Sil",R.drawable.trash){
+                            viewModel.deleteComment(commentId)
+                        }
+                    )
+                    options.add(
+                        OptionItem("Güncelle",R.drawable.edit){
+                            showUpdateDialog(commentId,commentContents);
+                        }
+                    )
+                }
+               // if(postUserId== UserStaticClass.userId){
+                    options.add(
+                      OptionItem("Sabitle",R.drawable.pin){
+                          viewModel.pinComments(commentId)
+                          MainScope().launch {
+                              delay(500)
+                              onPinnedAlready?.invoke()
+                          }
+                       }
+                   )
+               // }
+                    options.add(
+                        OptionItem("Kopyala",R.drawable.copy){
+                            val clipboard = requireContext()
+                                .getSystemService(ClipboardManager::class.java)
+
+                            val clip = ClipData.newPlainText("Yorum", commentContents)
+                            clipboard.setPrimaryClip(clip)
+
+                            Toast.makeText(requireContext(), "Yorum kopyalandı", Toast.LENGTH_SHORT).show()
+
+                        }
+                    )
+
 
                 val adapter = object : ArrayAdapter<OptionItem>(
                     requireContext(),
@@ -162,9 +204,13 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             object : RecyclerView.AdapterDataObserver() {
                 override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
                     if (positionStart == 0) {
-                        rvComment.scrollToPosition(0)
+                        rvComment.smoothScrollToPosition(0)
                     }
                 }
+                override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
+                        rvComment.smoothScrollToPosition(0)
+                }
+
             }
         )
 
@@ -190,7 +236,6 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
                     viewModel.commentAddState.collect { success ->
                         if (success) {
-
                         } else {
                             Toast.makeText(
                                 requireContext(),
@@ -201,37 +246,52 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                     }
                 }
                 launch {
-                    commentAdapter.loadStateFlow
-                        .distinctUntilChangedBy { it.refresh }
-                        .collectLatest { loadStates ->
+                    viewModel.pinState.collect { result ->
+                       if(result){
+                           rvComment.smoothScrollToPosition(0)
+                       }else{
+                           Toast.makeText(
+                               requireContext(),
+                               "Yorum sabitlenemedi",
+                               Toast.LENGTH_SHORT
+                           ).show()
+                       }
+                    }
+                }
 
-                            val refreshState = loadStates.refresh
-                            val isRefreshing = refreshState is LoadState.Loading
+                launch {
+                    commentAdapter.loadStateFlow.collectLatest { loadStates ->
 
-                            progressBar.visibility =
-                                if (isRefreshing) View.VISIBLE else View.GONE
+                        val isRefreshing = loadStates.refresh is LoadState.Loading
+                        progressBar.visibility =
+                            if (isRefreshing) View.VISIBLE else View.GONE
 
+                        val isListEmpty =
+                            loadStates.refresh is LoadState.NotLoading &&
+                                    commentAdapter.itemCount == 0
 
-                            val isListEmpty =
-                                loadStates.refresh is LoadState.NotLoading &&
-                                        commentAdapter.itemCount == 0
+                        val errorState = loadStates.source.refresh as? LoadState.Error
+                            ?: loadStates.source.append as? LoadState.Error
+                            ?: loadStates.source.prepend as? LoadState.Error
 
-                            txtEmpty.visibility =
-                                if (isListEmpty) View.VISIBLE else View.GONE
-
-                            // Error
-                            val errorState =
-                                loadStates.refresh as? LoadState.Error
-
-                            if (errorState != null) {
+                        when {
+                            errorState != null -> {
                                 txtEmpty.visibility = View.VISIBLE
-                                txtEmpty.text =
-                                    "İnternet bağlantısı yok veya bir hata oluştu."
-                            } else if (!isListEmpty) {
+                                txtEmpty.text = "Bir hata oluştu: ${errorState.error.localizedMessage}"
+                            }
+
+                            isListEmpty -> {
+                                txtEmpty.visibility = View.VISIBLE
                                 txtEmpty.text = "Henüz yorum yapılmamış."
                             }
+
+                            else -> {
+                                txtEmpty.visibility = View.GONE
+                            }
                         }
+                    }
                 }
+
 
             }
         }
