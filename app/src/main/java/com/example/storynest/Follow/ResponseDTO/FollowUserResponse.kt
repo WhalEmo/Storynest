@@ -7,7 +7,5 @@ data class FollowUserResponseDTO(
     val username: String,
     val profile: String?,
     val biography: String?,
-    val followInfo: FollowResponseDTO,
-    val followingYou: Boolean,
-    val myFollower: Boolean
+    val followInfo: FollowResponseDTO
 )

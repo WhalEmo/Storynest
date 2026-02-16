@@ -2,6 +2,7 @@ package com.example.storynest.Profile
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -96,9 +97,10 @@ class ProfileFragment : Fragment(){
                 }
             }
         }
-
+        Log.d("ProfileFragment", "userId: $userId")
         viewModel.init(
-            mode = profileMode
+            mode = profileMode,
+            userId = userId
         )
         observeScreenState()
     }

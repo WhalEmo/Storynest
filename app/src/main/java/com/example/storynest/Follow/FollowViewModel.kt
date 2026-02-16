@@ -40,7 +40,7 @@ class FollowViewModel: ViewModel() {
     }
 
     private val _actionUpdates =
-        MutableStateFlow<Map<Long, FollowActionUiState>>(emptyMap())
+        MutableStateFlow<Map<Long, FollowActionDataState>>(emptyMap())
 
 
     private var user = TestUserProvider
@@ -66,30 +66,20 @@ class FollowViewModel: ViewModel() {
     val followers: Flow<PagingData<FollowRow>> =
         combine(
             pagingFollowers,
-            followUpdates,
-            removedUserIds
-        ) { pagindata, followMap, removedIds ->
+            _actionUpdates
+        ) { pagindata, actionUpdates ->
             pagindata
-                .filter { row ->
-                    if (row is FollowRow.FollowUserItem) {
-                        !removedIds.contains(row.followUserResponseDTO.id)
-                    } else true
-                }
-                .map { row ->
-                    if (row is FollowRow.FollowUserItem) {
-                        val update = followMap[row.followUserResponseDTO.id]
-                        if (update != null) {
-                            Log.e("update", row.toString())
-                            Log.e("update", update.toString())
+                .map {
+                    row ->
+                    if (row is FollowRow.FollowUserItem){
+                        val updatedState = actionUpdates[row.id]
+                        if(updatedState!=null){
                             row.copy(
-                                followUserResponseDTO = row.followUserResponseDTO.copy(
-                                    followInfo = update,
-                                    followingYou = update.status == FollowRequestStatus.ACCEPTED
-                                            || update.status == FollowRequestStatus.PENDING
-                                )
+                                visibleViews = updatedState.actionState.toVisibleViews(),
+                                requestId = updatedState.requestId
                             )
-                        } else row
-                    } else row
+                        }else row
+                    }else row
                 }
         }
 
@@ -117,15 +107,15 @@ class FollowViewModel: ViewModel() {
         }.cachedIn(viewModelScope)
     }
 
-    fun sendFollowRequest(userId: Long){
+    fun sendFollowRequest(userId: Long, followType: FollowType){
         viewModelScope.launch {
             try {
                 val response = repository.followMyFollower(user.STATIC_USER_ID.toLong(), userId)
                 if (response.isSuccessful){
                     response.body().let { followResponseDTO ->
                         if(followResponseDTO != null){
-                           val action = dtoToAction()
-                            updateUserActionState(userId, action)
+                            val action = dtoToAction(followResponseDTO, followType)
+                            updateUserActionState(userId, action, followResponseDTO.id)
                         }
                     }
                 }
@@ -142,14 +132,15 @@ class FollowViewModel: ViewModel() {
         }
     }
 
-    fun cancelFollowRequest(followId: Long){
+    fun cancelFollowRequest(followId: Long, followType: FollowType){
         viewModelScope.launch {
             try {
                 val response = repository.cancelFollowRequest(followId)
                 if (response.isSuccessful){
                     val responseBody = response.body()
                     if(responseBody?.status == FollowRequestStatus.CANCEL){
-                        followUpdates.value = followUpdates.value.orEmpty() + (responseBody.requested.userId to responseBody)
+                        val action = dtoToAction(responseBody, followType)
+                        updateUserActionState(responseBody.requested.userId, action, responseBody.id)
                     }
                 }
             }
@@ -175,7 +166,6 @@ class FollowViewModel: ViewModel() {
                 Log.e("response", response.toString())
                 if(response.isSuccessful){
                     val responseBody = response.body()
-                    removedUserIds.value = removedUserIds.value.orEmpty() + (responseBody?.followedId ?: 0)
                     onRemoved.invoke()
                 }
             }
@@ -193,11 +183,18 @@ class FollowViewModel: ViewModel() {
 
     private fun updateUserActionState(
         userId: Long,
-        newState: FollowActionUiState
+        newState: FollowActionState,
+        newRequestId: Long
     ) {
         _actionUpdates.value =
             _actionUpdates.value.toMutableMap().apply {
-                put(userId, newState)
+                put(
+                    userId,
+                    FollowActionDataState(
+                        actionState = newState,
+                        requestId = newRequestId
+                    )
+                )
             }
     }
 
@@ -206,33 +203,71 @@ class FollowViewModel: ViewModel() {
         followType: FollowType
     ): FollowRow.FollowUserItem {
 
-        val action = dtoToAction(dto)
+        val action = dtoToAction(dto.followInfo, followType)
 
         return FollowRow.FollowUserItem(
             id = dto.id,
             username = dto.username,
             biography = dto.biography,
             profile = dto.profile,
-            actionState = action
+            visibleViews = action.toVisibleViews(),
+            requestId = dto.followInfo.id
         )
     }
 
     private fun dtoToAction(
-        dto: FollowUserResponseDTO
-    ): FollowActionUiState {
-        return when {
-            dto.myFollower && !dto.followingYou ->
-                FollowActionUiState.ShowAccept
-
-            dto.followInfo.status == FollowRequestStatus.ACCEPTED ->
-                FollowActionUiState.ShowMessage
-
-            dto.followInfo.status == FollowRequestStatus.PENDING ->
-                FollowActionUiState.ShowPending
-
-            else ->
-                FollowActionUiState.ShowAccept
+        dto: FollowResponseDTO,
+        followType: FollowType
+    ): FollowActionState {
+        return when(followType) {
+            FollowType.MY_FOLLOWERS ->{
+                myFollowersActionUiState(dto)
+            }
+            FollowType.MY_FOLLOWING -> myFollowingActionUiState(dto)
+            else -> {FollowActionState.FOLLOWER_ACCEPT}
         }
     }
+
+    private fun myFollowersActionUiState(
+        dto: FollowResponseDTO
+    ): FollowActionState{
+        return when {
+            dto.myFollower && !dto.followingYou ->
+                FollowActionState.FOLLOWER_ACCEPT
+
+            dto.status == FollowRequestStatus.ACCEPTED
+                    && dto.requester.userId == user.STATIC_USER_ID ->
+                FollowActionState.FOLLOWER_MESSAGE
+
+            dto.status == FollowRequestStatus.PENDING
+                    && dto.requester.userId == user.STATIC_USER_ID ->
+                FollowActionState.FOLLOWER_PENDING
+            else ->
+                FollowActionState.FOLLOWER_ACCEPT
+        }
+    }
+
+    private fun myFollowingActionUiState(
+        dto: FollowResponseDTO
+    ): FollowActionState{
+        return FollowActionState.FOLLOWING
+    }
+
+    private fun FollowActionState.toVisibleViews(): Set<FollowViewType> {
+        return when (this) {
+            FollowActionState.FOLLOWER_ACCEPT ->
+                setOf(FollowViewType.UNFOLLOW, FollowViewType.ACCEPT)
+
+            FollowActionState.FOLLOWER_MESSAGE ->
+                setOf(FollowViewType.UNFOLLOW, FollowViewType.MESSAGE)
+
+            FollowActionState.FOLLOWER_PENDING ->
+                setOf(FollowViewType.UNFOLLOW, FollowViewType.PENDING)
+
+            FollowActionState.FOLLOWING ->
+                setOf(FollowViewType.DOT_MENU, FollowViewType.MESSAGE)
+        }
+    }
+
 
 }

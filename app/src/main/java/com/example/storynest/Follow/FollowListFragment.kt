@@ -19,6 +19,9 @@ import com.example.storynest.Follow.Adapter.FollowAdapter
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.FollowersLoadStateAdapter
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.FollowersUiState
 import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
+import com.example.storynest.MainActivity
+import com.example.storynest.Profile.ProfileFragment
+import com.example.storynest.Profile.ProfileMode
 import com.example.storynest.R
 import com.example.storynest.databinding.MyFollowersFragmentBinding
 import kotlinx.coroutines.delay
@@ -109,7 +112,7 @@ class FollowListFragment: Fragment() {
         adapter = FollowAdapter(
             onAccept = {
                 onAccept(
-                    it.followUserResponseDTO.id
+                    it.id
                 )
             },
             onReject = {
@@ -117,13 +120,21 @@ class FollowListFragment: Fragment() {
             },
             onCancelRequest = {
                 onCancelRequest(
-                    it.followUserResponseDTO.followInfo.id
+                    it.requestId
                 )
             },
             onUnFollowMy = {
                 onUnFollowMy(
-                    it.followUserResponseDTO
+                    it
                 )
+            }
+            ,
+            onProfileClick = {
+                val fragment = ProfileFragment.newInstance(
+                    mode = ProfileMode.USER_PROFILE,
+                    userId = it.id
+                )
+                (requireActivity() as MainActivity).navigateTo(fragment)
             }
         )
 
@@ -195,7 +206,7 @@ class FollowListFragment: Fragment() {
             0,
             1f
         )
-        viewModel.sendFollowRequest(userId)
+        viewModel.sendFollowRequest(userId, followType)
     }
 
     private fun onCancelRequest(followId: Long){
@@ -207,10 +218,10 @@ class FollowListFragment: Fragment() {
             0,
             1f
         )
-        viewModel.cancelFollowRequest(followId)
+        viewModel.cancelFollowRequest(followId, followType)
     }
 
-    private fun onUnFollowMy(usrResponse: FollowUserResponseDTO){
+    private fun onUnFollowMy(usrResponse: FollowRow.FollowUserItem){
         ConfirmDialog(
             title = "Takipçiyi Çıkar?",
             message = "${usrResponse.username} kullanıcıyı takipten çıkarmak istiyor musunuz?",

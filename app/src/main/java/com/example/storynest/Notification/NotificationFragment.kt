@@ -29,55 +29,6 @@ class NotificationFragment : Fragment() {
     private var _binding: ProfileNotificationFragmentBinding? = null
     private val binding get() = _binding!!
 
-    val testItems = mutableListOf(
-        FollowResponseDTO(
-            id = 1L,
-            requester = SimpleUserDTO(
-                userId = 101L,
-                username = "ahmet_y",
-                profileURL = "https://i.pravatar.cc/150?img=3"
-            ),
-            requested = SimpleUserDTO(
-                userId = 999L,
-                username = "current_user",
-                profileURL = null
-            ),
-            status = FollowRequestStatus.PENDING,
-            date = "2025-12-16T14:30:00"
-        ),
-        FollowResponseDTO(
-            id = 2L,
-            requester = SimpleUserDTO(
-                userId = 102L,
-                username = "melis_k",
-                profileURL = "https://i.pravatar.cc/150?img=5"
-            ),
-            requested = SimpleUserDTO(
-                userId = 999L,
-                username = "current_user",
-                profileURL = null
-            ),
-            status = FollowRequestStatus.PENDING,
-            date = "2025-12-16T13:10:00"
-        ),
-        FollowResponseDTO(
-            id = 3L,
-            requester = SimpleUserDTO(
-                userId = 103L,
-                username = "emre_dev",
-                profileURL = "https://i.pravatar.cc/150?img=8"
-            ),
-            requested = SimpleUserDTO(
-                userId = 999L,
-                username = "current_user",
-                profileURL = null
-            ),
-            status = FollowRequestStatus.PENDING,
-            date = "2025-12-15T22:45:00"
-        )
-    )
-
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

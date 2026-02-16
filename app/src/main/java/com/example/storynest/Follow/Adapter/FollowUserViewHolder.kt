@@ -3,11 +3,11 @@ package com.example.storynest.Follow.Adapter
 import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.core.view.isVisible
 import com.example.storynest.Follow.Base.BaseFollowViewHolder
-import com.example.storynest.Follow.FollowActionUiState
 import com.example.storynest.Follow.FollowRow
-import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
-import com.example.storynest.Notification.FollowRequestStatus
+import com.example.storynest.Follow.FollowViewType
+
 import com.example.storynest.R
 
 
@@ -17,6 +17,7 @@ class FollowUserViewHolder(
     private val onSendMessage: (FollowRow.FollowUserItem) -> Unit,
     private val onCancelRequest: (FollowRow.FollowUserItem) -> Unit,
     private val onUnFollowMy: (FollowRow.FollowUserItem) -> Unit,
+    private val onProfileClick: (FollowRow.FollowUserItem) -> Unit
 ): BaseFollowViewHolder(itemView) {
 
 
@@ -28,10 +29,13 @@ class FollowUserViewHolder(
         itemView.findViewById<TextView>(R.id.sendMessage)
     private val unFollow =
         itemView.findViewById<ImageButton>(R.id.unFollow)
+    private val dotMenu =
+        itemView.findViewById<ImageButton>(R.id.dotMenu)
 
+    private val actionButtons by lazy {
+        listOf(yourFollowMe, sendMessage, sendingRequest)
+    }
 
-    private var lastItemId: Long? = null
-    private var lastTargetViewId: Int? = null
 
 
     init {
@@ -47,88 +51,58 @@ class FollowUserViewHolder(
         unFollow.setOnClickListener {
             currentItem?.let(onUnFollowMy)
         }
+        profileImage.setOnClickListener {
+            currentItem?.let(onProfileClick)
+        }
     }
 
     override fun bindSpecific(resource: FollowRow.FollowUserItem) {
-        when (resource.actionState) {
-
-            FollowActionUiState.ShowAccept -> {
-                showOnly(yourFollowMe)
-            }
-
-            FollowActionUiState.ShowMessage -> {
-                showOnly(sendMessage)
-            }
-
-            FollowActionUiState.ShowPending -> {
-                showOnly(sendingRequest)
-            }
-
-            FollowActionUiState.ShowUnfollow -> {
-                showOnly(unFollow)
-            }
-        }
+        render(resource.visibleViews)
     }
 
     fun bind(resource: FollowRow.FollowUserItem) {
         super.bindBase(resource)
     }
 
-    private fun showOnly(target: View) {
-        listOf(yourFollowMe, sendMessage, sendingRequest, unFollow)
-            .forEach {
-                it.visibility = if (it == target) View.VISIBLE else View.GONE
-            }
+
+    private fun render(visibleViews: Set<FollowViewType>) {
+        yourFollowMe.isVisible = FollowViewType.ACCEPT in visibleViews
+        sendMessage.isVisible = FollowViewType.MESSAGE in visibleViews
+        sendingRequest.isVisible = FollowViewType.PENDING in visibleViews
+        unFollow.isVisible = FollowViewType.UNFOLLOW in visibleViews
+        dotMenu.isVisible = FollowViewType.DOT_MENU in visibleViews
     }
 
 
-    private fun animateSwitchTo(target: View) {
-        val allViews = listOf(yourFollowMe, sendMessage, sendingRequest)
-        val current = allViews.firstOrNull { it.visibility == View.VISIBLE }
 
+
+
+    private fun animateSwitch(target: View?) {
+        val current = actionButtons.firstOrNull { it.isVisible }
         if (current == target) return
 
-        current?.animate()?.cancel()
-        target.animate().cancel()
+        actionButtons.forEach {
+            it.animate().cancel()
+        }
 
         current?.animate()
             ?.alpha(0f)
-            ?.setDuration(120)
+            ?.setDuration(150)
             ?.withEndAction {
                 current.visibility = View.GONE
-
-                target.apply {
-                    alpha = 0f
-                    visibility = View.VISIBLE
-                    animate()
-                        .alpha(1f)
-                        .setDuration(120)
-                        .start()
-                }
+                current.alpha = 1f
             }
             ?.start()
-    }
 
-
-    private fun resolveTargetView(resource: FollowUserResponseDTO): View {
-        return when {
-            resource.myFollower && !resource.followingYou -> yourFollowMe
-            resource.followInfo.status == FollowRequestStatus.ACCEPTED -> sendMessage
-            resource.myFollower && resource.followInfo.status != FollowRequestStatus.PENDING -> sendMessage
-            resource.followInfo.status == FollowRequestStatus.PENDING -> sendingRequest
-            else -> yourFollowMe
+        target?.apply {
+            alpha = 0f
+            visibility = View.VISIBLE
+            animate()
+                .alpha(1f)
+                .setDuration(150)
+                .start()
         }
     }
-
-
-    private fun setDirectState(target: View) {
-        listOf(yourFollowMe, sendMessage, sendingRequest).forEach {
-            it.animate().cancel()
-            it.alpha = 1f
-            it.visibility = if (it == target) View.VISIBLE else View.GONE
-        }
-    }
-
 
 
 }

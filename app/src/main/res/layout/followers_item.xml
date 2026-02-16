@@ -130,6 +130,18 @@
         app:tint="#000000"
         tools:ignore="ContentDescription" />
 
+        <ImageButton
+            android:id="@+id/dotMenu"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/dot_menu"
+            android:scaleType="centerInside"
+            android:layout_marginStart="10dp"
+            android:visibility="gone"
+            app:tint="#000000"
+            tools:ignore="ContentDescription" />
+
     </LinearLayout>
 
 

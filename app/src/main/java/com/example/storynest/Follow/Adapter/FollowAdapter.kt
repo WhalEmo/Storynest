@@ -13,7 +13,8 @@ class FollowAdapter(
     private val onAccept: (FollowRow.FollowUserItem) -> Unit,
     private val onReject: (FollowRow.FollowUserItem) -> Unit,
     private val onCancelRequest: (FollowRow.FollowUserItem) -> Unit,
-    private val onUnFollowMy: (FollowRow.FollowUserItem) -> Unit
+    private val onUnFollowMy: (FollowRow.FollowUserItem) -> Unit,
+    private val onProfileClick: (FollowRow.FollowUserItem) -> Unit
 ) : PagingDataAdapter<FollowRow, RecyclerView.ViewHolder>(DIFF) {
 
     companion object {
@@ -30,8 +31,7 @@ class FollowAdapter(
                 return when {
                     oldItem is FollowRow.FollowUserItem &&
                             newItem is FollowRow.FollowUserItem ->
-                        oldItem.followUserResponseDTO.id ==
-                                newItem.followUserResponseDTO.id
+                        oldItem.id == newItem.id
 
 
                     oldItem is FollowRow.FollowHeaderItem &&
@@ -46,18 +46,7 @@ class FollowAdapter(
                 oldItem: FollowRow,
                 newItem: FollowRow
             ): Boolean {
-                return when {
-                    oldItem is FollowRow.FollowUserItem &&
-                            newItem is FollowRow.FollowUserItem ->
-                        oldItem.followUserResponseDTO.followInfo.status ==
-                                newItem.followUserResponseDTO.followInfo.status
-
-                    oldItem is FollowRow.FollowHeaderItem &&
-                            newItem is FollowRow.FollowHeaderItem ->
-                        oldItem.title == newItem.title
-
-                    else -> true
-                }
+                return oldItem == newItem
             }
 
         }
@@ -93,7 +82,14 @@ class FollowAdapter(
                     parent,
                     false
                 )
-                FollowUserViewHolder(view, onAccept, onReject, onCancelRequest, onUnFollowMy)
+                FollowUserViewHolder(
+                    itemView = view,
+                    onAccept = onAccept,
+                    onSendMessage = onReject,
+                    onCancelRequest = onCancelRequest,
+                    onUnFollowMy = onUnFollowMy,
+                    onProfileClick = onProfileClick
+                )
             }
             else -> throw IllegalArgumentException("Unknown viewType")
         }

@@ -21,6 +21,8 @@ data class FollowResponseDTO(
     val requester: SimpleUserDTO,
     val requested: SimpleUserDTO,
     val status: FollowRequestStatus,
-    val date: String
+    val date: String,
+    val followingYou: Boolean,
+    val myFollower: Boolean
 )
 

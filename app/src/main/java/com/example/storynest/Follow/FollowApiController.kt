@@ -36,4 +36,10 @@ interface FollowApiController {
         @Body request: FollowDTO
     ): Response<FollowDTO>
 
+    @GET("follow/userFollowing")
+    suspend fun getUserFollowing(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20
+    ): Response<List<FollowUserResponseDTO>>
+
 }

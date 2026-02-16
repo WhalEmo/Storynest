@@ -1,5 +1,6 @@
 package com.example.storynest.Profile
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -24,8 +25,10 @@ class ProfileViewModel: ViewModel() {
 
 
     fun init(mode: ProfileMode, userId: Long = -1L) {
-        if(mode == ProfileMode.MY_PROFILE){
-            loadMyProfile()
+        when(mode){
+            ProfileMode.USER_PROFILE -> loadUserProfile(userId)
+
+            ProfileMode.MY_PROFILE -> loadMyProfile()
         }
     }
 
@@ -52,6 +55,28 @@ class ProfileViewModel: ViewModel() {
             }
         }
     }
+    private fun loadUserProfile(userId: Long) {
+        viewModelScope.launch {
+            _uiState.value = ProfileScreenState.Loading
+            try {
+                val profile = profileRepository.loadUserProfile(userId)
+                _uiState.value = ProfileScreenState.Success(
+                    uiState = profile.toUiState(
+                        type = ProfileMode.USER_PROFILE
+                    )
+                )
+            } catch (e: HttpException) {
+                Log.e("ProfileViewModel", "Error loading user profile", e)
+                _error.value = "Sunucuya bağlanılamadı (HTTP ${e.code()})"
+            } catch (e: IOException) {
+                Log.e("ProfileViewModel", "Error loading user profile", e)
+                _error.value = "İnternet bağlantısı yok!"
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Error loading user profile", e)
+                _error.value = "Beklenmeyen bir hata oluştu"
+            }
+        }
+    }
 /*
     private fun loadUserProfile(userId: String) {
         viewModelScope.launch {
@@ -61,7 +86,7 @@ class ProfileViewModel: ViewModel() {
     }*/
 
     private fun ProfileData.toUiState(type: ProfileMode): ProfileUiState {
-
+        Log.d("Model", type.name)
         return ProfileUiState(
             id = id,
             username = username,

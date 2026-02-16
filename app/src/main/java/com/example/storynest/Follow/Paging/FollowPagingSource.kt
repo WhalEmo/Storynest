@@ -28,6 +28,9 @@ class FollowPagingSource(
                 FollowType.MY_FOLLOWERS -> {
                     repository.getFollowers(page, params.loadSize)
                 }
+                FollowType.MY_FOLLOWING -> {
+                    repository.getFollowing(page, params.loadSize)
+                }
                 else -> null
             }
 

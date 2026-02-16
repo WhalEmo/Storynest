@@ -47,6 +47,11 @@ class FollowRepository {
         return response.body() ?: emptyList()
     }
 
+    suspend fun getFollowing(page: Int = 0, size: Int = 20) : List<FollowUserResponseDTO>{
+        val response = followApiController.getUserFollowing(page, size)
+        return response.body() ?: emptyList()
+    }
+
 
     suspend fun removeFollower(userId: Long): Response<FollowDTO> {
         Log.e("userId", userId.toString())
