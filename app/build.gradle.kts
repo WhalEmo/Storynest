@@ -59,6 +59,7 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("androidx.paging:paging-runtime-ktx:3.1.1")
     implementation(libs.pagingCommon)
     implementation(libs.pagingRuntimeKtx)
     kapt("com.github.bumptech.glide:compiler:4.16.0")

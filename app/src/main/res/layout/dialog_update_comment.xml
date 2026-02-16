@@ -74,6 +74,7 @@
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
                 android:text="İptal"
+                app:strokeColor="@color/gray"
                 android:textAllCaps="false"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:enabled="true"

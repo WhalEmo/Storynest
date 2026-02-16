@@ -37,7 +37,8 @@ data class commentResponse(
     val replies: List<commentResponse>? = null,
     val isRepliesVisible: Boolean = false,
     @SerializedName(value = "isPinned", alternate = ["pinned"])
-    var isPinned: Boolean=false
+    var isPinned: Boolean=false,
+    var replyCount: Long
 )
 data class userResponseDto(
     val id: Long,

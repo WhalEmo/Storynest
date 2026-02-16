@@ -12,12 +12,9 @@ import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.flatMap
 import androidx.paging.insertHeaderItem
-import androidx.paging.insertSeparators
-import androidx.paging.map
 import com.example.storynest.ApiClient
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +24,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -172,47 +168,163 @@ class CommentsViewModel(
 
 
 
+    private val _replyMap =
+        MutableStateFlow<Map<Long, List<commentResponse>>>(emptyMap())
+    val replyMap = _replyMap.asStateFlow()
 
-    val comments: Flow<PagingData<commentResponse>> =
+
+    private val _replyVisibleCount =
+        MutableStateFlow<Map<Long, Int>>(emptyMap())
+    val replyVisibleCount = _replyVisibleCount.asStateFlow()
+
+    data class CommentUiState(
+        val removedIds: Set<Long>,
+        val updates: Map<Long, commentResponse>,
+        val newItems: List<commentResponse>,
+        val pinnedItems: List<commentResponse>,
+        val replyMap: Map<Long, List<commentResponse>>,
+        val visibleMap: Map<Long, Int>
+    )
+
+    data class BaseState(
+        val removedIds: Set<Long>,
+        val updates: Map<Long, commentResponse>,
+        val newItems: List<commentResponse>,
+        val pinnedIds: List<commentResponse>
+    )
+    data class ReplyState(
+        val replyMap: Map<Long, List<commentResponse>>,
+        val visibleMap: Map<Long, Int>
+    )
+    private val baseState =
         combine(
-            pagingComments,
             removedCommentIds,
             updatedComments,
             newComments,
             pinnedComments
-        ) { pagingData, removedIds, updates, newItems ,pinnedIds->
+        ) { removedIds, updates, newItems, pinnedIds ->
 
-            var baseData = pagingData
-                .filter { pagingItem ->
-                    !removedIds.contains(pagingItem.comment_id) &&
-                            pinnedIds.none { it.comment_id == pagingItem.comment_id }
-                }
-                .map { comment ->
-                    updates[comment.comment_id]?.let { updated ->
-                        comment.copy(
-                            contents = updated.contents,
-                            isEdited = updated.isEdited,
-                            updateDate = updated.updateDate,
-                            isPinned = updated.isPinned
+            BaseState(
+                removedIds = removedIds,
+                updates = updates,
+                newItems = newItems,
+                pinnedIds = pinnedIds
+            )
+        }
+
+    private val replyState =
+        combine(
+            replyMap,
+            replyVisibleCount
+        ) { replyMap, visibleMap ->
+
+            ReplyState(
+                replyMap = replyMap,
+                visibleMap = visibleMap
+            )
+        }
+
+    private val commentUiState =
+        combine(baseState, replyState) { base, reply ->
+
+            CommentUiState(
+                removedIds = base.removedIds,
+                updates = base.updates,
+                newItems = base.newItems,
+                pinnedItems = base.pinnedIds,
+                replyMap = reply.replyMap,
+                visibleMap = reply.visibleMap
+            )
+        }
+
+
+    val comments: Flow<PagingData<CommentsUiModel>> =
+        combine(
+            pagingComments,
+            commentUiState
+
+        ) {pagingData, uiState->
+
+            var baseData:PagingData<CommentsUiModel> =
+                pagingData
+                    .filter { pagingItem ->
+                        !uiState.removedIds.contains(pagingItem.comment_id) &&
+                                uiState.pinnedItems.none { it.comment_id == pagingItem.comment_id }
+                    }
+                    .flatMap { comment ->
+
+                        val items = mutableListOf<CommentsUiModel>()
+
+                        val updatedComment =
+                            uiState.updates[comment.comment_id] ?: comment
+
+                        items.add(
+                            CommentsUiModel.CommentItem(updatedComment)
                         )
-                    } ?: comment
-                }
 
-            pinnedIds.reversed().forEach { pinnedItem ->
-                if (pinnedItem.comment_id !in removedIds) {
-                    val itemToDisplay = updates[pinnedItem.comment_id] ?: pinnedItem
+                        val replies =
+                            uiState.replyMap[comment.comment_id] ?: emptyList()
+
+                        val visibleCount =
+                            uiState.visibleMap[comment.comment_id] ?: 0
+
+                        if (visibleCount == 0) {
+
+                            if (comment.replyCount > 0) {
+                                items.add(
+                                    CommentsUiModel.ViewRepliesItem(
+                                        parentCommentId = comment.comment_id,
+                                        remainingCount = comment.replyCount,
+                                        isLoadMore = false
+                                    )
+                                )
+                            }
+
+                        } else {
+                            replies.take(visibleCount).forEach { reply ->
+                                items.add(
+                                    CommentsUiModel.ReplyItem(reply)
+                                )
+                            }
+
+                            if (replies.size < comment.replyCount) {
+                                items.add(
+                                    CommentsUiModel.ViewRepliesItem(
+                                        parentCommentId = comment.comment_id,
+                                        remainingCount = comment.replyCount - replies.size,
+                                        isLoadMore = true
+                                    )
+                                )
+                            }
+                        }
+
+                        items
+                    }
+
+            uiState.pinnedItems.reversed().forEach { pinnedItem ->
+                if (pinnedItem.comment_id !in uiState.removedIds) {
+
+                    val itemToDisplay =
+                        uiState.updates[pinnedItem.comment_id] ?: pinnedItem
+
                     baseData = baseData.insertHeaderItem(
-                        item = itemToDisplay.copy(isPinned = true)
+                        item = CommentsUiModel.CommentItem(
+                            itemToDisplay.copy(isPinned = true)
+                        )
                     )
                 }
             }
-            newItems
-                .filter { newItem -> pinnedIds.none { it.comment_id == newItem.comment_id } }
+
+            uiState.newItems
+                .filter { newItem ->
+                    uiState.pinnedItems.none { it.comment_id == newItem.comment_id }
+                }
                 .reversed()
                 .forEach { newItem ->
-                    baseData = baseData.insertHeaderItem(item = newItem)
+                    baseData = baseData.insertHeaderItem(
+                        item = CommentsUiModel.CommentItem(newItem)
+                    )
                 }
-
 
             baseData
         }
@@ -238,6 +350,7 @@ class CommentsViewModel(
     fun updateComment(comment: commentResponse) {
         _updatedComments.value = _updatedComments.value + (comment.comment_id to comment)
     }
+
 
     fun updateComment(commentId: Long, contents: String) {
         val request = update(contents)

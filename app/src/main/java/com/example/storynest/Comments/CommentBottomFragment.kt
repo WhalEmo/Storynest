@@ -33,6 +33,18 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.content.ClipData
 import android.content.Context
+import android.content.res.ColorStateList
+import android.content.res.Resources
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.Gravity
+import android.widget.PopupWindow
+import androidx.core.content.ContextCompat
+import com.example.storynest.CustomViews.InfoMessage
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.MainScope
@@ -78,6 +90,32 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
         return inflater.inflate(R.layout.bottom_sheet_comments, container, false)
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        val bottomSheet =
+            (dialog as BottomSheetDialog)
+                .findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+                ?: return
+
+        val behavior = BottomSheetBehavior.from(bottomSheet)
+
+        val screenHeight = Resources.getSystem().displayMetrics.heightPixels
+        val desiredHeight = (screenHeight * 0.6).toInt()
+
+        bottomSheet.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+        bottomSheet.requestLayout()
+
+        behavior.peekHeight = desiredHeight
+        behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+
+        behavior.isFitToContents = false
+        behavior.skipCollapsed = false
+    }
+
+
+
+
     override fun onViewCreated(view: View,savedInstanceState: Bundle?) {
         super.onViewCreated(view,savedInstanceState)
         rvComment=view.findViewById(R.id.rvComment)
@@ -94,13 +132,17 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
         btnCancelReply=view.findViewById(R.id.btnCancelReply)
 
         setUpRecyclerView()
-        setupObserves()
+        setupLifecyle()
         clicks()
         viewModel.setPostId(postId)
 
+
     }
 
-    data class OptionItem(val title: String, val iconRes: Int, val action: () -> Unit)
+
+    private fun goBar(){
+        InfoMessage.show(this,"Yorum kopyalandı.")
+    }
     private fun setUpRecyclerView() {
         commentAdapter = CommentsAdapter(object : CommentsAdapter.OnCommentInteractionListener {
             override fun onLikeClicked(commentId: Long) {
@@ -112,74 +154,75 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                 commentContents: String,
                 userId: Long,
                 postUserId: Long,
+                anchorView: View,
                 onPinnedAlready: (() -> Unit)?
             ) {
-                val options=mutableListOf<OptionItem>()
-                if(userId== UserStaticClass.userId){
-                    options.add(
-                        OptionItem("Sil",R.drawable.trash){
-                            viewModel.deleteComment(commentId)
-                        }
-                    )
-                    options.add(
-                        OptionItem("Güncelle",R.drawable.edit){
-                            showUpdateDialog(commentId,commentContents);
-                        }
-                    )
-                }
-               // if(postUserId== UserStaticClass.userId){
-                    options.add(
-                      OptionItem("Sabitle",R.drawable.pin){
-                          viewModel.pinComments(commentId)
-                          MainScope().launch {
-                              delay(500)
-                              onPinnedAlready?.invoke()
-                          }
-                       }
-                   )
-               // }
-                    options.add(
-                        OptionItem("Kopyala",R.drawable.copy){
-                            val clipboard = requireContext()
-                                .getSystemService(ClipboardManager::class.java)
+                val inflater = LayoutInflater.from(context)
+                val view = inflater.inflate(R.layout.custom_layout_menu, null)
 
-                            val clip = ClipData.newPlainText("Yorum", commentContents)
-                            clipboard.setPrimaryClip(clip)
+                val popupWindow = PopupWindow(
+                    view,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    true
+                )
 
-                            Toast.makeText(requireContext(), "Yorum kopyalandı", Toast.LENGTH_SHORT).show()
+                popupWindow.isOutsideTouchable = true
+                popupWindow.isFocusable = true
+                popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
-                        }
-                    )
-
-
-                val adapter = object : ArrayAdapter<OptionItem>(
-                    requireContext(),
-                    R.layout.dialog_option_item,
-                    options
-                ) {
-                    override fun getView(
-                        position: Int,
-                        convertView: View?,
-                        parent: ViewGroup
-                    ): View {
-                        val view = convertView ?: LayoutInflater.from(context)
-                            .inflate(R.layout.dialog_option_item, parent, false)
-                        val item = options[position]
-                        val title = view.findViewById<TextView>(R.id.title)
-                        val icon = view.findViewById<ImageView>(R.id.icon)
-                        title.text = item.title
-                        icon.setImageResource(item.iconRes)
-                        return view
+                val editItem = view.findViewById<LinearLayout>(R.id.item_edit)
+                if(userId == UserStaticClass.userId) {
+                    editItem.visibility = View.VISIBLE
+                    editItem.setOnClickListener {
+                        popupWindow.dismiss()
+                        showUpdateDialog(commentId, commentContents)
                     }
+                } else {
+                    editItem.visibility = View.GONE
                 }
-                val dialog = MaterialAlertDialogBuilder(requireContext())
-                    .setAdapter(adapter) { dialog, which ->
-                        options[which].action()
-                    }
-                    .create()
-                dialog.window?.setBackgroundDrawableResource(R.drawable.dialog_rounded_bg)
-                dialog.show()
 
+                view.findViewById<LinearLayout>(R.id.itemcopy).setOnClickListener {
+                    val textCopy=commentContents
+                    val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+                    val clip = ClipData.newPlainText("comment", textCopy)
+                    clipboard.setPrimaryClip(clip)
+                    goBar()
+                    popupWindow.dismiss()
+                }
+                val deleteItem=view.findViewById<LinearLayout>(R.id.item_delete)
+                if(userId== UserStaticClass.userId) {
+                    deleteItem.visibility=View.VISIBLE
+                    view.findViewById<LinearLayout>(R.id.item_delete).setOnClickListener {
+                        viewModel.deleteComment(commentId)
+                        popupWindow.dismiss()
+                    }
+                }else{
+                    deleteItem.visibility=View.GONE
+                }
+                val pinItem=view.findViewById<LinearLayout>(R.id.item_pin)
+                  if(postUserId== UserStaticClass.userId) {
+                      pinItem.visibility=View.VISIBLE
+                      viewModel.pinComments(commentId)
+                      popupWindow.dismiss()
+                  }else{
+                      pinItem.visibility=View.GONE
+                  }
+
+                view.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+                val popupWidth = view.measuredWidth
+                val popupHeight = view.measuredHeight
+
+                val location = IntArray(2)
+                anchorView.getLocationOnScreen(location)
+                val anchorX = location[0]
+                val anchorY = location[1]+anchorView.height
+
+                val xOffset = anchorView.width - popupWidth
+                val yOffset = -popupHeight
+
+                popupWindow.showAtLocation(anchorView, Gravity.NO_GRAVITY, anchorX + xOffset, anchorY + yOffset)
             }
 
             override fun onReplyClicked(comment: commentResponse) {
@@ -208,7 +251,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                     }
                 }
                 override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
-                        rvComment.smoothScrollToPosition(0)
+                    rvComment.smoothScrollToPosition(0)
                 }
 
             }
@@ -223,12 +266,102 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             )
         }
 
+    }
+
+    private fun showUpdateDialog(commentId: Long, commentContents: String) {
+
+        val view = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_update_comment, null)
+
+        val textInputLayout = view.findViewById<TextInputLayout>(R.id.textInputLayout)
+        val editText = view.findViewById<TextInputEditText>(R.id.editComment)
+        val btnUpdate = view.findViewById<MaterialButton>(R.id.btnUpdate)
+        val btnIptal = view.findViewById<MaterialButton>(R.id.btnIptal)
+
+        editText.setText(commentContents)
+        editText.setSelection(commentContents.length)
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(view)
+            .create()
+
+        dialog.show()
+
+        fun updateButtonAndField() {
+            val currentText = editText.text.toString()
+            val trimmedCurrent = currentText.trim()
+            val trimmedOriginal = commentContents.trim()
+
+            val isChanged = trimmedCurrent.isNotEmpty() && trimmedCurrent != trimmedOriginal
+
+            // Buton durumu
+            btnUpdate.isEnabled = isChanged
+            btnUpdate.alpha = if (isChanged) 1f else 0.5f
+            btnUpdate.setTextColor(
+                ContextCompat.getColor(requireContext(), if (isChanged) R.color.accept_blue else R.color.gray)
+            )
+            btnUpdate.strokeColor = ColorStateList.valueOf(
+                ContextCompat.getColor(
+                    requireContext(),
+                    if (isChanged) R.color.accept_blue else R.color.gray
+                )
+            )
+
+            if (!editText.isFocused) {
+                textInputLayout.boxStrokeColor = ContextCompat.getColor(
+                    requireContext(),
+                    if (isChanged) R.color.accept_blue else R.color.gray
+                )
+                textInputLayout.defaultHintTextColor = ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), if (isChanged) R.color.accept_blue else R.color.gray)
+                )
+            }
+        }
+
+        updateButtonAndField()
+        editText.addTextChangedListener { editable ->
+            val currentText = editable.toString()
+            if (currentText.length > 250) {
+                editText.setText(currentText.substring(0, 250))
+                editText.setSelection(250)
+            }
+            updateButtonAndField()
+        }
+
+        editText.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                textInputLayout.boxStrokeColor =
+                    ContextCompat.getColor(requireContext(), R.color.black)
+                textInputLayout.defaultHintTextColor = ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.black)
+                )
+                editText.setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+            } else {
+                updateButtonAndField()
+            }
+        }
+
+        btnUpdate.setOnClickListener {
+            val newText = editText.text.toString().trim()
+            if (newText != commentContents.trim() && newText.isNotEmpty()) {
+                viewModel.updateComment(commentId, newText)
+            }
+            dialog.dismiss()
+        }
+
+        btnIptal.setOnClickListener {
+            dialog.dismiss()
+        }
+    }
+
+
+    private fun setupLifecyle(){
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
                 launch {
-                    viewModel.comments.collectLatest {
-                        commentAdapter.submitData(it)
+                    viewModel.comments.collectLatest { pagingData ->
+                        commentAdapter.submitData(pagingData)
                     }
                 }
 
@@ -247,15 +380,15 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                 }
                 launch {
                     viewModel.pinState.collect { result ->
-                       if(result){
-                           rvComment.smoothScrollToPosition(0)
-                       }else{
-                           Toast.makeText(
-                               requireContext(),
-                               "Yorum sabitlenemedi",
-                               Toast.LENGTH_SHORT
-                           ).show()
-                       }
+                        if(result){
+                            rvComment.smoothScrollToPosition(0)
+                        }else{
+                            Toast.makeText(
+                                requireContext(),
+                                "Yorum sabitlenemedi",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 }
 
@@ -295,65 +428,6 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
             }
         }
-    }
-
-    private fun showUpdateDialog(commentId: Long, commentContents: String) {
-
-        val view = LayoutInflater.from(requireContext())
-            .inflate(R.layout.dialog_update_comment, null)
-
-        val textInputLayout = view.findViewById<TextInputLayout>(R.id.textInputLayout)
-        val editText = view.findViewById<TextInputEditText>(R.id.editComment)
-
-        editText.setText(commentContents)
-        editText.setSelection(commentContents.length)
-
-        val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setView(view)
-            .setPositiveButton("Güncelle", null)
-            .setNegativeButton("İptal") { dialogInterface, _ ->
-                dialogInterface.dismiss()
-            }
-            .create()
-
-        dialog.setOnShowListener {
-            val button = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-
-            fun updateButtonState() {
-                val currentText = editText.text.toString()
-                val trimmedCurrent = currentText.trim()
-                val trimmedOriginal = commentContents.trim()
-
-                val enableButton = trimmedCurrent.isNotEmpty() && trimmedCurrent != trimmedOriginal
-
-                button.isEnabled = enableButton
-                button.alpha = if (enableButton) 1f else 0.5f
-            }
-
-            updateButtonState()
-
-            editText.addTextChangedListener { editable ->
-                val currentText = editable.toString()
-
-                if (currentText.length > 250) {
-                    editText.setText(currentText.substring(0, 250))
-                    editText.setSelection(250)
-                }
-
-                updateButtonState()
-            }
-            button.setOnClickListener {
-                val newText = editText.text.toString().trim()
-                if (newText != commentContents.trim()) {
-                    viewModel.updateComment(commentId, newText)
-                }
-                dialog.dismiss()
-            }
-        }
-        dialog.show()
-    }
-
-    private fun setupObserves(){
 
 
     }

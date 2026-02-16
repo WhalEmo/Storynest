@@ -2,19 +2,20 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/layout"
+    android:id="@+id/replylayout"
     android:layout_width="match_parent"
-    android:clickable="true"
-    android:focusable="true"
-    android:clipToPadding="false"
-    android:background="@drawable/bg_comment_item"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="12dp"
-    android:paddingVertical="12dp">
+    android:paddingStart="60dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp"
+    android:text="3 yanıtı gör"
+    android:textSize="13sp"
+    android:textStyle="bold"
+    android:textColor="@android:color/darker_gray">
 
     <!-- Profil Foto -->
     <androidx.cardview.widget.CardView
-        android:id="@+id/imgProfile"
+        android:id="@+id/imgProfilereply"
         android:layout_width="36dp"
         android:layout_height="36dp"
         app:cardCornerRadius="18dp"
@@ -23,7 +24,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:id="@+id/ppfoto"
+            android:id="@+id/ppfotoreply"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/account_circle_24"
@@ -31,31 +32,31 @@
     </androidx.cardview.widget.CardView>
 
     <ImageView
-        android:id="@+id/imgPin"
+        android:id="@+id/imgPinreply"
         android:layout_width="14dp"
         android:layout_height="14dp"
         android:src="@drawable/pin"
         android:visibility="gone"
-        app:layout_constraintStart_toEndOf="@id/imgProfile"
-        app:layout_constraintTop_toTopOf="@id/imgProfile"
-        app:layout_constraintBottom_toBottomOf="@id/txtUsername"
+        app:layout_constraintStart_toEndOf="@id/imgProfilereply"
+        app:layout_constraintTop_toTopOf="@id/imgProfilereply"
+        app:layout_constraintBottom_toBottomOf="@id/txtUsernamereply"
         android:layout_marginStart="6dp"/>
 
     <TextView
-        android:id="@+id/txtUsername"
+        android:id="@+id/txtUsernamereply"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="beyzatakca"
         android:textStyle="bold"
         android:textSize="13sp"
         android:textColor="@color/black"
-        app:layout_constraintStart_toEndOf="@id/imgPin"
-        app:layout_constraintTop_toTopOf="@id/imgProfile"
+        app:layout_constraintStart_toEndOf="@id/imgPinreply"
+        app:layout_constraintTop_toTopOf="@id/imgProfilereply"
         android:layout_marginStart="4dp"/>
 
 
     <TextView
-        android:id="@+id/txtEdited"
+        android:id="@+id/txtEditedreply"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Düzenlendi"
@@ -64,11 +65,11 @@
         android:textStyle="italic"
         android:visibility="gone"
         android:layout_marginStart="4dp"
-        app:layout_constraintStart_toEndOf="@id/txtUsername"
-        app:layout_constraintBottom_toBottomOf="@id/txtUsername"/>
+        app:layout_constraintStart_toEndOf="@id/txtUsernamereply"
+        app:layout_constraintBottom_toBottomOf="@id/txtUsernamereply"/>
 
     <TextView
-        android:id="@+id/txtEditDate"
+        android:id="@+id/txtEditDatereply"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="• 13 Şub 2026"
@@ -76,40 +77,40 @@
         android:visibility="gone"
         android:textColor="@color/accept_blue"
         android:textStyle="italic"
-        app:layout_constraintStart_toEndOf="@id/txtEdited"
-        app:layout_constraintTop_toTopOf="@id/txtEdited"
+        app:layout_constraintStart_toEndOf="@id/txtEditedreply"
+        app:layout_constraintTop_toTopOf="@id/txtEditedreply"
         android:layout_marginStart="4dp"/>
 
 
     <!-- Yorum -->
     <TextView
-        android:id="@+id/txtComment"
+        android:id="@+id/txtCommentreply"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Bu gönderi gerçekten çok güzel olmuş 🔥"
         android:textSize="13sp"
         android:textColor="@color/black"
         android:layout_marginTop="2dp"
-        app:layout_constraintStart_toStartOf="@id/txtUsername"
-        app:layout_constraintTop_toBottomOf="@id/txtUsername"
-        app:layout_constraintEnd_toStartOf="@id/likeContainer"/>
+        app:layout_constraintStart_toStartOf="@id/txtUsernamereply"
+        app:layout_constraintTop_toBottomOf="@id/txtUsernamereply"
+        app:layout_constraintEnd_toStartOf="@id/likeContainerreply"/>
 
 
     <!-- Zaman -->
     <TextView
-        android:id="@+id/txtTime"
+        android:id="@+id/txtTimereply"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="2s"
         android:textSize="11sp"
         android:textColor="@color/gray"
         android:layout_marginTop="6dp"
-        app:layout_constraintStart_toStartOf="@id/txtComment"
-        app:layout_constraintTop_toBottomOf="@id/txtComment"/>
+        app:layout_constraintStart_toStartOf="@id/txtCommentreply"
+        app:layout_constraintTop_toBottomOf="@id/txtCommentreply"/>
 
     <!-- Yanıtla -->
     <TextView
-        android:id="@+id/txtReply"
+        android:id="@+id/txtReplyreply"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Yanıtla"
@@ -117,26 +118,26 @@
         android:textStyle="bold"
         android:textColor="@color/gray"
         android:layout_marginStart="16dp"
-        app:layout_constraintStart_toEndOf="@id/txtTime"
-        app:layout_constraintBaseline_toBaselineOf="@id/txtTime"/>
+        app:layout_constraintStart_toEndOf="@id/txtTimereply"
+        app:layout_constraintBaseline_toBaselineOf="@id/txtTimereply"/>
 
     <LinearLayout
-        android:id="@+id/likeContainer"
+        android:id="@+id/likeContainerreply"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center_horizontal"
-        app:layout_constraintTop_toTopOf="@id/txtUsername"
+        app:layout_constraintTop_toTopOf="@id/txtUsernamereply"
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
-            android:id="@+id/btnLike"
+            android:id="@+id/btnLikereply"
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:src="@drawable/baseline_favorite_border_24"/>
 
         <TextView
-            android:id="@+id/txtLikeCount"
+            android:id="@+id/txtLikeCountreply"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="120"
