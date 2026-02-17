@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <Transition
+        app:constraintSetStart="@+id/half"
+        app:constraintSetEnd="@+id/full"
+        app:duration="400">
+        <OnSwipe
+            app:touchAnchorId="@+id/rvComment"
+            app:touchAnchorSide="top"
+            app:nestedScrollFlags="disablePostScroll"
+            app:moveWhenScrollAtTop="true"
+            app:dragScale="0.5"
+            app:dragDirection="dragUp" />
+    </Transition>
+
+    <ConstraintSet android:id="@+id/half">
+        <Constraint
+            android:id="@+id/rvComment"
+            android:layout_width="0dp"
+            android:layout_height="350dp"
+            app:layout_constraintBottom_toTopOf="@id/commentinput"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/divider" />
+
+        <Constraint
+            android:id="@+id/commentinput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@+id/full">
+        <Constraint
+            android:id="@+id/rvComment"
+            android:layout_width="0dp"
+            android:layout_height="600dp"
+            app:layout_constraintTop_toBottomOf="@id/divider"
+            app:layout_constraintBottom_toTopOf="@id/commentinput"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <Constraint
+            android:id="@+id/commentinput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </ConstraintSet>
+
+    <Transition
+        android:id="@+id/handleTransition"
+        app:constraintSetStart="@+id/half"
+        app:constraintSetEnd="@+id/full">
+
+        <OnSwipe
+            app:touchAnchorId="@+id/dragHandle"
+            app:touchAnchorSide="top"
+            app:dragDirection="dragUp" />
+    </Transition>
+
+    <Transition
+        android:id="@+id/contentTransition"
+        app:constraintSetStart="@+id/half"
+        app:constraintSetEnd="@+id/full"
+        app:duration="400">
+
+        <OnSwipe
+            app:touchAnchorId="@+id/rvComment"
+            app:touchAnchorSide="top"
+            app:dragDirection="dragUp"
+            app:moveWhenScrollAtTop="true" />
+    </Transition>
+
+
+
+</MotionScene>

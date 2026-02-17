@@ -38,7 +38,9 @@ import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
+import android.view.MotionEvent
 import android.widget.PopupWindow
+import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.core.content.ContextCompat
 import com.example.storynest.CustomViews.InfoMessage
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -75,6 +77,9 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
     private lateinit var commentforReply: commentResponse
 
+    private lateinit var dragHandle: View
+    private lateinit var motionLayout:MotionLayout
+
     private var postId: Long = -1L
 
 
@@ -90,28 +95,6 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
         return inflater.inflate(R.layout.bottom_sheet_comments, container, false)
     }
 
-    override fun onStart() {
-        super.onStart()
-
-        val bottomSheet =
-            (dialog as BottomSheetDialog)
-                .findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
-                ?: return
-
-        val behavior = BottomSheetBehavior.from(bottomSheet)
-
-        val screenHeight = Resources.getSystem().displayMetrics.heightPixels
-        val desiredHeight = (screenHeight * 0.6).toInt()
-
-        bottomSheet.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
-        bottomSheet.requestLayout()
-
-        behavior.peekHeight = desiredHeight
-        behavior.state = BottomSheetBehavior.STATE_COLLAPSED
-
-        behavior.isFitToContents = false
-        behavior.skipCollapsed = false
-    }
 
 
 
@@ -130,14 +113,19 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
         replyinput=view.findViewById(R.id.replyinput)
         txtReplyingTo=view.findViewById(R.id.txtReplyingTo)
         btnCancelReply=view.findViewById(R.id.btnCancelReply)
+        dragHandle=view.findViewById(R.id.dragHandle)
+        motionLayout=view.findViewById(R.id.motionLayout)
+
 
         setUpRecyclerView()
         setupLifecyle()
         clicks()
         viewModel.setPostId(postId)
-
+        rvComment.isNestedScrollingEnabled = true
+        motionLayout.transitionToState(R.id.half)
 
     }
+
 
 
     private fun goBar(){

@@ -1,45 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<androidx.constraintlayout.motion.widget.MotionLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/motionLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@drawable/dialog_rounded_bg"
+    app:layoutDescription="@xml/comment_sheet_scene">
 
+    <!-- Drag Handle -->
     <View
         android:id="@+id/dragHandle"
         android:layout_width="36dp"
         android:layout_height="4dp"
-        android:layout_gravity="center"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_drag_handle"/>
+        android:background="@drawable/bg_drag_handle"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
+    <!-- Title -->
     <TextView
         android:id="@+id/txtTitle"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Yorumlar"
         android:textSize="16sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:paddingBottom="8dp"/>
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/dragHandle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Divider -->
     <View
-        android:layout_width="match_parent"
+        android:id="@+id/divider"
+        android:layout_width="0dp"
         android:layout_height="1dp"
         android:background="#DDDDDD"
-        android:layout_marginBottom="8dp"/>
+        app:layout_constraintTop_toBottomOf="@id/txtTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+    <!-- Recycler Container -->
 
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvComment"
-        android:nestedScrollingEnabled="true"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvComment"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:nestedScrollingEnabled="true"
+            android:overScrollMode="never"
+            android:clipToPadding="false"
+            app:layout_constraintTop_toBottomOf="@id/divider"
+            app:layout_constraintBottom_toTopOf="@id/commentinput"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
         <ProgressBar
             android:id="@+id/progressBar"
@@ -50,34 +68,33 @@
 
         <TextView
             android:id="@+id/txtEmpty"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:text="Henüz Yorum yok"
-            android:gravity="center"
             android:visibility="gone"/>
 
-    </FrameLayout>
-
+    <!-- Reply Input -->
     <LinearLayout
         android:id="@+id/replyinput"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:padding="8dp"
         android:background="#F5F5F5"
-        android:visibility="gone">
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/commentinput"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Yanıt oku -->
         <ImageView
             android:id="@+id/imgReplyArrow"
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginEnd="6dp"
-            android:src="@drawable/reply"
-           />
+            android:src="@drawable/reply"/>
 
-        <!-- Yanıtlanan kullanıcı -->
         <TextView
             android:id="@+id/txtReplyingTo"
             android:layout_width="0dp"
@@ -87,32 +104,33 @@
             android:textSize="12sp"
             android:textColor="#444444"/>
 
-        <!-- İptal -->
         <ImageView
             android:id="@+id/btnCancelReply"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:src="@drawable/delete"
-            />
+            android:src="@drawable/delete"/>
     </LinearLayout>
 
-    <!-- Comment input -->
+    <!-- Comment Input -->
     <LinearLayout
         android:id="@+id/commentinput"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="8dp"
         android:background="@drawable/bgback"
-        android:visibility="visible"
-        android:elevation="8dp">
+        android:clipToPadding="false"
+        android:elevation="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
             android:id="@+id/imgProfile"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:src="@drawable/account_circle_24"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/account_circle_24"/>
 
         <EditText
             android:id="@+id/etComment"
@@ -134,6 +152,4 @@
             android:textStyle="bold"
             android:padding="8dp"/>
     </LinearLayout>
-
-
-</LinearLayout>
+</androidx.constraintlayout.motion.widget.MotionLayout>
