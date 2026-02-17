@@ -31,7 +31,12 @@ class FollowPagingSource(
                 FollowType.MY_FOLLOWING -> {
                     repository.getFollowing(page, params.loadSize)
                 }
-                else -> null
+                FollowType.USER_FOLLOWING ->{
+                    repository.getOtherUserFollowing(userId!!, page, params.loadSize)
+                }
+                FollowType.USER_FOLLOWERS -> {
+                    repository.getOtherUserFollowers(userId!!, page, params.loadSize)
+                }
             }
 
             val loadSize = params.loadSize
@@ -40,7 +45,7 @@ class FollowPagingSource(
 
             val pageLoaded = loadSize / pageSize
             LoadResult.Page(
-                data = data as List<FollowUserResponseDTO>,
+                data = data,
                 prevKey = if (page == 0) null else page - pageLoaded,
                 nextKey = if (data.isEmpty()) null else page + pageLoaded
             )

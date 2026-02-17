@@ -209,7 +209,7 @@ class FollowListFragment: Fragment() {
         viewModel.sendFollowRequest(userId, followType)
     }
 
-    private fun onCancelRequest(followId: Long){
+    private fun onCancelRequest(followId: Long?){
         soundPool.play(
             cancelSoundId,
             1f,

@@ -70,33 +70,22 @@ class ProfileFragment : Fragment(){
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         this.viewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
+
         settingsButtonAnimation()
+
+        setupButtonFlow(
+            profileMode = profileMode,
+            userId = userId
+        )
+
+        binding.backButton.setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
 
         binding.notificationBook.setOnClickListener {
             navigateTo(NotificationFragment())
         }
 
-        binding.followersContainer.setOnClickListener {
-            when(profileMode){
-                ProfileMode.MY_PROFILE -> {
-                    navigateTo(FollowListFragment.newInstance(
-                        type = FollowType.MY_FOLLOWERS
-                    ))
-                }
-                else -> {}
-            }
-        }
-        binding.followingContainer.setOnClickListener {
-            when(profileMode){
-                ProfileMode.MY_PROFILE -> {
-                    navigateTo(FollowListFragment.newInstance(
-                        type = FollowType.MY_FOLLOWING
-                    ))
-                }
-                else -> {
-                }
-            }
-        }
         Log.d("ProfileFragment", "userId: $userId")
         viewModel.init(
             mode = profileMode,
@@ -191,5 +180,50 @@ class ProfileFragment : Fragment(){
 
     }
 
+    private fun setupButtonFlow(
+        profileMode: ProfileMode,
+        userId: Long
+    ){
+        when(profileMode){
+            ProfileMode.MY_PROFILE -> {
+
+            }
+            ProfileMode.USER_PROFILE -> {
+
+            }
+        }
+        val followingContainerType = when(profileMode){
+            ProfileMode.MY_PROFILE -> {
+                FollowType.MY_FOLLOWING
+            }
+            ProfileMode.USER_PROFILE -> {
+                FollowType.USER_FOLLOWING
+            }
+        }
+        val followersContainerType = when(profileMode){
+            ProfileMode.MY_PROFILE -> {
+                FollowType.MY_FOLLOWERS
+            }
+            ProfileMode.USER_PROFILE -> {
+                FollowType.USER_FOLLOWERS
+            }
+        }
+        binding.followersContainer.setOnClickListener {
+           navigateTo(
+               FollowListFragment.newInstance(
+                   type = followersContainerType,
+                   userId = userId
+               )
+           )
+        }
+        binding.followingContainer.setOnClickListener {
+            navigateTo(
+                FollowListFragment.newInstance(
+                    type = followingContainerType,
+                    userId = userId
+                )
+            )
+        }
+    }
 
 }

@@ -42,4 +42,19 @@ interface FollowApiController {
         @Query("size") size: Int = 20
     ): Response<List<FollowUserResponseDTO>>
 
+    @GET("follow/otherUserFollowing/{userId}")
+    suspend fun getOtherUserFollowing(
+        @Path("userId") userId: Long,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20
+    ): Response<List<FollowUserResponseDTO>>
+
+    @GET("follow/otherUserFollowed/{userId}")
+    suspend fun getOtherUserFollowers(
+        @Path("userId") userId: Long,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20
+    ): Response<List<FollowUserResponseDTO>>
+
+
 }

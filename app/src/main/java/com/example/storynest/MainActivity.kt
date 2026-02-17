@@ -32,7 +32,10 @@ class MainActivity : AppCompatActivity() {
             profile = at,
             biography = "Android Developer • Coffee Lover ☕ • Kotlin ❤️",
             followers = 128,
-            following = 89
+            following = 89,
+            isFollowing = false,
+            isOwnProfile = true,
+            isFollower = false
         )
         navigateTo(
             ProfileFragment.newInstance(

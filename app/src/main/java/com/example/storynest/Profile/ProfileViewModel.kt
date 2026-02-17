@@ -99,13 +99,14 @@ class ProfileViewModel: ViewModel() {
             isFollowing = false,
 
             showEditButton = type == ProfileMode.MY_PROFILE,
-            showFollowButton = type == ProfileMode.USER_PROFILE,
+            showFollowButton = type == ProfileMode.USER_PROFILE && !isFollowing,
             showSettingsButton = type == ProfileMode.MY_PROFILE,
             showDotMenuButton = type == ProfileMode.USER_PROFILE,
             showNotificationButton = type == ProfileMode.MY_PROFILE,
             isOwnProfile = type == ProfileMode.MY_PROFILE,
-            showMessageButton = type == ProfileMode.USER_PROFILE
+            showMessageButton = type == ProfileMode.USER_PROFILE && !isOwnProfile && isFollowing
         )
+
     }
 
 }

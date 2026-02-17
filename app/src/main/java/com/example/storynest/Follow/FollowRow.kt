@@ -11,7 +11,7 @@ sealed class FollowRow {
 
     data class FollowUserItem(
         val id: Long,
-        val requestId: Long,
+        val requestId: Long?,
         val username: String,
         val biography: String?,
         val profile: String?,

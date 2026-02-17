@@ -24,7 +24,10 @@ class ProfileService {
             profile = response.userResponseDto.profile?: "",
             biography = response.userResponseDto.biography,
             followers = response.followerCount,
-            following = response.followedCount
+            following = response.followedCount,
+            isFollowing = response.following,
+            isOwnProfile = response.ownProfile,
+            isFollower = response.follower
         )
     }
     suspend fun getUserProfile(userId: Long): ProfileData{
@@ -38,7 +41,10 @@ class ProfileService {
             profile = response.userResponseDto.profile?: "",
             biography = response.userResponseDto.biography,
             followers = response.followerCount,
-            following = response.followedCount
+            following = response.followedCount,
+            isFollowing = response.following,
+            isOwnProfile = response.ownProfile,
+            isFollower = response.follower
         )
     }
 }
