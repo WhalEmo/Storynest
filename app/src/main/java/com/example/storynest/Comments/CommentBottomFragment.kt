@@ -39,9 +39,14 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.MotionEvent
+import android.view.WindowManager
 import android.widget.PopupWindow
 import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnPreDraw
 import com.example.storynest.CustomViews.InfoMessage
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -65,20 +70,20 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
     private lateinit var progressBar: ProgressBar
     private lateinit var commentAdapter: CommentsAdapter
     private lateinit var txtEmpty: TextView
-    private lateinit var commentinput: LinearLayout
+    private lateinit var commentInputContainer: ConstraintLayout
 
     private lateinit var imgProfile: ImageView
     private lateinit var etComment: EditText
     private lateinit var btnSend: TextView
 
-    private lateinit var replyinput: LinearLayout
+    private lateinit var replyLayout: ConstraintLayout
     private lateinit var txtReplyingTo: TextView
     private lateinit var btnCancelReply: ImageView
 
     private lateinit var commentforReply: commentResponse
 
     private lateinit var dragHandle: View
-    private lateinit var motionLayout:MotionLayout
+
 
     private var postId: Long = -1L
 
@@ -104,26 +109,42 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
         rvComment=view.findViewById(R.id.rvComment)
         progressBar=view.findViewById(R.id.progressBar)
         txtEmpty=view.findViewById(R.id.txtEmpty)
-        commentinput=view.findViewById(R.id.commentinput)
+        commentInputContainer=view.findViewById(R.id.commentInputContainer)
 
         imgProfile=view.findViewById(R.id.imgProfile)
         etComment=view.findViewById(R.id.etComment)
         btnSend=view.findViewById(R.id.btnSend)
 
-        replyinput=view.findViewById(R.id.replyinput)
+        replyLayout=view.findViewById(R.id.replyLayout)
         txtReplyingTo=view.findViewById(R.id.txtReplyingTo)
         btnCancelReply=view.findViewById(R.id.btnCancelReply)
         dragHandle=view.findViewById(R.id.dragHandle)
-        motionLayout=view.findViewById(R.id.motionLayout)
+
 
 
         setUpRecyclerView()
         setupLifecyle()
         clicks()
         viewModel.setPostId(postId)
-        rvComment.isNestedScrollingEnabled = true
-        motionLayout.transitionToState(R.id.half)
 
+    }
+    override fun onStart() {
+        super.onStart()
+
+        val bottomSheet = (dialog as? BottomSheetDialog)
+            ?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+            ?: return
+
+        val behavior = BottomSheetBehavior.from(bottomSheet) as? ScrollAwareBottomSheetBehavior<View>
+        behavior?.let {
+            it.isFitToContents = false
+            it.skipCollapsed = true
+            it.expandedOffset = 0
+            it.halfExpandedRatio=0.6f
+            it.state = BottomSheetBehavior.STATE_HALF_EXPANDED
+        }
+
+        rvComment.isNestedScrollingEnabled = true
     }
 
 
@@ -215,10 +236,10 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
             override fun onReplyClicked(comment: commentResponse) {
                 commentforReply = comment
-                replyinput.visibility = View.VISIBLE
+                replyLayout.visibility = View.VISIBLE
                 txtReplyingTo.text = comment.parentCommentUsername
                 btnCancelReply.setOnClickListener {
-                    replyinput.visibility = View.GONE
+                    replyLayout.visibility = View.GONE
                 }
             }
 
@@ -448,7 +469,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                 return@setOnClickListener
             }
 
-            if (replyinput.visibility == View.VISIBLE) {
+            if (replyLayout.visibility == View.VISIBLE) {
                 viewModel.addSubComment(postId, UserStaticClass.userId,commentText,commentforReply.comment_id)
             } else {
 
@@ -456,7 +477,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             }
 
             etComment.text.clear()
-            replyinput.visibility = View.GONE
+            replyLayout.visibility = View.GONE
         }
 
     }
