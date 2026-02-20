@@ -39,7 +39,8 @@ class MainActivity : AppCompatActivity() {
         )
         navigateTo(
             ProfileFragment.newInstance(
-                mode = ProfileMode.MY_PROFILE
+                mode = ProfileMode.MY_PROFILE,
+                userId = 8 // bu 3 ü değiştirmeyi unutma
             )
         )
 

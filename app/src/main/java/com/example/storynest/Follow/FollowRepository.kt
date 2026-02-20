@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import retrofit2.Response
 
-class FollowRepository {
+object FollowRepository {
     private lateinit var token: String
 
     private var pagingSource: FollowPagingSource? = null
@@ -28,6 +28,7 @@ class FollowRepository {
     }
     val followApiController = ApiClient.getClient(token).create(FollowApiController::class.java)
 
+
     suspend fun followMyFollower(myId: Long, userId: Long): Response<FollowResponseDTO> {
         return followApiController.sendFollowRequest(
             FollowRequestDTO(
@@ -36,7 +37,6 @@ class FollowRepository {
             )
         )
     }
-
 
     suspend fun cancelFollowRequest(followId: Long): Response<FollowResponseDTO> {
         return followApiController.cancelFollow(followId)

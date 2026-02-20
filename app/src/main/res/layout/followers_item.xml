@@ -76,6 +76,20 @@
         app:layout_constraintBottom_toBottomOf="@id/imgProfile">
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/follow"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Takip Et"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorOnSecondary"
+            android:paddingHorizontal="16dp"
+            android:visibility="gone"
+            app:cornerRadius="8dp"
+            app:backgroundTint="@color/accept_blue"/>
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/yourFollowMe"
             style="@style/Widget.Material3.Button.TonalButton"
             android:layout_width="wrap_content"
@@ -85,7 +99,7 @@
             android:textStyle="bold"
             android:textColor="@color/colorOnSecondary"
             android:paddingHorizontal="16dp"
-            android:visibility="visible"
+            android:visibility="gone"
             app:cornerRadius="8dp"
             app:backgroundTint="@color/accept_blue"/>
 
@@ -120,15 +134,16 @@
             app:layout_constraintBottom_toBottomOf="@id/imgProfile"/>
 
         <ImageButton
-        android:id="@+id/unFollow"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/unfollow"
-        android:scaleType="centerInside"
+            android:id="@+id/unFollow"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/unfollow"
+            android:scaleType="centerInside"
             android:layout_marginStart="10dp"
-        app:tint="#000000"
-        tools:ignore="ContentDescription" />
+            android:visibility="gone"
+            app:tint="#000000"
+            tools:ignore="ContentDescription" />
 
         <ImageButton
             android:id="@+id/dotMenu"
@@ -142,9 +157,19 @@
             app:tint="#000000"
             tools:ignore="ContentDescription" />
 
+        <TextView
+            android:id="@+id/removedFromFollowersText"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:gravity="center"
+            android:text="Takipçilerden Çıkarıldı"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorTextPrimary"
+            android:paddingHorizontal="16dp"
+            android:background="@drawable/bg_unfollowed_label"
+            android:visibility="visible" />
     </LinearLayout>
-
-
 
 
     <androidx.constraintlayout.widget.Barrier

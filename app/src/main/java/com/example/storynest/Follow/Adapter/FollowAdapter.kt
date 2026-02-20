@@ -14,7 +14,8 @@ class FollowAdapter(
     private val onReject: (FollowRow.FollowUserItem) -> Unit,
     private val onCancelRequest: (FollowRow.FollowUserItem) -> Unit,
     private val onUnFollowMy: (FollowRow.FollowUserItem) -> Unit,
-    private val onProfileClick: (FollowRow.FollowUserItem) -> Unit
+    private val onProfileClick: (FollowRow.FollowUserItem) -> Unit,
+    private val onDotMenuClick: (FollowRow.FollowUserItem) -> Unit
 ) : PagingDataAdapter<FollowRow, RecyclerView.ViewHolder>(DIFF) {
 
     companion object {
@@ -88,7 +89,8 @@ class FollowAdapter(
                     onSendMessage = onReject,
                     onCancelRequest = onCancelRequest,
                     onUnFollowMy = onUnFollowMy,
-                    onProfileClick = onProfileClick
+                    onProfileClick = onProfileClick,
+                    onDotMenuClick = onDotMenuClick
                 )
             }
             else -> throw IllegalArgumentException("Unknown viewType")

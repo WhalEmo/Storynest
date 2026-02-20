@@ -17,7 +17,8 @@ class FollowUserViewHolder(
     private val onSendMessage: (FollowRow.FollowUserItem) -> Unit,
     private val onCancelRequest: (FollowRow.FollowUserItem) -> Unit,
     private val onUnFollowMy: (FollowRow.FollowUserItem) -> Unit,
-    private val onProfileClick: (FollowRow.FollowUserItem) -> Unit
+    private val onProfileClick: (FollowRow.FollowUserItem) -> Unit,
+    private val onDotMenuClick: (FollowRow.FollowUserItem) -> Unit
 ): BaseFollowViewHolder(itemView) {
 
 
@@ -31,11 +32,14 @@ class FollowUserViewHolder(
         itemView.findViewById<ImageButton>(R.id.unFollow)
     private val dotMenu =
         itemView.findViewById<ImageButton>(R.id.dotMenu)
+    private val follow =
+        itemView.findViewById<TextView>(R.id.follow)
+    private val removedFromFollowersText =
+        itemView.findViewById<TextView>(R.id.removedFromFollowersText)
 
     private val actionButtons by lazy {
         listOf(yourFollowMe, sendMessage, sendingRequest)
     }
-
 
 
     init {
@@ -54,6 +58,12 @@ class FollowUserViewHolder(
         profileImage.setOnClickListener {
             currentItem?.let(onProfileClick)
         }
+        follow.setOnClickListener {
+            currentItem?.let(onAccept)
+        }
+        dotMenu.setOnClickListener {
+            currentItem?.let(onDotMenuClick)
+        }
     }
 
     override fun bindSpecific(resource: FollowRow.FollowUserItem) {
@@ -71,6 +81,9 @@ class FollowUserViewHolder(
         sendingRequest.isVisible = FollowViewType.PENDING in visibleViews
         unFollow.isVisible = FollowViewType.UNFOLLOW in visibleViews
         dotMenu.isVisible = FollowViewType.DOT_MENU in visibleViews
+        follow.isVisible = FollowViewType.FOLLOW in visibleViews
+
+        removedFromFollowersText.isVisible = FollowViewType.REMOVE_FOLLOWER in visibleViews
     }
 
 

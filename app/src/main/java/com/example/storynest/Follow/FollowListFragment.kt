@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.storynest.CustomViews.ConfirmDialog
 import com.example.storynest.CustomViews.InfoMessage
 import com.example.storynest.Follow.Adapter.FollowAdapter
+import com.example.storynest.Follow.FollowOptions.FollowOptionClickListener
+import com.example.storynest.Follow.FollowOptions.FollowOptionsBottomSheet
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.FollowersLoadStateAdapter
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.FollowersUiState
 import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
@@ -135,7 +137,11 @@ class FollowListFragment: Fragment() {
                     userId = it.id
                 )
                 (requireActivity() as MainActivity).navigateTo(fragment)
+            },
+            onDotMenuClick = {
+                asd(2, "")
             }
+
         )
 
         binding.recycler.layoutManager = LinearLayoutManager(requireContext())
@@ -180,10 +186,11 @@ class FollowListFragment: Fragment() {
                 }
 
                 else -> {
-                    binding.recycler.recyclerFadeIn()
                     FollowersUiState.Content
                 }
             }
+
+            contentRender(uiState)
 
         }
 
@@ -228,13 +235,14 @@ class FollowListFragment: Fragment() {
             imageUrl = usrResponse.profile,
             onConfirm = {
                 viewModel.removeFollower(
-                    usrResponse.id,
-                    {
+                    userId = usrResponse.id,
+                    onRemoved = {
                         InfoMessage.show(
                             requireActivity(),
                             "Takipçiden Çıkarıldı"
                         )
-                    }
+                    },
+                    followType = followType
                 )
             }
         ).show(
@@ -260,6 +268,17 @@ class FollowListFragment: Fragment() {
         }
     }
 
+    private fun contentRender(
+        uiState: FollowersUiState
+    ){
+        when(uiState){
+            is FollowersUiState.Content ->{
+                binding.recycler.recyclerFadeIn()
+            }
+            else -> null
+        }
+    }
+
     private fun sendMessage(){
         InfoMessage.show(
             requireActivity(),
@@ -277,5 +296,30 @@ class FollowListFragment: Fragment() {
         isVisible = true
         onStart?.invoke()
         animate().alpha(1f).setDuration(duration).start()
+    }
+
+    private fun asd(userId: Long, username: String){
+        val sheet = FollowOptionsBottomSheet(
+            username = username,
+            listener = object : FollowOptionClickListener {
+
+                override fun onViewProfile() {
+                    val fragment = ProfileFragment.newInstance(
+                        mode = ProfileMode.USER_PROFILE,
+                        userId = userId
+                    )
+
+                }
+
+                override fun onUnfollow() {
+                }
+
+
+                override fun onBlock() {
+                }
+            }
+        )
+
+        sheet.show(parentFragmentManager, "FollowOptions")
     }
 }

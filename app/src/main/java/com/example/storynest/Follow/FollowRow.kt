@@ -6,9 +6,6 @@ sealed class FollowRow {
         val title: String
     ): FollowRow()
 
-
-
-
     data class FollowUserItem(
         val id: Long,
         val requestId: Long?,

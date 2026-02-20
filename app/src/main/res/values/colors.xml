@@ -31,4 +31,15 @@
     <color name="colorWarning">#FFC107</color>
     <color name="colorError">#E53935</color>
 
+
+    <!-- DsButton Colors -->
+    <color name="ds_color_primary">#6750A4</color>
+    <color name="ds_color_on_primary">#FFFFFF</color>
+
+    <color name="ds_color_secondary">#625B71</color>
+    <color name="ds_color_on_secondary">#FFFFFF</color>
+
+    <color name="ds_color_surface">#FFFFFF</color>
+    <color name="ds_color_on_surface">#1C1B1F</color>
+
 </resources>

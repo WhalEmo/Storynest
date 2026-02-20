@@ -5,5 +5,7 @@ enum class FollowViewType {
     MESSAGE,
     PENDING,
     UNFOLLOW,
-    DOT_MENU
+    DOT_MENU,
+    FOLLOW,
+    REMOVE_FOLLOWER
 }
