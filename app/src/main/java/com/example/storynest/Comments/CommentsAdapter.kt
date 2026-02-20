@@ -27,9 +27,9 @@ class CommentsAdapter(
 
 
     interface OnCommentInteractionListener {
-        fun onLikeClicked(commentId: Long)
+        fun onLikeClicked(comment:commentUiItem)
         fun onLongClicked(commentId: Long,commentContents:String,userId: Long,postUserId:Long,anchorView: View,onPinnedAlready: (() -> Unit)? = null)
-        fun onReplyClicked(comment: commentResponse)
+        fun onReplyClicked(comment: commentUiItem)
         fun onViewReplys(
             commentId: Long,
             reset: Boolean,
@@ -106,42 +106,25 @@ class CommentsAdapter(
         val txtEditDate: TextView=itemView.findViewById(R.id.txtEditDate)
         val imgPin: ImageView=itemView.findViewById(R.id.imgPin)
 
-        @RequiresApi(Build.VERSION_CODES.O)
-        fun bind(comment: commentResponse) {
+        fun bind(comment: commentUiItem) {
             Glide.with(itemView.context)
-                .load(comment.user.profile)
+                .load(comment.profileUrl)
                 .placeholder(R.drawable.account_circle_24)
                 .error(R.drawable.account_circle_24)
                 .circleCrop()
                 .into(ppfoto)
 
-            txtUsername.text = comment.user.username
+            txtUsername.text = comment.userName
             txtComment.text = comment.contents
-            txtTime.text = formatPostDate(comment.date)
-            txtLikeCount.text = formatLike(comment.number_of_like)
+            txtTime.text = comment.date
+            txtLikeCount.text = comment.number_of_like
+            btnLike.setImageResource(comment.likeIconRes)
+            imgPin.visibility=comment.pinVisibility
+            txtEdited.visibility=comment.editedVisibility
+            txtEditDate.visibility=comment.editDateVisibility
+            txtEditDate.text=comment.updateDate
 
-            if (comment.isLiked) {
-                btnLike.setImageResource(R.drawable.baseline_favorite_24)
-            } else {
-                btnLike.setImageResource(R.drawable.baseline_favorite_border_24)
-            }
-
-            if(comment.isPinned){
-                imgPin.visibility=View.VISIBLE
-            }else{
-                imgPin.visibility=View.GONE
-            }
-
-            if(comment.isEdited){
-                txtEdited.visibility=View.VISIBLE
-                txtEditDate.visibility= View.VISIBLE
-                txtEditDate.text=formatPostDate(comment.updateDate)
-            }else{
-                txtEdited.visibility= View.GONE
-                txtEditDate.visibility= View.GONE
-            }
-
-            btnLike.setOnClickListener {
+            /*btnLike.setOnClickListener {
                 val item = getItem(bindingAdapterPosition) ?: return@setOnClickListener
                 when(item){
                     is CommentsUiModel.CommentItem->{
@@ -167,19 +150,31 @@ class CommentsAdapter(
                 }
             }
 
+             */
+            btnLike.setOnClickListener {
+                val position = bindingAdapterPosition
+                if (position == RecyclerView.NO_POSITION) return@setOnClickListener
+
+                val item = getItem(position)
+                if (item is CommentsUiModel.CommentItem) {
+                    listener.onLikeClicked(item.comment)
+                }
+            }
+
             txtReply.setOnClickListener {
                 listener.onReplyClicked(comment)
             }
 
 
             layout.setOnLongClickListener {
-                listener.onLongClicked(comment.comment_id,comment.contents,comment.user.id,comment.postUserId,layout){
+                listener.onLongClicked(comment.commentId,comment.contents,comment.userId,comment.postUserId,layout){
                     imgPin.visibility= View.VISIBLE
                 }
                 true
             }
         }
     }
+
 
     inner class ReplyViewHolder(itemView: View) :
         RecyclerView.ViewHolder(itemView) {
@@ -196,7 +191,7 @@ class CommentsAdapter(
         val txtEditDatereply: TextView=itemView.findViewById(R.id.txtEditDatereply)
         val imgPinreply: ImageView=itemView.findViewById(R.id.imgPin)
 
-        fun bind(comment: commentResponse) {
+        fun bind(comment: commentUiItem) {
 
         }
 
@@ -239,11 +234,11 @@ class CommentsAdapter(
                 return when {
                     oldItem is CommentsUiModel.CommentItem &&
                             newItem is CommentsUiModel.CommentItem ->
-                        oldItem.comment.comment_id == newItem.comment.comment_id
+                        oldItem.comment.commentId == newItem.comment.commentId
 
                     oldItem is CommentsUiModel.ReplyItem &&
                             newItem is CommentsUiModel.ReplyItem ->
-                        oldItem.reply.comment_id == newItem.reply.comment_id
+                        oldItem.reply.commentId == newItem.reply.commentId
 
                     oldItem is CommentsUiModel.ViewRepliesItem &&
                             newItem is CommentsUiModel.ViewRepliesItem ->
@@ -258,53 +253,5 @@ class CommentsAdapter(
                 newItem: CommentsUiModel
             ): Boolean = oldItem == newItem
         }
-    }
-
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun formatPostDate(postDate: String?): String {
-
-        val postUtc = LocalDateTime.parse(
-            postDate,
-            DateTimeFormatter.ISO_LOCAL_DATE_TIME
-        ).atZone(ZoneOffset.UTC)
-
-        val postTr = postUtc.withZoneSameInstant(ZoneId.of("Europe/Istanbul"))
-        val nowTr = ZonedDateTime.now(ZoneId.of("Europe/Istanbul"))
-
-        val days = ChronoUnit.DAYS.between(postTr, nowTr)
-        val hours = ChronoUnit.HOURS.between(postTr, nowTr)
-        val minutes = ChronoUnit.MINUTES.between(postTr, nowTr)
-
-        return when {
-            days >= 7 -> postTr.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
-            days >= 1 -> "$days gün"
-            hours >= 1 -> "$hours saat"
-            minutes >= 1 -> "$minutes dakika"
-            else -> "Şimdi"
-        }
-    }
-
-    private fun formatLike(likeCount: Int): String {
-        return when {
-            likeCount < 9_999 -> {
-                likeCount.toString()
-            }
-
-            likeCount < 1_000_000 -> {
-                val value = likeCount / 1_000.0
-                formatDecimal(value) + "Bin"
-            }
-
-            else -> {
-                val value = likeCount / 1_000_000.0
-                formatDecimal(value) + "M"
-            }
-        }
-    }
-
-    private fun formatDecimal(value: Double): String {
-        val formatted = String.format("%.1f", value)
-        return formatted.replace(".0", "").replace(".", ",")
     }
 }

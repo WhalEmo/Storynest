@@ -2,11 +2,11 @@ package com.example.storynest.Comments
 
 sealed class CommentsUiModel {
     data class CommentItem(
-        val comment: commentResponse
+        val comment: commentUiItem
     ): CommentsUiModel()
 
     data class ReplyItem(
-        val reply: commentResponse,
+        val reply: commentUiItem,
     ) : CommentsUiModel()
 
     data class ViewRepliesItem(

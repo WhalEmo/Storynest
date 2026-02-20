@@ -40,7 +40,7 @@ class CommentRepo(
 
     suspend fun toggleLike(
         commentId: Long
-    ): ResultWrapper<StringResponse> =
+    ): ResultWrapper<commentResponse> =
         safeApiCall {
             api.toggleLike(commentId)
         }

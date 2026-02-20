@@ -1,6 +1,9 @@
 package com.example.storynest.Comments
 
+import android.os.Build
 import android.util.Log
+import android.view.View
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -12,9 +15,12 @@ import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.flatMap
 import androidx.paging.insertHeaderItem
+import androidx.paging.map
 import com.example.storynest.ApiClient
+import com.example.storynest.R
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
+import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +32,12 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 
 class CommentsViewModel(
@@ -56,6 +68,9 @@ class CommentsViewModel(
     val pinState = _pinState.asSharedFlow()
 
 
+    private val _commentCache = mutableMapOf<Long, commentResponse>()
+
+
     private val _postId = MutableStateFlow<Long?>(null)
     val postId: StateFlow<Long?> = _postId
 
@@ -72,7 +87,7 @@ class CommentsViewModel(
 
 
     private val _commentsLike = MutableLiveData<UiState<StringResponse>>()
-    val postsLike: LiveData<UiState<StringResponse>> = _commentsLike
+    val commentsLike: LiveData<UiState<StringResponse>> = _commentsLike
 
     private val _usersWhoLike = MutableLiveData<UiState<List<userResponseDto>>>()
     val usersWhoLike: LiveData<UiState<List<userResponseDto>>> = _usersWhoLike
@@ -177,6 +192,35 @@ class CommentsViewModel(
         MutableStateFlow<Map<Long, Int>>(emptyMap())
     val replyVisibleCount = _replyVisibleCount.asStateFlow()
 
+
+    fun commentResponse.toUiItem(): commentUiItem{
+
+        val isEditedVisible = if (isEdited) View.VISIBLE else View.GONE
+        val isPinnedVisible = if (isPinned) View.VISIBLE else View.GONE
+
+        return commentUiItem(
+            commentId=comment_id,
+            parentCommentUsername=parentCommentUsername,
+            postUserId=postUserId,
+            userId = user.id,
+            userName = user.username,
+            profileUrl = user.profile,
+            contents= contents,
+            number_of_like=formatLike(number_of_like),
+            date=formatCommentDate(date),
+            updateDate=if (isEdited) formatCommentDate(updateDate) else null,
+            parentCommentId=parentCommentId,
+            likeIconRes = if (isLiked)
+                R.drawable.baseline_favorite_24
+            else
+                R.drawable.baseline_favorite_border_24,
+            editedVisibility=isEditedVisible,
+            pinVisibility = isPinnedVisible,
+            editDateVisibility = isEditedVisible,
+            replyCount=replyCount
+        )
+    }
+
     data class CommentUiState(
         val removedIds: Set<Long>,
         val updates: Map<Long, commentResponse>,
@@ -196,6 +240,52 @@ class CommentsViewModel(
         val replyMap: Map<Long, List<commentResponse>>,
         val visibleMap: Map<Long, Int>
     )
+
+    private fun formatLike(likeCount: Int): String {
+        return when {
+            likeCount < 9_999 -> {
+                likeCount.toString()
+            }
+
+            likeCount < 1_000_000 -> {
+                val value = likeCount / 1_000.0
+                formatDecimal(value) + "Bin"
+            }
+
+            else -> {
+                val value = likeCount / 1_000_000.0
+                formatDecimal(value) + "M"
+            }
+        }
+    }
+    private fun formatDecimal(value: Double): String {
+        val formatted = String.format("%.1f", value)
+        return formatted.replace(".0", "").replace(".", ",")
+    }
+
+
+    fun formatCommentDate(postDate: String?): String {
+
+        val postUtc = LocalDateTime.parse(
+            postDate,
+            DateTimeFormatter.ISO_LOCAL_DATE_TIME
+        ).atZone(ZoneOffset.UTC)
+
+        val postTr = postUtc.withZoneSameInstant(ZoneId.of("Europe/Istanbul"))
+        val nowTr = ZonedDateTime.now(ZoneId.of("Europe/Istanbul"))
+
+        val days = ChronoUnit.DAYS.between(postTr, nowTr)
+        val hours = ChronoUnit.HOURS.between(postTr, nowTr)
+        val minutes = ChronoUnit.MINUTES.between(postTr, nowTr)
+
+        return when {
+            days >= 7 -> postTr.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+            days >= 1 -> "$days gün"
+            hours >= 1 -> "$hours saat"
+            minutes >= 1 -> "$minutes dakika"
+            else -> "Şimdi"
+        }
+    }
     private val baseState =
         combine(
             removedCommentIds,
@@ -245,6 +335,7 @@ class CommentsViewModel(
 
         ) {pagingData, uiState->
 
+
             var baseData:PagingData<CommentsUiModel> =
                 pagingData
                     .filter { pagingItem ->
@@ -258,8 +349,11 @@ class CommentsViewModel(
                         val updatedComment =
                             uiState.updates[comment.comment_id] ?: comment
 
+                        _commentCache[comment.comment_id] = updatedComment
+
+                        val uiItem = updatedComment.toUiItem()
                         items.add(
-                            CommentsUiModel.CommentItem(updatedComment)
+                            CommentsUiModel.CommentItem(uiItem)
                         )
 
                         val replies =
@@ -283,7 +377,7 @@ class CommentsViewModel(
                         } else {
                             replies.take(visibleCount).forEach { reply ->
                                 items.add(
-                                    CommentsUiModel.ReplyItem(reply)
+                                    CommentsUiModel.ReplyItem(reply.toUiItem())
                                 )
                             }
 
@@ -304,25 +398,32 @@ class CommentsViewModel(
             uiState.pinnedItems.reversed().forEach { pinnedItem ->
                 if (pinnedItem.comment_id !in uiState.removedIds) {
 
-                    val itemToDisplay =
-                        uiState.updates[pinnedItem.comment_id] ?: pinnedItem
+                    val currentState = uiState.updates[pinnedItem.comment_id]
+                        ?: pinnedItem
 
+                    val cachedItem = _commentCache[pinnedItem.comment_id]
+
+                    val mergedItem = currentState.copy(
+                        isPinned = true ,
+                        isLiked = cachedItem?.isLiked ?: currentState.isLiked,
+                        replyCount = cachedItem?.replyCount ?: currentState.replyCount
+                    )
+                    val uiItem = mergedItem.toUiItem()
                     baseData = baseData.insertHeaderItem(
-                        item = CommentsUiModel.CommentItem(
-                            itemToDisplay.copy(isPinned = true)
-                        )
+                        item = CommentsUiModel.CommentItem(uiItem)
                     )
                 }
             }
 
             uiState.newItems
                 .filter { newItem ->
-                    uiState.pinnedItems.none { it.comment_id == newItem.comment_id }
+                    newItem.comment_id !in uiState.removedIds &&
+                            uiState.pinnedItems.none { it.comment_id == newItem.comment_id }
                 }
                 .reversed()
                 .forEach { newItem ->
                     baseData = baseData.insertHeaderItem(
-                        item = CommentsUiModel.CommentItem(newItem)
+                        item = CommentsUiModel.CommentItem(newItem.toUiItem())
                     )
                 }
 
@@ -343,8 +444,9 @@ class CommentsViewModel(
         }
     }
 
+
     fun removeComment(commentId: Long) {
-        _removedCommentIds.value = _removedCommentIds.value + commentId
+        _removedCommentIds.update { it + commentId }
     }
 
     fun updateComment(comment: commentResponse) {
@@ -368,14 +470,13 @@ class CommentsViewModel(
         }
     }
 
-
+/*
     fun toggleLike(
         commentId: Long
     ) {
         _commentsLike.value= UiState.Loading
         viewModelScope.launch {
             val result=repo.toggleLike(commentId)
-            Log.d("API_CHECK", "İstek atılan Comment ID: $commentId")
             when (result) {
                 is ResultWrapper.Success -> {
                     val body = result.data
@@ -385,6 +486,24 @@ class CommentsViewModel(
             }
         }
     }
+
+ */
+
+    fun toggleLike(uiItem: commentUiItem) {
+        val commentId = uiItem.commentId
+        viewModelScope.launch {
+            when ( val result=repo.toggleLike(commentId)) {
+                is ResultWrapper.Success -> {
+                    updateComment(result.data)
+                }
+                is ResultWrapper.Error -> {
+                }
+            }
+        }
+    }
+
+
+
 
     private var currentPageUser = 0
     private val pageSizeUser = 10
@@ -421,3 +540,5 @@ class CommentsViewModel(
 
 
 }
+
+

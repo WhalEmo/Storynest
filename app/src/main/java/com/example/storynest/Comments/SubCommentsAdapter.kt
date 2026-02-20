@@ -60,12 +60,14 @@ class SubCommentsAdapter(private val listener:OnCommentInteractionListener) :
                 subComment.number_of_like++
             }
             submitList(newList)
-            listener.onLikeClicked(subComment.comment_id)
+            //listener.onLikeClicked(subComment.comment_id)
         }
-
+/*
         holder.txtReply.setOnClickListener {
             listener.onReplyClicked(comment)
         }
+
+ */
     }
 
     inner class SubCommentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

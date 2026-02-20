@@ -2,18 +2,15 @@ package com.example.storynest.Comments
 
 import android.content.ClipboardManager
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.addTextChangedListener
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.activityViewModels
@@ -37,27 +34,19 @@ import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.view.Gravity
-import android.view.MotionEvent
-import android.view.WindowManager
 import android.widget.PopupWindow
-import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.doOnPreDraw
 import com.example.storynest.CustomViews.InfoMessage
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
 
 class CommentBottomFragment: BottomSheetDialogFragment() {
@@ -80,7 +69,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
     private lateinit var txtReplyingTo: TextView
     private lateinit var btnCancelReply: ImageView
 
-    private lateinit var commentforReply: commentResponse
+    private lateinit var commentforReply: commentUiItem
 
     private lateinit var dragHandle: View
 
@@ -102,8 +91,6 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
 
 
-
-
     override fun onViewCreated(view: View,savedInstanceState: Bundle?) {
         super.onViewCreated(view,savedInstanceState)
         rvComment=view.findViewById(R.id.rvComment)
@@ -121,32 +108,32 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
         dragHandle=view.findViewById(R.id.dragHandle)
 
 
-
         setUpRecyclerView()
         setupLifecyle()
         clicks()
         viewModel.setPostId(postId)
-
     }
-    override fun onStart() {
+
+     override fun onStart() {
         super.onStart()
 
-        val bottomSheet = (dialog as? BottomSheetDialog)
-            ?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
-            ?: return
+        val dialog = dialog as? BottomSheetDialog ?: return
+        val bottomSheet = dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) ?: return
+        val behavior = BottomSheetBehavior.from(bottomSheet)
 
-        val behavior = BottomSheetBehavior.from(bottomSheet) as? ScrollAwareBottomSheetBehavior<View>
-        behavior?.let {
-            it.isFitToContents = false
-            it.skipCollapsed = true
-            it.expandedOffset = 0
-            it.halfExpandedRatio=0.6f
-            it.state = BottomSheetBehavior.STATE_HALF_EXPANDED
-        }
+        val screenHeight = Resources.getSystem().displayMetrics.heightPixels
 
-        rvComment.isNestedScrollingEnabled = true
+        val finalHeight = (screenHeight * 0.9).toInt()
+
+        bottomSheet.layoutParams.height = finalHeight
+
+        behavior.peekHeight = finalHeight
+        behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+
+        behavior.isFitToContents = true
+
+        bottomSheet.requestLayout()
     }
-
 
 
     private fun goBar(){
@@ -154,8 +141,8 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
     }
     private fun setUpRecyclerView() {
         commentAdapter = CommentsAdapter(object : CommentsAdapter.OnCommentInteractionListener {
-            override fun onLikeClicked(commentId: Long) {
-                viewModel.toggleLike(commentId)
+            override fun onLikeClicked(comment: commentUiItem) {
+                viewModel.toggleLike(comment)
             }
 
             override fun onLongClicked(
@@ -211,13 +198,15 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                     deleteItem.visibility=View.GONE
                 }
                 val pinItem=view.findViewById<LinearLayout>(R.id.item_pin)
-                  if(postUserId== UserStaticClass.userId) {
+                 // if(postUserId== UserStaticClass.userId) {
                       pinItem.visibility=View.VISIBLE
-                      viewModel.pinComments(commentId)
+                   pinItem.setOnClickListener {
+                       viewModel.pinComments(commentId)
                       popupWindow.dismiss()
-                  }else{
-                      pinItem.visibility=View.GONE
-                  }
+                   }
+                 // }else{
+                 //     pinItem.visibility=View.GONE
+                 // }
 
                 view.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
                 val popupWidth = view.measuredWidth
@@ -234,7 +223,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                 popupWindow.showAtLocation(anchorView, Gravity.NO_GRAVITY, anchorX + xOffset, anchorY + yOffset)
             }
 
-            override fun onReplyClicked(comment: commentResponse) {
+            override fun onReplyClicked(comment: commentUiItem) {
                 commentforReply = comment
                 replyLayout.visibility = View.VISIBLE
                 txtReplyingTo.text = comment.parentCommentUsername
@@ -437,8 +426,6 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
             }
         }
-
-
     }
 
     private fun clicks(){
@@ -470,7 +457,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             }
 
             if (replyLayout.visibility == View.VISIBLE) {
-                viewModel.addSubComment(postId, UserStaticClass.userId,commentText,commentforReply.comment_id)
+                viewModel.addSubComment(postId, UserStaticClass.userId,commentText,commentforReply.commentId)
             } else {
 
                 viewModel.addComment(postId, UserStaticClass.userId,commentText,null)
@@ -482,32 +469,6 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
     }
 
-    private fun <T> observeUiState(
-        liveData: LiveData<UiState<T>>,
-        progressBar: View,
-        onSuccess: (T) -> Unit = {}
-    ) {
-        liveData.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is UiState.Loading -> {
-                    progressBar.visibility = View.VISIBLE
-                    rvComment.visibility = View.GONE
-                    txtEmpty.visibility = View.GONE
-                }
-                is UiState.Success -> {
-                    progressBar.visibility = View.GONE
-                    onSuccess(state.data)
-                }
-                is UiState.Error -> {
-                    progressBar.visibility = View.GONE
-                    rvComment.visibility = View.GONE
-                    txtEmpty.visibility = View.VISIBLE
-                    Toast.makeText(requireContext(), "Hata: ${state.message}", Toast.LENGTH_SHORT).show()
-                }
-                else -> {}
-            }
-        }
-    }
     companion object {
         private const val ARG_POST_ID = "post_id"
 

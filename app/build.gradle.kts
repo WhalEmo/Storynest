@@ -45,6 +45,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -62,6 +63,7 @@ dependencies {
     implementation("androidx.paging:paging-runtime-ktx:3.1.1")
     implementation("androidx.constraintlayout:constraintlayout:2.1.6")
     implementation("androidx.recyclerview:recyclerview:1.3.1")
+    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.4")
     implementation(libs.pagingCommon)
     implementation(libs.pagingRuntimeKtx)
     kapt("com.github.bumptech.glide:compiler:4.16.0")

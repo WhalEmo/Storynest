@@ -34,10 +34,26 @@ data class commentResponse(
     var isLiked: Boolean = false,
     @SerializedName(value = "isEdited", alternate = ["edited"])
     var isEdited: Boolean=false,
-    val replies: List<commentResponse>? = null,
-    val isRepliesVisible: Boolean = false,
     @SerializedName(value = "isPinned", alternate = ["pinned"])
     var isPinned: Boolean=false,
+    var replyCount: Long
+)
+data class commentUiItem(
+    val commentId:Long,
+    val parentCommentUsername:String?,
+    val postUserId:Long,
+    val userId: Long,
+    val userName:String,
+    val profileUrl:String?,
+    val contents:String,
+    var number_of_like: String,
+    val date: String,
+    var updateDate: String?,
+    var parentCommentId:Long,
+    val likeIconRes: Int,
+    val editedVisibility: Int,
+    val pinVisibility:Int,
+    val editDateVisibility:Int,
     var replyCount: Long
 )
 data class userResponseDto(
@@ -87,7 +103,7 @@ interface CMController{
     ): List<commentResponse>
 
     @POST("/api/comments/{commentId}/like")
-     suspend fun toggleLike(@Path("commentId") commentId: Long): StringResponse
+     suspend fun toggleLike(@Path("commentId") commentId: Long): commentResponse
 
     @GET("/api/comments/{commentId}/getUsersWhoLike")
      suspend fun getUsersWhoLike(
