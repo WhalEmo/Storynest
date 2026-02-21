@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -17,6 +18,7 @@ import coil.load
 import com.example.storynest.Follow.FollowListFragment
 import com.example.storynest.Follow.FollowType
 import com.example.storynest.MainActivity
+import com.example.storynest.Navigator
 import com.example.storynest.Notification.NotificationFragment
 import com.example.storynest.R
 import com.example.storynest.Settings.SettingsFragment
@@ -29,6 +31,8 @@ class ProfileFragment : Fragment(){
     private var _binding: MyProfileFragmentBinding? = null
     private val binding get() = _binding!!
     private lateinit var viewModel: ProfileViewModel
+    private val navigator = Navigator
+
 
 
     private val profileMode by lazy {
@@ -42,7 +46,6 @@ class ProfileFragment : Fragment(){
     }
 
     companion object {
-
         private const val ARG_MODE = "mode"
         private const val ARG_USER_ID = "userId"
 
@@ -58,6 +61,12 @@ class ProfileFragment : Fragment(){
         }
     }
 
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.d("INSTANCE_TEST", "Fragment hash: ${this.hashCode()} tag=$tag")
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -65,6 +74,11 @@ class ProfileFragment : Fragment(){
     ): View? {
         _binding = MyProfileFragmentBinding.inflate(inflater, container, false)
         return binding.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d("TAG_TEST", "Active Fragment: $tag")
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -83,7 +97,9 @@ class ProfileFragment : Fragment(){
         }
 
         binding.notificationBook.setOnClickListener {
-            navigateTo(NotificationFragment())
+            navigator.openNotification(
+                activity = requireActivity() as AppCompatActivity
+            )
         }
 
         Log.d("ProfileFragment", "userId: $userId")
@@ -121,7 +137,9 @@ class ProfileFragment : Fragment(){
                         .scaleY(1f)
                         .setDuration(150)
                         .start()
-                    navigateTo(SettingsFragment())
+                    navigator.openSettings(
+                        activity = requireActivity() as AppCompatActivity
+                    )
                     true
                 }
 
@@ -139,9 +157,6 @@ class ProfileFragment : Fragment(){
         }
     }
 
-    fun navigateTo(fragment: Fragment) {
-        (requireActivity() as MainActivity).navigateTo(fragment)
-    }
 
     private fun observeScreenState() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -209,19 +224,17 @@ class ProfileFragment : Fragment(){
             }
         }
         binding.followersContainer.setOnClickListener {
-           navigateTo(
-               FollowListFragment.newInstance(
-                   type = followersContainerType,
-                   userId = userId
-               )
-           )
+            navigator.openFollowList(
+                activity = requireActivity() as AppCompatActivity,
+                type = followersContainerType,
+                userId = userId
+            )
         }
         binding.followingContainer.setOnClickListener {
-            navigateTo(
-                FollowListFragment.newInstance(
-                    type = followingContainerType,
-                    userId = userId
-                )
+            navigator.openFollowList(
+                activity = requireActivity() as AppCompatActivity,
+                type = followingContainerType,
+                userId = userId
             )
         }
     }

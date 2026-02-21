@@ -3,21 +3,19 @@
     android:layout_width="match_parent"
     android:layout_height="56dp"
     android:gravity="center_vertical"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
     android:orientation="horizontal"
     android:paddingHorizontal="8dp"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <ImageView
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:src="@drawable/unfollow"
-        app:tint="@color/reject_gray" />
 
     <TextView
+        style="@style/SN.Text.Action.Unfollow"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:text="Takipten Çık"
-        android:textColor="@color/reject_gray"
-        android:textSize="16sp"/>
+        android:text="Takipten Çık"/>
+
 </LinearLayout>

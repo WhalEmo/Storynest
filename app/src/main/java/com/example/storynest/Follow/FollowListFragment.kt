@@ -1,10 +1,13 @@
 package com.example.storynest.Follow
 
+import android.app.Activity
 import android.media.SoundPool
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -20,9 +23,7 @@ import com.example.storynest.Follow.FollowOptions.FollowOptionClickListener
 import com.example.storynest.Follow.FollowOptions.FollowOptionsBottomSheet
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.FollowersLoadStateAdapter
 import com.example.storynest.Follow.MyFollowProcesses.MyFollowers.FollowersUiState
-import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
-import com.example.storynest.MainActivity
-import com.example.storynest.Profile.ProfileFragment
+import com.example.storynest.Navigator
 import com.example.storynest.Profile.ProfileMode
 import com.example.storynest.R
 import com.example.storynest.databinding.MyFollowersFragmentBinding
@@ -44,6 +45,8 @@ class FollowListFragment: Fragment() {
 
     private var acceptSoundId: Int = 0
     private var cancelSoundId: Int = 0
+
+    private val navigator = Navigator
 
     private var loadingStartTime: Long = 0L
     private val MIN_LOADING_DURATION = 500L
@@ -74,6 +77,15 @@ class FollowListFragment: Fragment() {
         requireArguments().getLong(ARG_USER_ID)
     }
 
+    override fun onResume() {
+        super.onResume()
+        Log.d("TAG_TEST", "Active Fragment: $tag")
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.d("INSTANCE_TEST", "Fragment hash: ${this.hashCode()} tag=$tag")
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -132,14 +144,18 @@ class FollowListFragment: Fragment() {
             }
             ,
             onProfileClick = {
-                val fragment = ProfileFragment.newInstance(
-                    mode = ProfileMode.USER_PROFILE,
-                    userId = it.id
+                openProfile(
+                    userId = it.id,
+                    profileMode = ProfileMode.USER_PROFILE
                 )
-                (requireActivity() as MainActivity).navigateTo(fragment)
             },
             onDotMenuClick = {
-                asd(2, "")
+                showFollowOptions(
+                    userId = it.id,
+                    username = it.username,
+                    profileImage = it.profile ?: "",
+                    profileMode = ProfileMode.USER_PROFILE
+                )
             }
 
         )
@@ -298,28 +314,54 @@ class FollowListFragment: Fragment() {
         animate().alpha(1f).setDuration(duration).start()
     }
 
-    private fun asd(userId: Long, username: String){
-        val sheet = FollowOptionsBottomSheet(
-            username = username,
-            listener = object : FollowOptionClickListener {
+    private fun showFollowOptions(userId: Long, username: String, profileImage: String, profileMode: ProfileMode){
+        val tag = "FollowOptions"
 
-                override fun onViewProfile() {
-                    val fragment = ProfileFragment.newInstance(
-                        mode = ProfileMode.USER_PROFILE,
-                        userId = userId
-                    )
+        val existing = parentFragmentManager.findFragmentByTag(tag)
+        if (existing != null) return
 
-                }
-
-                override fun onUnfollow() {
-                }
-
-
-                override fun onBlock() {
-                }
-            }
+        val sheet = FollowOptionsBottomSheet.newInstance(
+            userId,
+            username,
+            profileImage,
+            profileMode
         )
+        setupFollowOptionClickListener(sheet)
+        sheet.show(parentFragmentManager, tag)
+    }
 
-        sheet.show(parentFragmentManager, "FollowOptions")
+    private fun openProfile(
+        userId: Long,
+        profileMode: ProfileMode
+    ){
+        Log.d("FollowListFragment", "open profile userId: $userId")
+
+        navigator.openProfile(
+            activity = requireActivity() as AppCompatActivity,
+            id = userId,
+            mode = profileMode
+        )
+    }
+
+    private fun setupFollowOptionClickListener(sheet: FollowOptionsBottomSheet){
+        val listener = object : FollowOptionClickListener {
+            override fun onViewProfile(userId: Long, profileMode: ProfileMode) {
+                openProfile(
+                    userId = userId,
+                    profileMode = profileMode
+                )
+            }
+
+            override fun onUnfollow(userId: Long) {
+
+            }
+
+            override fun onBlock(userId: Long) {
+
+            }
+        }
+        sheet.setFollowOptionClickListener(
+            listener
+        )
     }
 }

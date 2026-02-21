@@ -1,6 +1,7 @@
 package com.example.storynest
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -12,6 +13,8 @@ import com.example.storynest.Profile.ProfileMode
 
 class MainActivity : AppCompatActivity() {
 
+    private val navigator = Navigator
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,6 +25,7 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        val userId = 8L
         val at = "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=800"
         val profileData: ProfileData = ProfileData(
             id = 1,
@@ -37,28 +41,22 @@ class MainActivity : AppCompatActivity() {
             isOwnProfile = true,
             isFollower = false
         )
-        navigateTo(
-            ProfileFragment.newInstance(
-                mode = ProfileMode.MY_PROFILE,
-                userId = 8 // bu 3 ü değiştirmeyi unutma
-            )
+
+        navigator.openProfile(
+            activity = this as AppCompatActivity,
+            id = userId,
+            mode = ProfileMode.MY_PROFILE
         )
 
     }
 
-    fun navigateTo(fragment: Fragment) {
-        supportFragmentManager.beginTransaction()
-            .setCustomAnimations(
-                R.anim.enter_from_right,
-                R.anim.exit_to_left,
-                R.anim.enter_from_left,
-                R.anim.exit_to_right
+    fun dumpStack() {
+        supportFragmentManager.fragments.forEach {
+            Log.d("STACK_DUMP",
+                "Fragment=${it.tag} hash=${it.hashCode()} added=${it.isAdded} visible=${it.isVisible}"
             )
-            .replace(R.id.nav_host, fragment)
-            .addToBackStack(null)
-            .commit()
+        }
     }
-
 
 
 }

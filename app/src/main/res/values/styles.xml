@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="SN">
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="SN.Text">
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="SN.Text.Action">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="SN.Text.Action.Unfollow">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/unfollow_text_selector</item>
+    </style>
+
+    <style name="SN.Text.Action.Block">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/block_text_selector</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="SN.Text.Action.Danger">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/sn_block</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+</resources>

@@ -32,14 +32,30 @@
     <color name="colorError">#E53935</color>
 
 
-    <!-- DsButton Colors -->
-    <color name="ds_color_primary">#6750A4</color>
-    <color name="ds_color_on_primary">#FFFFFF</color>
+    <!-- Unfollow (Warning - Soft Red) -->
+    <!--
+    <color name="un_follow">#F97316</color>
+    <color name="un_follow_pressed">#CCF97316</color>
+    <color name="un_follow_disabled">#66F97316</color>
+    -->
+    <color name="un_follow">#64748B</color>
+    <color name="un_follow_pressed">#475569</color>
+    <color name="un_follow_disabled">#8064748B</color>
 
-    <color name="ds_color_secondary">#625B71</color>
-    <color name="ds_color_on_secondary">#FFFFFF</color>
+    <!-- Block -->
+    <!-- Block (Stronger Red) -->
+    <color name="sn_block">#DC2626</color>
+    <color name="sn_block_pressed">#B91C1C</color>
+    <color name="sn_block_disabled">#66DC2626</color>
 
-    <color name="ds_color_surface">#FFFFFF</color>
-    <color name="ds_color_on_surface">#1C1B1F</color>
+    <!-- Danger Background -->
+    <color name="sn_block_bg">#14DC2626</color> <!-- %8 alpha -->
+    <color name="sn_block_bg_pressed">#22DC2626</color>
+    <!-- Block -->
+
+    <!-- Divider -->
+    <color name="divider">#F0F0F0</color>
+
+
 
 </resources>
