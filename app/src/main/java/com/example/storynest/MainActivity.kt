@@ -27,20 +27,6 @@ class MainActivity : AppCompatActivity() {
         }
         val userId = 8L
         val at = "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=800"
-        val profileData: ProfileData = ProfileData(
-            id = 1,
-            username = "emrullah.dev",
-            email = "emrullah@example.com",
-            name = "Emrullah",
-            surname = "Uygun",
-            profile = at,
-            biography = "Android Developer • Coffee Lover ☕ • Kotlin ❤️",
-            followers = 128,
-            following = 89,
-            isFollowing = false,
-            isOwnProfile = true,
-            isFollower = false
-        )
 
         navigator.openProfile(
             activity = this as AppCompatActivity,

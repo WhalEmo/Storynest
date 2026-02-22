@@ -100,15 +100,21 @@ class ProfileViewModel: ViewModel() {
             profileImageUrl = profile,
             followers = followers,
             following = following,
-            isFollowing = false,
+            isFollowing = isFollowing,
+            isFollower = isFollower,
 
             showEditButton = type == ProfileMode.MY_PROFILE,
-            showFollowButton = type == ProfileMode.USER_PROFILE && !isFollowing,
+            showFollowButton = type == ProfileMode.USER_PROFILE && !isFollower && !isFollowing && !isPending,
             showSettingsButton = type == ProfileMode.MY_PROFILE,
             showDotMenuButton = type == ProfileMode.USER_PROFILE,
             showNotificationButton = type == ProfileMode.MY_PROFILE,
             isOwnProfile = type == ProfileMode.MY_PROFILE,
-            showMessageButton = type == ProfileMode.USER_PROFILE && !isOwnProfile && isFollowing
+
+            showMessageButton = type == ProfileMode.USER_PROFILE && !isOwnProfile && isFollowing,
+
+            btnFollowYour = type == ProfileMode.USER_PROFILE && isFollower && !isFollowing && !isPending,
+            btnShareProfile = true,
+            showPendingRequestButton = type == ProfileMode.USER_PROFILE && isPending && !isFollowing
         )
 
     }

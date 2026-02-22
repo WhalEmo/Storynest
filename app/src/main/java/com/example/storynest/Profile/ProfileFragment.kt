@@ -7,30 +7,27 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import coil.load
-import com.example.storynest.Follow.FollowListFragment
 import com.example.storynest.Follow.FollowType
-import com.example.storynest.MainActivity
 import com.example.storynest.Navigator
-import com.example.storynest.Notification.NotificationFragment
 import com.example.storynest.R
-import com.example.storynest.Settings.SettingsFragment
-import com.example.storynest.databinding.MyProfileFragmentBinding
+import com.example.storynest.databinding.ProfileFragmentBinding
 import kotlinx.coroutines.launch
 
 
 class ProfileFragment : Fragment(){
 
-    private var _binding: MyProfileFragmentBinding? = null
+    private var _binding: ProfileFragmentBinding? = null
     private val binding get() = _binding!!
-    private lateinit var viewModel: ProfileViewModel
+    private val viewModel: ProfileViewModel by viewModels()
     private val navigator = Navigator
 
 
@@ -72,18 +69,14 @@ class ProfileFragment : Fragment(){
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        _binding = MyProfileFragmentBinding.inflate(inflater, container, false)
+        _binding = ProfileFragmentBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-    override fun onResume() {
-        super.onResume()
-        Log.d("TAG_TEST", "Active Fragment: $tag")
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        this.viewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
+
 
         settingsButtonAnimation()
 
@@ -103,11 +96,13 @@ class ProfileFragment : Fragment(){
         }
 
         Log.d("ProfileFragment", "userId: $userId")
+
+        observeScreenState()
+
         viewModel.init(
             mode = profileMode,
             userId = userId
         )
-        observeScreenState()
     }
 
     override fun onDestroyView() {
@@ -192,6 +187,10 @@ class ProfileFragment : Fragment(){
         binding.dotMenu.isVisible = state.showDotMenuButton
         binding.notificationContainer.isVisible = state.showNotificationButton
         binding.btnMessage.isVisible = state.showMessageButton
+
+        binding.btnFollowYour.isVisible = state.btnFollowYour
+        binding.btnShareProfile.isVisible = state.btnShareProfile
+        binding.btnPendingRequest.isVisible = state.showPendingRequestButton
 
     }
 

@@ -196,6 +196,29 @@ class FollowViewModel: ViewModel() {
         }
     }
 
+    fun unFollow(
+        userId: Long
+    ){
+        viewModelScope.launch {
+            try {
+                val response = repository.unfollow(userId)
+                if(response.isSuccessful){
+                    val action = FollowActionState.REMOVE_FOLLOWING
+                    updateUserActionState(userId, action, -1)
+                }
+            }
+            catch (e: HttpException){
+                _error.value = "Sunucuya bağlanılamadı (HTTP ${e.code()})"
+            }
+            catch (e: IOException) {
+                _error.value = "İnternet bağlantısı yok!"
+            }
+            catch (e: Exception) {
+                _error.value = "Beklenmeyen bir hata oluştu"
+            }
+        }
+    }
+
     private fun updateUserActionState(
         userId: Long,
         newState: FollowActionState,
@@ -358,6 +381,9 @@ class FollowViewModel: ViewModel() {
 
             FollowActionState.REMOVE_FOLLOWER ->
                 setOf(FollowViewType.REMOVE_FOLLOWER)
+
+            FollowActionState.REMOVE_FOLLOWING ->
+                setOf(FollowViewType.FOLLOW, FollowViewType.DOT_MENU)
         }
     }
 

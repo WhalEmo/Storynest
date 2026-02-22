@@ -14,5 +14,6 @@ data class ProfileData(
     var following : Int,
     val isFollowing : Boolean,
     val isOwnProfile : Boolean,
-    val isFollower: Boolean
+    val isFollower: Boolean,
+    val isPending: Boolean
 ) : Serializable

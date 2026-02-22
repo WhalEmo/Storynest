@@ -72,4 +72,13 @@ object FollowRepository {
         return followApiController.removeFollower(request)
     }
 
+    suspend fun unfollow(userId: Long): Response<FollowDTO> {
+        val request = FollowDTO(
+            followingId = TestUserProvider.STATIC_USER_ID.toLong(),
+            followedId = userId,
+            followed = true
+        )
+        return followApiController.unfollow(request)
+    }
+
 }

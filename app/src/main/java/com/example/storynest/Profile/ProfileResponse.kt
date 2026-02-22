@@ -8,7 +8,8 @@ data class ProfileResponse(
     val postCount: Int,
     val following: Boolean,
     val follower: Boolean,
-    val ownProfile: Boolean
+    val ownProfile: Boolean,
+    val pending: Boolean
 )
 
 data class UserResponseDto(

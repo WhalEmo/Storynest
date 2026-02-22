@@ -203,6 +203,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginTop="24dp"
+        android:gravity="center"
         app:layout_constraintTop_toBottomOf="@id/statsContainer">
 
         <com.google.android.material.button.MaterialButton
@@ -211,7 +212,7 @@
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="4dp"
             android:text="Edit Profile"
             android:textAllCaps="false"
             app:cornerRadius="12dp"
@@ -225,9 +226,9 @@
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="4dp"
             android:text="Takip Et"
-            android:visibility="visible"
+            android:visibility="gone"
             android:textAllCaps="false"
             app:cornerRadius="12dp"
             app:backgroundTint="#009688"
@@ -239,7 +240,7 @@
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"
+            android:layout_marginEnd="4dp"
             android:text="Mesaj Gönder"
             android:visibility="gone"
             android:textAllCaps="false"
@@ -248,12 +249,45 @@
             android:textColor="#000000"/>
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPendingRequest"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:visibility="gone"
+            android:text="İstek Gönderildi"
+            android:textAllCaps="false"
+            android:layout_marginEnd="4dp"
+            app:cornerRadius="12dp"
+            app:backgroundTint="@color/un_follow_disabled"
+            android:textColor="#000000"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFollowYour"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:visibility="visible"
+            android:text="Sende Takip Et"
+            android:textAllCaps="false"
+            android:layout_marginEnd="4dp"
+            app:cornerRadius="12dp"
+            app:backgroundTint="@color/accept_blue"
+            android:textColor="@color/colorOnSecondary"/>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="24dp"
+            android:background="@color/divider"/>
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnShareProfile"
             style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="4dp"
             android:text="Paylaş"
             android:textAllCaps="false"
             app:cornerRadius="12dp"

@@ -55,6 +55,7 @@ object Navigator {
         val manager = activity.supportFragmentManager
 
         var fragment = manager.findFragmentByTag(tag)
+
         if (fragment == null) {
             fragment = FollowListFragment.newInstance(
                 type = type,

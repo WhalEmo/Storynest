@@ -36,6 +36,8 @@ class FollowUserViewHolder(
         itemView.findViewById<TextView>(R.id.follow)
     private val removedFromFollowersText =
         itemView.findViewById<TextView>(R.id.removedFromFollowersText)
+    private val row =
+        itemView.findViewById<View>(R.id.row)
 
     private val actionButtons by lazy {
         listOf(yourFollowMe, sendMessage, sendingRequest)
@@ -56,6 +58,9 @@ class FollowUserViewHolder(
             currentItem?.let(onUnFollowMy)
         }
         profileImage.setOnClickListener {
+            currentItem?.let(onProfileClick)
+        }
+        row.setOnClickListener {
             currentItem?.let(onProfileClick)
         }
         follow.setOnClickListener {

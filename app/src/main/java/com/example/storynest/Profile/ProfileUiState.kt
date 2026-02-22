@@ -12,6 +12,7 @@ data class ProfileUiState(
     val following: Int,
 
     val isFollowing: Boolean,
+    val isFollower: Boolean,
 
     val isOwnProfile: Boolean,
     val showEditButton: Boolean,
@@ -19,5 +20,8 @@ data class ProfileUiState(
     val showSettingsButton: Boolean,
     val showDotMenuButton: Boolean,
     val showMessageButton: Boolean,
-    val showNotificationButton: Boolean
+    val showNotificationButton: Boolean,
+    val showPendingRequestButton: Boolean,
+    val btnFollowYour: Boolean,
+    val btnShareProfile: Boolean
 )

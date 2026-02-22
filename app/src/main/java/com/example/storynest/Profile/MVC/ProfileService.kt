@@ -27,7 +27,8 @@ class ProfileService {
             following = response.followedCount,
             isFollowing = response.following,
             isOwnProfile = response.ownProfile,
-            isFollower = response.follower
+            isFollower = response.follower,
+            isPending = response.pending
         )
     }
     suspend fun getUserProfile(userId: Long): ProfileData{
@@ -44,7 +45,8 @@ class ProfileService {
             following = response.followedCount,
             isFollowing = response.following,
             isOwnProfile = response.ownProfile,
-            isFollower = response.follower
+            isFollower = response.follower,
+            isPending = response.pending
         )
     }
 }

@@ -56,5 +56,10 @@ interface FollowApiController {
         @Query("size") size: Int = 20
     ): Response<List<FollowUserResponseDTO>>
 
+    @POST("follow/unfollow")
+    suspend fun unfollow(
+        @Body request: FollowDTO
+    ): Response<FollowDTO>
+
 
 }

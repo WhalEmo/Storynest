@@ -19,14 +19,15 @@ fun AppCompatActivity.openFragment(fragment: Fragment, tag: String) {
 
     val current = manager.primaryNavigationFragment
     current?.let { transaction.hide(it) }
-
     var existing = manager.findFragmentByTag(tag)
 
     if (existing == null) {
         existing = fragment
-        transaction.add(R.id.nav_host, existing, tag)
+    }
+    if (!fragment.isAdded) {
+        transaction.add(R.id.nav_host, fragment, tag)
     } else {
-        transaction.show(existing)
+        transaction.show(fragment)
     }
 
     transaction.setPrimaryNavigationFragment(existing)

@@ -1,6 +1,5 @@
 package com.example.storynest.Follow
 
-import android.app.Activity
 import android.media.SoundPool
 import android.os.Bundle
 import android.util.Log
@@ -10,8 +9,8 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.LoadState
@@ -32,6 +31,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
+import kotlin.getValue
 
 class FollowListFragment: Fragment() {
 
@@ -39,7 +39,7 @@ class FollowListFragment: Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var adapter: FollowAdapter
-    private lateinit var viewModel: FollowViewModel
+    private val viewModel: FollowViewModel by viewModels()
 
     private lateinit var soundPool: SoundPool
 
@@ -77,15 +77,6 @@ class FollowListFragment: Fragment() {
         requireArguments().getLong(ARG_USER_ID)
     }
 
-    override fun onResume() {
-        super.onResume()
-        Log.d("TAG_TEST", "Active Fragment: $tag")
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        Log.d("INSTANCE_TEST", "Fragment hash: ${this.hashCode()} tag=$tag")
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -98,7 +89,7 @@ class FollowListFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel = ViewModelProvider(this)[FollowViewModel::class.java]
+
 
         viewModel.setParams(followType, userId)
 
@@ -353,7 +344,7 @@ class FollowListFragment: Fragment() {
             }
 
             override fun onUnfollow(userId: Long) {
-
+                viewModel.unFollow(userId)
             }
 
             override fun onBlock(userId: Long) {
