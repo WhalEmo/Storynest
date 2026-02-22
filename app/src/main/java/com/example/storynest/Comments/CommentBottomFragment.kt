@@ -41,9 +41,11 @@ import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import com.example.storynest.CustomViews.InfoMessage
+import com.example.storynest.CustomViews.UiEvents
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.flow.collectLatest
@@ -150,8 +152,8 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                 commentContents: String,
                 userId: Long,
                 postUserId: Long,
+                isPin:Boolean,
                 anchorView: View,
-                onPinnedAlready: (() -> Unit)?
             ) {
                 val inflater = LayoutInflater.from(context)
                 val view = inflater.inflate(R.layout.custom_layout_menu, null)
@@ -197,16 +199,31 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                 }else{
                     deleteItem.visibility=View.GONE
                 }
+
                 val pinItem=view.findViewById<LinearLayout>(R.id.item_pin)
-                 // if(postUserId== UserStaticClass.userId) {
-                      pinItem.visibility=View.VISIBLE
-                   pinItem.setOnClickListener {
-                       viewModel.pinComments(commentId)
-                      popupWindow.dismiss()
-                   }
-                 // }else{
-                 //     pinItem.visibility=View.GONE
-                 // }
+                val removepinItem=view.findViewById<LinearLayout>(R.id.item_pinremove)
+                //if(postUserId== UserStaticClass.userId ) {
+                    if(isPin){
+                        pinItem.visibility=View.GONE
+                        removepinItem.visibility=View.VISIBLE
+                        removepinItem.setOnClickListener {
+                            viewModel.removePin(commentId)
+                            popupWindow.dismiss()
+                        }
+                    }else{
+                        pinItem.visibility=View.VISIBLE
+                        removepinItem.visibility=View.GONE
+                        pinItem.setOnClickListener {
+                            viewModel.pinComments(commentId)
+                            popupWindow.dismiss()
+                        }
+                    }
+
+                //}else{
+                   //  pinItem.visibility=View.GONE
+                     //removepinItem.visibility=View.GONE
+                //}
+
 
                 view.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
                 val popupWidth = view.measuredWidth
@@ -356,6 +373,21 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
     private fun setupLifecyle(){
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.uiEvent.collect { event ->
+                        when (event) {
+                            is UiEvents.ShowToast -> {
+                                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                            }
+                            is UiEvents.showInfoMessage -> {
+                                InfoMessage.show(fragment = this@CommentBottomFragment, message = event.message)
+                            }
+                            is UiEvents.ShowSnackbar->{
+
+                            }
+                        }
+                    }
+                }
 
                 launch {
                     viewModel.comments.collectLatest { pagingData ->

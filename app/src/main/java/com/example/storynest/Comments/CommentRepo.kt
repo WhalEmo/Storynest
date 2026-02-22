@@ -3,6 +3,7 @@ package com.example.storynest.Comments
 import android.util.Log
 import com.example.storynest.ResultWrapper
 import com.example.storynest.safeApiCall
+import retrofit2.Response
 
 class CommentRepo(
     private val api: CMController
@@ -24,7 +25,7 @@ class CommentRepo(
         postId: Long,
         page: Int = 0,
         size: Int = 10
-    ): ResultWrapper<List<commentResponse>> =
+    ): ResultWrapper<Response<List<commentResponse>>> =
         safeApiCall {
             api.commentsGet(postId, page, size)
         }
@@ -33,7 +34,7 @@ class CommentRepo(
         parentCommentId: Long,
         page: Int = 0,
         size: Int = 10
-    ): ResultWrapper<List<commentResponse>> =
+    ): ResultWrapper<Response<List<commentResponse>>> =
         safeApiCall {
             api.subCommentsGet(parentCommentId, page, size)
         }
@@ -76,5 +77,13 @@ class CommentRepo(
         safeApiCall {
             api.pinComment(commentId)
         }
+
+    suspend fun removePin(
+        commentId: Long
+    ): ResultWrapper<commentResponse> =
+        safeApiCall {
+            api.removePin(commentId)
+        }
+
 
 }

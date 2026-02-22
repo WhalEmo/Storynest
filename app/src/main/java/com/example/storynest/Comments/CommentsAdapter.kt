@@ -28,7 +28,7 @@ class CommentsAdapter(
 
     interface OnCommentInteractionListener {
         fun onLikeClicked(comment:commentUiItem)
-        fun onLongClicked(commentId: Long,commentContents:String,userId: Long,postUserId:Long,anchorView: View,onPinnedAlready: (() -> Unit)? = null)
+        fun onLongClicked(commentId: Long,commentContents:String,userId: Long,postUserId:Long,isPin:Boolean,anchorView: View)
         fun onReplyClicked(comment: commentUiItem)
         fun onViewReplys(
             commentId: Long,
@@ -167,9 +167,7 @@ class CommentsAdapter(
 
 
             layout.setOnLongClickListener {
-                listener.onLongClicked(comment.commentId,comment.contents,comment.userId,comment.postUserId,layout){
-                    imgPin.visibility= View.VISIBLE
-                }
+                listener.onLongClicked(comment.commentId,comment.contents,comment.userId,comment.postUserId,comment.isPin,layout)
                 true
             }
         }

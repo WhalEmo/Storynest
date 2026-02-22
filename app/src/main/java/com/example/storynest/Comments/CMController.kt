@@ -53,6 +53,7 @@ data class commentUiItem(
     val likeIconRes: Int,
     val editedVisibility: Int,
     val pinVisibility:Int,
+    val isPin: Boolean=false,
     val editDateVisibility:Int,
     var replyCount: Long
 )
@@ -92,7 +93,7 @@ interface CMController{
         @Query("postId") postId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
-    ): List<commentResponse>
+    ): Response<List<commentResponse>>
 
 
     @GET("/api/comments/subCommentsGet")
@@ -100,7 +101,7 @@ interface CMController{
         @Query("parentCommentId") postId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
-    ): List<commentResponse>
+    ): Response<List<commentResponse>>
 
     @POST("/api/comments/{commentId}/like")
      suspend fun toggleLike(@Path("commentId") commentId: Long): commentResponse
@@ -126,6 +127,11 @@ interface CMController{
 
     @PATCH("/api/comments/{commentId}/pin")
     suspend fun pinComment(
+        @Path("commentId") commentId: Long
+    ): commentResponse
+
+    @PATCH("/api/comments/{commentId}/removePin")
+    suspend fun removePin(
         @Path("commentId") commentId: Long
     ): commentResponse
 

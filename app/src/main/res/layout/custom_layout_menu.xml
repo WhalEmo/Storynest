@@ -18,8 +18,8 @@
 
         <ImageView
             android:src="@drawable/edit"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="23dp"
+            android:layout_height="23dp"
             android:contentDescription="Düzenle"/>
 
         <TextView
@@ -59,17 +59,41 @@
         android:padding="8dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:visibility="visible"
         android:clickable="true"
         android:foreground="?attr/selectableItemBackground">
 
         <ImageView
             android:src="@drawable/pin"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="23dp"
+            android:layout_height="23dp"
             android:contentDescription="Sabit"/>
 
         <TextView
             android:text="Sabitle"
+            android:textSize="16sp"
+            android:layout_marginStart="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/item_pinremove"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:clickable="true"
+        android:foreground="?attr/selectableItemBackground">
+
+        <ImageView
+            android:src="@drawable/deletepin"
+            android:layout_width="23dp"
+            android:layout_height="23dp"
+            android:contentDescription="Sabitlemeyi kaldır"/>
+
+        <TextView
+            android:text="Sabitlemeyi kaldır"
             android:textSize="16sp"
             android:layout_marginStart="8dp"
             android:layout_width="wrap_content"
