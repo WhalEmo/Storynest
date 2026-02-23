@@ -77,11 +77,13 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
 
     private var postId: Long = -1L
+    private var pinnedCount:Long=-1L
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         postId = requireArguments().getLong(ARG_POST_ID)
+        pinnedCount=requireArguments().getLong(ARG_PINNED_COMMENT)
     }
 
     override fun onCreateView(
@@ -114,6 +116,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
         setupLifecyle()
         clicks()
         viewModel.setPostId(postId)
+        viewModel.setPinnedCount(pinnedCount)
     }
 
      override fun onStart() {
@@ -394,17 +397,22 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                         commentAdapter.submitData(pagingData)
                     }
                 }
+                launch {
+                    viewModel.errorMessage.collect { message ->
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+                    }
+                }
 
                 launch {
 
                     viewModel.commentAddState.collect { success ->
                         if (success) {
                         } else {
-                            Toast.makeText(
+                            /*Toast.makeText(
                                 requireContext(),
                                 "Yorum eklenemedi",
                                 Toast.LENGTH_SHORT
-                            ).show()
+                            ).show()*/
                         }
                     }
                 }
@@ -489,7 +497,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             }
 
             if (replyLayout.visibility == View.VISIBLE) {
-                viewModel.addSubComment(postId, UserStaticClass.userId,commentText,commentforReply.commentId)
+                viewModel.addSubComment(postId, UserStaticClass.userId,commentText,commentforReply.userName,commentforReply.commentId)
             } else {
 
                 viewModel.addComment(postId, UserStaticClass.userId,commentText,null)
@@ -503,11 +511,13 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
     companion object {
         private const val ARG_POST_ID = "post_id"
+        private const val ARG_PINNED_COMMENT="pinned_comments_count"
 
-        fun newInstance(postId: Long): CommentBottomFragment {
+        fun newInstance(postId: Long,pinnedCountComment:Long): CommentBottomFragment {
             return CommentBottomFragment().apply {
                 arguments = Bundle().apply {
                     putLong(ARG_POST_ID, postId)
+                    putLong(ARG_PINNED_COMMENT,pinnedCountComment)
                 }
             }
         }

@@ -1,8 +1,6 @@
 package com.example.storynest.Comments
 
 import com.google.gson.annotations.SerializedName
-import retrofit2.Call
-import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -17,6 +15,7 @@ data class commentRequest(
     val postId: Long,
     val userId: Long?,
     val contents: String,
+    val parentUsername:String?,
     val parentCommentId: Long?
 )
 data class commentResponse(
@@ -29,7 +28,7 @@ data class commentResponse(
     var number_of_like: Int,
     val date: String,
     var updateDate: String?,
-    var parentCommentId:Long,
+    var parentCommentId:Long?,
     @SerializedName(value = "isLiked", alternate = ["liked"])
     var isLiked: Boolean = false,
     @SerializedName(value = "isEdited", alternate = ["edited"])
@@ -39,22 +38,22 @@ data class commentResponse(
     var replyCount: Long
 )
 data class commentUiItem(
-    val commentId:Long,
-    val parentCommentUsername:String?,
-    val postUserId:Long,
+    val commentId: Long,
+    val parentCommentUsername: String?,
+    val postUserId: Long,
     val userId: Long,
-    val userName:String,
-    val profileUrl:String?,
-    val contents:String,
+    val userName: String,
+    val profileUrl: String?,
+    val contents: String,
     var number_of_like: String,
     val date: String,
     var updateDate: String?,
-    var parentCommentId:Long,
+    var parentCommentId: Long?,
     val likeIconRes: Int,
     val editedVisibility: Int,
-    val pinVisibility:Int,
-    val isPin: Boolean=false,
-    val editDateVisibility:Int,
+    val pinVisibility: Int,
+    val isPin: Boolean =false,
+    val editDateVisibility: Int,
     var replyCount: Long
 )
 data class userResponseDto(
@@ -93,7 +92,7 @@ interface CMController{
         @Query("postId") postId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
-    ): Response<List<commentResponse>>
+    ): List<commentResponse>
 
 
     @GET("/api/comments/subCommentsGet")
@@ -101,7 +100,7 @@ interface CMController{
         @Query("parentCommentId") postId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
-    ): Response<List<commentResponse>>
+    ): List<commentResponse>
 
     @POST("/api/comments/{commentId}/like")
      suspend fun toggleLike(@Path("commentId") commentId: Long): commentResponse

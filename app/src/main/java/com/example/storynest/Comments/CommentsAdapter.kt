@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.storynest.Comments.viewModelhelper.CommentFormatter.createMentionText
 import com.example.storynest.R
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -124,33 +125,6 @@ class CommentsAdapter(
             txtEditDate.visibility=comment.editDateVisibility
             txtEditDate.text=comment.updateDate
 
-            /*btnLike.setOnClickListener {
-                val item = getItem(bindingAdapterPosition) ?: return@setOnClickListener
-                when(item){
-                    is CommentsUiModel.CommentItem->{
-                        val current = item.comment
-                        current.isLiked = !current.isLiked
-                        if (current.isLiked) {
-                            current.number_of_like++
-                            btnLike.setImageResource(R.drawable.baseline_favorite_24)
-                        } else {
-                            current.number_of_like--
-                            btnLike.setImageResource(R.drawable.baseline_favorite_border_24)
-                        }
-                        txtLikeCount.text = current.number_of_like.toString()
-                        listener.onLikeClicked(current.comment_id)
-
-                    }
-                    is CommentsUiModel.ReplyItem -> {
-
-                    }
-                    else -> {
-
-                    }
-                }
-            }
-
-             */
             btnLike.setOnClickListener {
                 val position = bindingAdapterPosition
                 if (position == RecyclerView.NO_POSITION) return@setOnClickListener
@@ -187,9 +161,26 @@ class CommentsAdapter(
         val layoutreply: ConstraintLayout = itemView.findViewById(R.id.replylayout)
         val txtEditedreply: TextView=itemView.findViewById(R.id.txtEditedreply)
         val txtEditDatereply: TextView=itemView.findViewById(R.id.txtEditDatereply)
-        val imgPinreply: ImageView=itemView.findViewById(R.id.imgPin)
+        val imgPinreply: ImageView=itemView.findViewById(R.id.imgPinreply)
 
         fun bind(comment: commentUiItem) {
+            Glide.with(itemView.context)
+                .load(comment.profileUrl)
+                .placeholder(R.drawable.account_circle_24)
+                .error(R.drawable.account_circle_24)
+                .circleCrop()
+                .into(ppfotoreply)
+
+            txtUsernamereply.text=comment.userName
+            txtCommentreply.text = createMentionText(comment.parentCommentUsername,comment.contents)
+            txtTimereply.text = comment.date
+            txtLikeCountreply.text = comment.number_of_like
+            btnLikereply.setImageResource(comment.likeIconRes)
+            imgPinreply.visibility=comment.pinVisibility
+            txtEditedreply.visibility=comment.editedVisibility
+            txtEditDatereply.visibility=comment.editDateVisibility
+            txtEditDatereply.text=comment.updateDate
+
 
         }
 

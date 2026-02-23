@@ -31,7 +31,7 @@ class PostAdapter(
         fun onReadMoreClicked(post: postResponse)
 
         fun getLikeUsers(Id: Long)
-        fun clickComment(Id: Long);
+        fun clickComment(Id: Long,commentsPinned:Long);
     }
 
     companion object {
@@ -118,7 +118,7 @@ class PostAdapter(
             listener.getLikeUsers(post.post_id)
         }
         holder.btnComment.setOnClickListener {
-            listener.clickComment(post.post_id)
+            listener.clickComment(post.post_id,post.pinnedCount)
         }
     }
 

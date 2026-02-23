@@ -25,7 +25,8 @@ data class postResponse(
     val coverImage:String,
     var numberof_likes: Int,
     val postDate: String,
-    var liked:Boolean
+    var liked:Boolean,
+    var pinnedCount:Long
 )
 data class UserResponse(
     val id: Long,

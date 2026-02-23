@@ -25,7 +25,7 @@ class CommentRepo(
         postId: Long,
         page: Int = 0,
         size: Int = 10
-    ): ResultWrapper<Response<List<commentResponse>>> =
+    ): ResultWrapper<List<commentResponse>> =
         safeApiCall {
             api.commentsGet(postId, page, size)
         }
@@ -34,7 +34,7 @@ class CommentRepo(
         parentCommentId: Long,
         page: Int = 0,
         size: Int = 10
-    ): ResultWrapper<Response<List<commentResponse>>> =
+    ): ResultWrapper<List<commentResponse>> =
         safeApiCall {
             api.subCommentsGet(parentCommentId, page, size)
         }

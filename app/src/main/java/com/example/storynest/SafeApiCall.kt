@@ -26,8 +26,13 @@ suspend fun <T> safeApiCall(
     } catch (e: retrofit2.HttpException) {
 
         val errorBody = e.response()?.errorBody()?.string()
-        Log.e("API_ERROR", "HTTP Hatası: ${e.code()} - $errorBody") // DETAYLI HATA LOGU
-        ResultWrapper.Error(e.message(), ErrorType.SERVER_ERROR)
+
+        Log.e("API_ERROR", "HTTP ${e.code()} - $errorBody")
+
+        ResultWrapper.Error(
+            errorBody ?: "Server hatası oluştu",
+            ErrorType.SERVER_ERROR
+        )
 
     } catch (e: Exception) {
 

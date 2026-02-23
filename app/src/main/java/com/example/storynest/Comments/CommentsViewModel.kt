@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.text.toLong
+
 
 
 class CommentsViewModel(
@@ -63,11 +63,8 @@ class CommentsViewModel(
     private val _uiEvent = Channel<UiEvents>()
     val uiEvent = _uiEvent.receiveAsFlow()
 
-    private val api = ApiClient
+    private val api = ApiClient.commentApi
 
-
-    private val _pinnedCount = MutableStateFlow(0L)
-    val pinnedCount: StateFlow<Long> = _pinnedCount
 
     fun removeComment(commentId: Long) {
         _removedCommentIds.update { it + commentId }
@@ -82,6 +79,10 @@ class CommentsViewModel(
     private val _postId = MutableStateFlow<Long?>(null)
     val postId: StateFlow<Long?> = _postId
 
+    private val _pinnedCount = MutableStateFlow(0L)
+    val pinnedCount: StateFlow<Long> = _pinnedCount
+
+
     private val _newComments = MutableStateFlow<List<commentResponse>>(emptyList())
     val newComments = _newComments.asStateFlow()
 
@@ -93,6 +94,9 @@ class CommentsViewModel(
 
     fun setPostId(id: Long) {
         _postId.value = id
+    }
+    fun setPinnedCount(count: Long) {
+        _pinnedCount.value =count
     }
 
     val pagingComments: Flow<PagingData<commentResponse>> =
@@ -110,7 +114,7 @@ class CommentsViewModel(
         contents: String,
         parentCommentId: Long?
     ) {
-        val request = commentRequest(postId, userId, contents, parentCommentId)
+        val request = commentRequest(postId, userId, contents, null,null)
         viewModelScope.launch {
             val result = repo.addComment(request)
             when (result) {
@@ -176,24 +180,32 @@ class CommentsViewModel(
                 }
         }
     }
+
+
+    private val _errorMessage = MutableSharedFlow<String>()
+    val errorMessage = _errorMessage.asSharedFlow()
     fun addSubComment(
         postId: Long,
         userId: Long?,
         contents: String,
+        parentUsername:String,
         parentCommentId: Long
     ) {
-        val request = commentRequest(postId, userId, contents, parentCommentId)
-        _addSubCommentResult.value = UiState.Loading
+        val request = commentRequest(postId, userId, contents, parentUsername,parentCommentId)
 
         viewModelScope.launch {
             val result = repo.addSubComment(request)
             when (result) {
                 is ResultWrapper.Success -> {
-                    val body = result.data
-                    _addSubCommentResult.value = UiState.Success(body)
+                    _commentAddState.emit(true)
+                    _newComments.update { currentList ->
+                        listOf(result.data) + currentList
+                    }
                 }
-
-                is ResultWrapper.Error -> _addSubCommentResult.value = UiState.Error(result.message)
+                is ResultWrapper.Error -> {
+                    _commentAddState.emit(false)
+                    _errorMessage.emit(result.toString() ?: "Bilinmeyen hata oluştu")
+                }
             }
         }
     }
@@ -208,11 +220,9 @@ class CommentsViewModel(
                 prefetchDistance = 3
             ),
             pagingSourceFactory = {
-                CommentPagingSource(
-                    postId = postId,
-                    api = api,
-                    pinnedCountState = _pinnedCount
-                )
+                CommentPagingSource { page, size ->
+                    api.commentsGet(postId, page, size)
+                }
             }
         ).flow.cachedIn(viewModelScope)
     }
@@ -268,6 +278,13 @@ class CommentsViewModel(
     ): List<CommentsUiModel> = buildList {
         add(CommentsUiModel.CommentItem(comment.toUiItem()))
 
+        uiState.newItems
+            .filter { it.parentCommentId == comment.comment_id && it.comment_id !in uiState.removedIds }
+            .reversed()
+            .forEach{ newReply ->
+                add(CommentsUiModel.ReplyItem(newReply.toUiItem()))
+            }
+
         val thread = uiState.replyThreads[comment.comment_id]
         if (thread == null) {
             if (comment.replyCount > 0) {
@@ -291,7 +308,10 @@ class CommentsViewModel(
         uiState: CommentUiState
     ): PagingData<CommentsUiModel> {
         var base = data
-        uiState.newItems.filter { it.comment_id !in uiState.removedIds }.reversed().forEach {
+        uiState.newItems.filter {
+            it.comment_id !in uiState.removedIds && it.parentCommentId == null
+
+        }.reversed().forEach {
             base = base.insertHeaderItem(item=CommentsUiModel.CommentItem(it.toUiItem()))
         }
         uiState.pinnedItems.filter { it.comment_id !in uiState.removedIds }.reversed().forEach {
@@ -384,6 +404,7 @@ class CommentsViewModel(
         }
 
      */
+
     /*
     fun fetchReplies(parentCommentId: Long) {
         val currentThread = _replyThreads.value[parentCommentId] ?: ReplyThread()
@@ -391,12 +412,15 @@ class CommentsViewModel(
 
         viewModelScope.launch {
             updateThread(parentCommentId) { it.copy(isLoading = true) }
+
             val result = repo.subCommentsGet(parentCommentId, currentThread.currentPage)
+
             when (result) {
                 is ResultWrapper.Success -> {
-                    updateThread(parentCommentId) { state ->
+                    val newReplies = result.data.body().orEmpty()
 
-                        val totalReplies = state.replies + result.data
+                    updateThread(parentCommentId) { state ->
+                        val totalReplies = state.replies + newReplies
                         state.copy(
                             replies = totalReplies,
                             visibleCount = totalReplies.size,
@@ -414,8 +438,14 @@ class CommentsViewModel(
         }
     }
 
-
      */
+
+    private fun updateThread(commentId: Long, update: (ReplyThread) -> ReplyThread) {
+        _replyThreads.update { currentMap ->
+            val thread = currentMap[commentId] ?: ReplyThread()
+            currentMap + (commentId to update(thread))
+        }
+    }
 
 
     fun deleteComment(commentId: Long) {

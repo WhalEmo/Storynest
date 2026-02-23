@@ -64,15 +64,14 @@ class HomePageFragment : Fragment() {
             }
 
             override fun getLikeUsers(postId: Long) {
-                Log.d("POST_FRAGMENT", "Opening LikeUsersBottomSheet for $postId")
                 LikeUsersBottomSheet
                     .newInstance(postId)
                     .show(parentFragmentManager, "LikeUsersBottomSheet")
             }
 
-            override fun clickComment(postId: Long) {
+            override fun clickComment(postId: Long,commentPinnedCount:Long) {
                 CommentBottomFragment
-                    .newInstance(postId)
+                    .newInstance(postId,commentPinnedCount)
                     .show(parentFragmentManager,"CommentBottomFragment")
             }
 
