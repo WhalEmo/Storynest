@@ -7,6 +7,10 @@ sealed class ProfileScreenState{
         val uiState: ProfileUiState
     ) : ProfileScreenState()
 
+    data class Update(
+        val uiState: ProfileBasicUiState
+    ) : ProfileScreenState()
+
     data class Error(
         val message: String
     ) : ProfileScreenState()

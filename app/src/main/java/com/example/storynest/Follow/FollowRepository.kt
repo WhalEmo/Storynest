@@ -1,21 +1,14 @@
 package com.example.storynest.Follow
 
 import android.util.Log
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.insertSeparators
-import androidx.paging.map
 import com.example.storynest.ApiClient
 import com.example.storynest.Follow.Paging.FollowPagingSource
 import com.example.storynest.Follow.RequestDTO.FollowDTO
 import com.example.storynest.Follow.RequestDTO.FollowRequestDTO
+import com.example.storynest.Follow.ResponseDTO.FollowResponse
 import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
-import com.example.storynest.Notification.FollowRequestStatus
 import com.example.storynest.Notification.FollowResponseDTO
 import com.example.storynest.TestUserProvider
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import retrofit2.Response
 
 object FollowRepository {
@@ -29,33 +22,12 @@ object FollowRepository {
     val followApiController = ApiClient.getClient(token).create(FollowApiController::class.java)
 
 
-    suspend fun followMyFollower(myId: Long, userId: Long): Response<FollowResponseDTO> {
-        return followApiController.sendFollowRequest(
-            FollowRequestDTO(
-                requesterId = myId,
-                requestedId = userId
-            )
-        )
-    }
 
-    suspend fun cancelFollowRequest(followId: Long): Response<FollowResponseDTO> {
-        return followApiController.cancelFollow(followId)
-    }
-
-    suspend fun getFollowers(page: Int = 0, size: Int = 20): List<FollowUserResponseDTO>{
-        val response = followApiController.getUserFollowed(page, size)
-        return response.body() ?: emptyList()
-    }
-
-    suspend fun getFollowing(page: Int = 0, size: Int = 20) : List<FollowUserResponseDTO>{
-        val response = followApiController.getUserFollowing(page, size)
-        return response.body() ?: emptyList()
-    }
-    suspend fun getOtherUserFollowing(userId: Long, page: Int = 0, size: Int = 20): List<FollowUserResponseDTO>{
+    suspend fun getOtherUserFollowing(userId: Long, page: Int = 0, size: Int = 20): List<FollowResponse>{
         val response = followApiController.getOtherUserFollowing(userId, page, size)
         return response.body() ?: emptyList()
     }
-    suspend fun getOtherUserFollowers(userId: Long, page: Int = 0, size: Int = 20): List<FollowUserResponseDTO>{
+    suspend fun getOtherUserFollowers(userId: Long, page: Int = 0, size: Int = 20): List<FollowResponse>{
         val response = followApiController.getOtherUserFollowers(userId, page, size)
         return response.body() ?: emptyList()
     }
@@ -65,20 +37,30 @@ object FollowRepository {
         Log.e("userId", userId.toString())
         val request = FollowDTO(
             followingId = TestUserProvider.STATIC_USER_ID.toLong(),
-            followedId = userId,
+            followerId = userId,
             followed = true
         )
         Log.e("request", request.toString())
         return followApiController.removeFollower(request)
     }
 
-    suspend fun unfollow(userId: Long): Response<FollowDTO> {
+    suspend fun unfollow(userId: Long): Response<FollowResponse> {
         val request = FollowDTO(
-            followingId = TestUserProvider.STATIC_USER_ID.toLong(),
-            followedId = userId,
+            followerId = TestUserProvider.STATIC_USER_ID.toLong(),
+            followingId = userId,
             followed = true
         )
         return followApiController.unfollow(request)
+    }
+
+    suspend fun follow(userId: Long): Response<FollowResponse> {
+        val request = FollowDTO(
+            followerId = TestUserProvider.STATIC_USER_ID.toLong(),
+            followingId = userId,
+            followed = true
+        )
+        return followApiController.follow(request)
+
     }
 
 }

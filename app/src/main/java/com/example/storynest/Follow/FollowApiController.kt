@@ -2,6 +2,7 @@ package com.example.storynest.Follow
 
 import com.example.storynest.Follow.RequestDTO.FollowDTO
 import com.example.storynest.Follow.RequestDTO.FollowRequestDTO
+import com.example.storynest.Follow.ResponseDTO.FollowResponse
 import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
 import com.example.storynest.Notification.FollowResponseDTO
 import retrofit2.Response
@@ -14,52 +15,35 @@ import retrofit2.http.Query
 
 interface FollowApiController {
 
-    @GET("follow/userFollowed")
-    suspend fun getUserFollowed(
-        @Query("page") page: Int = 0,
-        @Query("size") size: Int = 20
-    ): Response<List<FollowUserResponseDTO>>
-
-
-    @POST("follow/request")
-    suspend fun sendFollowRequest(
-        @Body request: FollowRequestDTO
-    ): Response<FollowResponseDTO>
-
-    @PUT("follow/request/{id}/cancel")
-    suspend fun cancelFollow(
-        @Path("id") id: Long
-    ): Response<FollowResponseDTO>
-
     @POST("follow/removeFollower")
     suspend fun removeFollower(
         @Body request: FollowDTO
     ): Response<FollowDTO>
-
-    @GET("follow/userFollowing")
-    suspend fun getUserFollowing(
-        @Query("page") page: Int = 0,
-        @Query("size") size: Int = 20
-    ): Response<List<FollowUserResponseDTO>>
 
     @GET("follow/otherUserFollowing/{userId}")
     suspend fun getOtherUserFollowing(
         @Path("userId") userId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20
-    ): Response<List<FollowUserResponseDTO>>
+    ): Response<List<FollowResponse>>
 
-    @GET("follow/otherUserFollowed/{userId}")
+    @GET("follow/otherUserFollowers/{userId}")
     suspend fun getOtherUserFollowers(
         @Path("userId") userId: Long,
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20
-    ): Response<List<FollowUserResponseDTO>>
+    ): Response<List<FollowResponse>>
 
     @POST("follow/unfollow")
     suspend fun unfollow(
         @Body request: FollowDTO
-    ): Response<FollowDTO>
+    ): Response<FollowResponse>
+
+
+    @POST("follow/follow")
+    suspend fun follow(
+        @Body request: FollowDTO
+    ): Response<FollowResponse>
 
 
 }

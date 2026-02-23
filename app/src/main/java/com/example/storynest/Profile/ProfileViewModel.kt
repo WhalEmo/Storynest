@@ -5,11 +5,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.storynest.Follow.FollowRepository
+import com.example.storynest.Follow.ResponseDTO.FollowResponse
 import com.example.storynest.Profile.MVC.ProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.io.IOException
 import retrofit2.HttpException
@@ -18,10 +19,10 @@ import retrofit2.HttpException
 class ProfileViewModel: ViewModel() {
 
     private val profileRepository = ProfileRepository
+    private val followRepository = FollowRepository
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
 
-    private val profileCache = mutableMapOf<Long, ProfileUiState>()
 
     private val _uiState = MutableStateFlow<ProfileScreenState?>(null)
     val uiState: StateFlow<ProfileScreenState?> = _uiState.asStateFlow()
@@ -89,6 +90,33 @@ class ProfileViewModel: ViewModel() {
         }
     }
 
+    fun followUser(
+        userId: Long,
+        profileMode: ProfileMode
+    ){
+        viewModelScope.launch {
+            try {
+                val response = followRepository.follow(userId)
+                response.body()?.let {
+                    _uiState.value = ProfileScreenState.Update(
+                        uiState = it.ToBasicUiState()
+                    )
+                }
+            }
+            catch (e: HttpException) {
+                Log.e("ProfileViewModel", "Error loading user profile", e)
+                _error.value = "Sunucuya bağlanılamadı (HTTP ${e.code()})"
+            } catch (e: IOException) {
+                Log.e("ProfileViewModel", "Error loading user profile", e)
+                _error.value = "İnternet bağlantısı yok!"
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Error loading user profile", e)
+                _error.value = "Beklenmeyen bir hata oluştu"
+            }
+        }
+    }
+
+
     private fun ProfileData.toUiState(type: ProfileMode): ProfileUiState {
         Log.d("Model", type.name)
         return ProfileUiState(
@@ -117,6 +145,15 @@ class ProfileViewModel: ViewModel() {
             showPendingRequestButton = type == ProfileMode.USER_PROFILE && isPending && !isFollowing
         )
 
+    }
+
+    private fun FollowResponse.ToBasicUiState(): ProfileBasicUiState{
+        return ProfileBasicUiState(
+            showFollowButton = !follower && !following && !pending,
+            showMessageButton = following && !pending,
+            showPendingRequestButton = pending && !following,
+            btnFollowYour = follower && !following && !pending,
+        )
     }
 
 }

@@ -90,6 +90,7 @@ class FollowListFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        Log.d("FollowListFragment", "userId: $userId")
 
         viewModel.setParams(followType, userId)
 
@@ -124,9 +125,7 @@ class FollowListFragment: Fragment() {
                 sendMessage()
             },
             onCancelRequest = {
-                onCancelRequest(
-                    it.requestId
-                )
+                viewModel.unFollow(it.id, followType)
             },
             onUnFollowMy = {
                 onUnFollowMy(
@@ -220,7 +219,7 @@ class FollowListFragment: Fragment() {
             0,
             1f
         )
-        viewModel.sendFollowRequest(userId, followType)
+        viewModel.followUser(userId, followType)
     }
 
     private fun onCancelRequest(followId: Long?){
@@ -232,7 +231,7 @@ class FollowListFragment: Fragment() {
             0,
             1f
         )
-        viewModel.cancelFollowRequest(followId, followType)
+       // viewModel.cancelFollowRequest(followId, followType)
     }
 
     private fun onUnFollowMy(usrResponse: FollowRow.FollowUserItem){
@@ -344,7 +343,7 @@ class FollowListFragment: Fragment() {
             }
 
             override fun onUnfollow(userId: Long) {
-                viewModel.unFollow(userId)
+                viewModel.unFollow(userId, followType)
             }
 
             override fun onBlock(userId: Long) {

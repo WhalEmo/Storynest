@@ -46,7 +46,7 @@ class ProfileFragment : Fragment(){
         private const val ARG_MODE = "mode"
         private const val ARG_USER_ID = "userId"
 
-        fun newInstance(mode: ProfileMode, userId: Long = -1) : ProfileFragment{
+        fun newInstance(mode: ProfileMode, userId: Long) : ProfileFragment{
             val fragment = ProfileFragment()
             fragment.apply {
                 arguments = Bundle().apply {
@@ -161,6 +161,9 @@ class ProfileFragment : Fragment(){
                         is ProfileScreenState.Success -> {
                             render(state.uiState)
                         }
+                        is ProfileScreenState.Update -> {
+                            basicRender(state.uiState)
+                        }
                         else -> {}
                     }
                 }
@@ -192,6 +195,13 @@ class ProfileFragment : Fragment(){
         binding.btnShareProfile.isVisible = state.btnShareProfile
         binding.btnPendingRequest.isVisible = state.showPendingRequestButton
 
+    }
+
+    private fun basicRender(state: ProfileBasicUiState){
+        binding.btnFollow.isVisible = state.showFollowButton ?: false
+        binding.btnMessage.isVisible = state.showMessageButton ?: false
+        binding.btnPendingRequest.isVisible = state.showPendingRequestButton
+        binding.btnFollowYour.isVisible = state.btnFollowYour
     }
 
     private fun setupButtonFlow(
@@ -234,6 +244,18 @@ class ProfileFragment : Fragment(){
                 activity = requireActivity() as AppCompatActivity,
                 type = followingContainerType,
                 userId = userId
+            )
+        }
+        binding.btnFollow.setOnClickListener {
+            viewModel.followUser(
+                userId = userId,
+                profileMode = profileMode
+            )
+        }
+        binding.btnFollowYour.setOnClickListener {
+            viewModel.followUser(
+                userId = userId,
+                profileMode = profileMode
             )
         }
     }

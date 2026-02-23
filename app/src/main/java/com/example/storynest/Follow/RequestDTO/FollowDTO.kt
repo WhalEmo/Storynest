@@ -1,7 +1,7 @@
 package com.example.storynest.Follow.RequestDTO
 
 data class FollowDTO(
+    val followerId : Long,
     val followingId : Long,
-    val followedId : Long,
     val followed : Boolean
 )

@@ -13,6 +13,7 @@ import androidx.paging.filter
 import androidx.paging.map
 import com.example.storynest.Follow.Paging.FollowPagingSource
 import com.example.storynest.Follow.RequestDTO.FollowDTO
+import com.example.storynest.Follow.ResponseDTO.FollowResponse
 import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
 import com.example.storynest.Notification.FollowRequestStatus
 import com.example.storynest.Notification.FollowResponseDTO
@@ -76,8 +77,7 @@ class FollowViewModel: ViewModel() {
                         val updatedState = actionUpdates[row.id]
                         if(updatedState!=null){
                             row.copy(
-                                visibleViews = updatedState.actionState.toVisibleViews(),
-                                requestId = updatedState.requestId
+                                visibleViews = updatedState.actionState.toVisibleViews()
                             )
                         }else row
                     }else row
@@ -108,20 +108,18 @@ class FollowViewModel: ViewModel() {
         }.cachedIn(viewModelScope)
     }
 
-    fun sendFollowRequest(userId: Long, followType: FollowType){
+    fun followUser(userId: Long, followType: FollowType){
         viewModelScope.launch {
             try {
-                val response = repository.followMyFollower(user.STATIC_USER_ID.toLong(), userId)
+                val response = repository.follow(userId)
                 if (response.isSuccessful){
-                    response.body().let { followResponseDTO ->
-                        if(followResponseDTO != null){
+                    response.body().let { followResponse ->
+                        if(followResponse != null){
                             val action = dtoToAction(
-                                dto = followResponseDTO,
+                                dto = followResponse,
                                 followType = followType
                             )
-                            Log.e("action", action.toString())
-                            Log.e("action", followResponseDTO.toString())
-                            updateUserActionState(userId, action, followResponseDTO.id)
+                            updateUserActionState(userId, action)
                         }
                     }
                 }
@@ -137,34 +135,7 @@ class FollowViewModel: ViewModel() {
             }
         }
     }
-    
-    fun cancelFollowRequest(followId: Long?, followType: FollowType){
-        viewModelScope.launch {
-            try {
-                if(followId == null) return@launch
-                val response = repository.cancelFollowRequest(followId)
-                if (response.isSuccessful){
-                    val responseBody = response.body()
-                    if(responseBody?.status == FollowRequestStatus.CANCEL){
-                        val action = dtoToAction(
-                            dto = responseBody,
-                            followType = followType
-                        )
-                        updateUserActionState(responseBody.requested.userId, action, responseBody.id)
-                    }
-                }
-            }
-            catch (e: HttpException){
-                _error.value = "Sunucuya bağlanılamadı (HTTP ${e.code()})"
-            }
-            catch (e: IOException) {
-                _error.value = "İnternet bağlantısı yok!"
-            }
-            catch (e: Exception) {
-                _error.value = "Beklenmeyen bir hata oluştu"
-            }
-        }
-    }
+
 
     fun removeFollower(
         userId: Long,
@@ -179,7 +150,7 @@ class FollowViewModel: ViewModel() {
                     val responseBody = response.body()
                     if (responseBody != null){
                         val action = FollowActionState.REMOVE_FOLLOWER
-                        updateUserActionState(userId, action, -1)
+                        updateUserActionState(userId, action)
                     }
                     onRemoved.invoke()
                 }
@@ -197,14 +168,15 @@ class FollowViewModel: ViewModel() {
     }
 
     fun unFollow(
-        userId: Long
+        userId: Long,
+        followType: FollowType
     ){
         viewModelScope.launch {
             try {
                 val response = repository.unfollow(userId)
-                if(response.isSuccessful){
-                    val action = FollowActionState.REMOVE_FOLLOWING
-                    updateUserActionState(userId, action, -1)
+                response.body()?.let { dto ->
+                    val action = dtoToAction(dto, followType)
+                    updateUserActionState(userId, action)
                 }
             }
             catch (e: HttpException){
@@ -221,72 +193,62 @@ class FollowViewModel: ViewModel() {
 
     private fun updateUserActionState(
         userId: Long,
-        newState: FollowActionState,
-        newRequestId: Long
+        newState: FollowActionState
     ) {
         _actionUpdates.value =
             _actionUpdates.value.toMutableMap().apply {
                 put(
                     userId,
                     FollowActionDataState(
-                        actionState = newState,
-                        requestId = newRequestId
+                        actionState = newState
                     )
                 )
             }
     }
 
     private fun mapToFollowRow(
-        dto: FollowUserResponseDTO,
+        dto: FollowResponse,
         followType: FollowType
     ): FollowRow.FollowUserItem {
 
         val action = dtoToAction(
-            dto = dto.followInfo,
-            followType = followType,
-            userFollowDto = dto
+            dto = dto,
+            followType = followType
         )
         return FollowRow.FollowUserItem(
-            id = dto.id,
+            id = dto.userId,
             username = dto.username,
-            biography = dto.biography,
-            profile = dto.profile,
-            visibleViews = action.toVisibleViews(),
-            requestId = dto.followInfo?.id
+            biography = dto.bio,
+            profile = dto.profileUrl,
+            visibleViews = action.toVisibleViews()
         )
     }
 
     private fun dtoToAction(
-        dto: FollowResponseDTO?,
-        followType: FollowType,
-        userFollowDto: FollowUserResponseDTO? = null
+        dto: FollowResponse,
+        followType: FollowType
     ): FollowActionState {
         return when(followType) {
             FollowType.MY_FOLLOWERS ->{
                 myFollowersActionUiState(dto)
             }
             FollowType.MY_FOLLOWING -> myFollowingActionUiState(dto)
-            FollowType.USER_FOLLOWERS -> otherUserFollowersActionUiState(dto, userFollowDto?.id)
-            FollowType.USER_FOLLOWING -> otherUserFollowingActionUiState(dto, userFollowDto?.id)
+            FollowType.USER_FOLLOWERS -> otherUserFollowersActionUiState(dto)
+            FollowType.USER_FOLLOWING -> otherUserFollowingActionUiState(dto)
         }
     }
 
     private fun myFollowersActionUiState(
-        dto: FollowResponseDTO?
+        dto: FollowResponse
     ): FollowActionState{
         return when {
-            dto == null ->{
-                FollowActionState.FOLLOWER_ACCEPT
-            }
-            dto.myFollower && !dto.followingYou ->
+            dto.follower && !dto.following ->
                 FollowActionState.FOLLOWER_ACCEPT
 
-            dto.status == FollowRequestStatus.ACCEPTED
-                    && dto.requester.userId == user.STATIC_USER_ID ->
+            dto.follower && dto.following ->
                 FollowActionState.FOLLOWER_MESSAGE
 
-            dto.status == FollowRequestStatus.PENDING
-                    && dto.requester.userId == user.STATIC_USER_ID ->
+            dto.pending && !dto.following ->
                 FollowActionState.FOLLOWER_PENDING
             else ->
                 FollowActionState.FOLLOWER_ACCEPT
@@ -294,56 +256,57 @@ class FollowViewModel: ViewModel() {
     }
 
     private fun myFollowingActionUiState(
-        dto: FollowResponseDTO?
+        dto: FollowResponse
     ): FollowActionState{
-        return FollowActionState.FOLLOWING
+        return when{
+            dto.following ->
+                FollowActionState.FOLLOWING
+            dto.follower && !dto.following ->
+                FollowActionState.FOLLOWING_YOUR_FOLLOW
+            dto.pending && !dto.following ->
+                FollowActionState.FOLLOWING_PENDING
+            else ->
+                FollowActionState.REMOVE_FOLLOWING
+        }
     }
 
     private fun otherUserFollowersActionUiState(
-        followInfo: FollowResponseDTO?,
-        userId: Long?
+        dto: FollowResponse,
     ): FollowActionState{
-        Log.e("userFollowDto", followInfo.toString())
+        Log.e("userFollowDto", dto.toString())
         return when{
-            userId == user.STATIC_USER_ID ->{
+            dto.userId == user.STATIC_USER_ID ->{
                 FollowActionState.MY_USER_ITEM
             }
-            followInfo == null -> {
-                FollowActionState.OTHER_USER_ITEM
-            }
-            followInfo.myFollower && !followInfo.followingYou ->{
+            dto.follower && !dto.following ->{
                 FollowActionState.OTHER_USER_ACCEPT
             }
-            followInfo.requester.userId == user.STATIC_USER_ID ->{
-                requesterFollowAction(followInfo)
+            dto.follower && dto.following ->{
+                FollowActionState.OTHER_USER_MESSAGE
             }
-            followInfo.requested.userId == user.STATIC_USER_ID ->{
-                requestedFollowAction(followInfo)
+            dto.pending && !dto.following ->{
+                FollowActionState.OTHER_USER_PENDING
             }
             else ->
                 FollowActionState.OTHER_USER_ITEM
         }
     }
     private fun otherUserFollowingActionUiState(
-        followInfo: FollowResponseDTO?,
-        userId: Long?
+        dto: FollowResponse
     ): FollowActionState{
-        Log.e("userFollowDto", followInfo.toString())
+        Log.e("userFollowDto", dto.toString())
         return when{
-            userId == user.STATIC_USER_ID ->{
+            dto.userId == user.STATIC_USER_ID ->{
                 FollowActionState.MY_USER_ITEM
             }
-            followInfo == null -> {
-                FollowActionState.OTHER_USER_ITEM
-            }
-            followInfo.myFollower && !followInfo.followingYou ->{
+            dto.follower && !dto.following ->{
                 FollowActionState.OTHER_USER_ACCEPT
             }
-            followInfo.requester.userId == user.STATIC_USER_ID ->{
-                requesterFollowAction(followInfo)
+            dto.follower && dto.following ->{
+                FollowActionState.OTHER_USER_MESSAGE
             }
-            followInfo.requested.userId == user.STATIC_USER_ID ->{
-                requestedFollowAction(followInfo)
+            dto.pending && !dto.following ->{
+                FollowActionState.OTHER_USER_PENDING
             }
             else ->
                 FollowActionState.OTHER_USER_ITEM
@@ -384,45 +347,14 @@ class FollowViewModel: ViewModel() {
 
             FollowActionState.REMOVE_FOLLOWING ->
                 setOf(FollowViewType.FOLLOW, FollowViewType.DOT_MENU)
+
+            FollowActionState.FOLLOWING_PENDING ->
+                setOf(FollowViewType.PENDING, FollowViewType.DOT_MENU)
+
+            FollowActionState.FOLLOWING_YOUR_FOLLOW ->
+                setOf(FollowViewType.ACCEPT, FollowViewType.DOT_MENU)
         }
     }
 
-    private fun requesterFollowAction(
-        dto: FollowResponseDTO
-    ): FollowActionState{
-        when{
-            dto.status == FollowRequestStatus.ACCEPTED ->{
-                return FollowActionState.OTHER_USER_MESSAGE
-            }
-            dto.status == FollowRequestStatus.PENDING ->{
-                return FollowActionState.OTHER_USER_PENDING
-            }
-            dto.status == FollowRequestStatus.CANCEL ->{
-                return FollowActionState.OTHER_USER_ITEM
-            }
-            else ->{
-                return FollowActionState.MY_USER_ITEM
-            }
-        }
-    }
-
-    private fun requestedFollowAction(
-        dto: FollowResponseDTO
-    ): FollowActionState{
-        when{
-            dto.myFollower && !dto.followingYou ->{
-                return FollowActionState.OTHER_USER_ACCEPT
-            }
-            dto.status == FollowRequestStatus.PENDING ->{
-                return FollowActionState.OTHER_USER_PENDING
-            }
-            dto.status == FollowRequestStatus.CANCEL ->{
-                return FollowActionState.OTHER_USER_ITEM
-            }
-            else ->{
-                return FollowActionState.MY_USER_ITEM
-            }
-        }
-    }
 
 }
