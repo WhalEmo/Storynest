@@ -33,7 +33,7 @@ class CommentRepo(
     suspend fun subCommentsGet(
         parentCommentId: Long,
         page: Int = 0,
-        size: Int = 10
+        size: Int = 2
     ): ResultWrapper<List<commentResponse>> =
         safeApiCall {
             api.subCommentsGet(parentCommentId, page, size)

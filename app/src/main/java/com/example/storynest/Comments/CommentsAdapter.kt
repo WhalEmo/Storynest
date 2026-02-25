@@ -33,8 +33,8 @@ class CommentsAdapter(
         fun onReplyClicked(comment: commentUiItem)
         fun onViewReplys(
             commentId: Long,
-            reset: Boolean,
-            onResult: (List<commentResponse>) -> Unit
+            totalSubComment:Long,
+            reset: Boolean
         )
     }
 
@@ -201,8 +201,9 @@ class CommentsAdapter(
                 txtViewReplies.setOnClickListener {
                     listener.onViewReplys(
                         item.parentCommentId,
-                        reset = false
-                    ) {}
+                        item.totalSubCount,
+                        reset = !item.isLoadMore
+                    )
                 }
         }
 

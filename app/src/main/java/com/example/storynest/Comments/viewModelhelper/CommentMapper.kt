@@ -31,7 +31,7 @@ object CommentMapper {
             pinVisibility = isPinnedVisible,
             isPin = isPinned,
             editDateVisibility = isEditedVisible,
-            replyCount = replyCount
+            subCommentsCount = subCommentsCount
         )
     }
 }

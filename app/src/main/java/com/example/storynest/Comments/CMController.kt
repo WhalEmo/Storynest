@@ -35,7 +35,7 @@ data class commentResponse(
     var isEdited: Boolean=false,
     @SerializedName(value = "isPinned", alternate = ["pinned"])
     var isPinned: Boolean=false,
-    var replyCount: Long
+    var subCommentsCount: Long
 )
 data class commentUiItem(
     val commentId: Long,
@@ -54,7 +54,7 @@ data class commentUiItem(
     val pinVisibility: Int,
     val isPin: Boolean =false,
     val editDateVisibility: Int,
-    var replyCount: Long
+    var subCommentsCount: Long
 )
 data class userResponseDto(
     val id: Long,

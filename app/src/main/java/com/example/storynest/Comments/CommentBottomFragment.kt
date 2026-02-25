@@ -254,10 +254,10 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
             override fun onViewReplys(
                 commentId: Long,
-                reset: Boolean,
-                onResult: (List<commentResponse>) -> Unit
+                totalSubComment:Long,
+                reset: Boolean
             ) {
-                //viewModel.subCommentsGet(commentId, reset, onResult)
+                viewModel.fetchReplies(commentId, totalSubComment,reset)
             }
         })
 

@@ -13,8 +13,8 @@ data class CommentUiState(
 data class ReplyThread(
     val replies: List<commentResponse> = emptyList(),
     val visibleCount: Int = 0,
-    val totalCount: Int = 0,
-    val currentPage: Int = 1,
+    val totalCount: Long = 0,
+    val currentPage: Int = 0,
     val isLoading: Boolean = false
 )
     data class BaseState(

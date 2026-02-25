@@ -286,19 +286,29 @@ class CommentsViewModel(
             }
 
         val thread = uiState.replyThreads[comment.comment_id]
-        if (thread == null) {
-            if (comment.replyCount > 0) {
-                add(CommentsUiModel.ViewRepliesItem(comment.comment_id, comment.replyCount, false))
+
+       if (thread == null) {
+            if (comment.subCommentsCount > 0) {
+                add(CommentsUiModel.ViewRepliesItem(comment.comment_id, comment.subCommentsCount, comment.subCommentsCount,false,false))
             }
-        } else {
+       } else {
             thread.replies.take(thread.visibleCount).forEach { reply ->
                 if (reply.comment_id !in uiState.removedIds) {
-                   // add(CommentsUiModel.ReplyItem(reply))
+                    add(CommentsUiModel.ReplyItem(reply.toUiItem()))
                 }
             }
             val remaining = thread.totalCount - thread.visibleCount
+
             if (remaining > 0 || thread.isLoading) {
-                //add(CommentsUiModel.ViewRepliesItem(comment.comment_id, remaining.coerceAtLeast(0), true, thread.isLoading))
+                add(CommentsUiModel.ViewRepliesItem(
+                    parentCommentId = comment.comment_id,
+                    remainingCount = remaining,
+                    totalSubCount = thread.totalCount,
+                    isLoadMore = true,
+                    isLoading = thread.isLoading
+                ))
+            }else if (thread.replies.isNotEmpty()) {
+
             }
         }
     }
@@ -308,123 +318,55 @@ class CommentsViewModel(
         uiState: CommentUiState
     ): PagingData<CommentsUiModel> {
         var base = data
-        uiState.newItems.filter {
-            it.comment_id !in uiState.removedIds && it.parentCommentId == null
 
-        }.reversed().forEach {
-            base = base.insertHeaderItem(item=CommentsUiModel.CommentItem(it.toUiItem()))
-        }
         uiState.pinnedItems.filter { it.comment_id !in uiState.removedIds }.reversed().forEach {
-            base = base.insertHeaderItem(item=CommentsUiModel.CommentItem(it.toUiItem().copy(isPin = true)))
+            val pinnedWithStatus = it.copy(isPinned = true)
+            val flatItems = transformCommentToFlatList(pinnedWithStatus, uiState)
 
+            flatItems.reversed().forEach { item ->
+                base = base.insertHeaderItem(item = item)
+            }
+
+        }
+        uiState.newItems.filter {
+            it.comment_id !in uiState.removedIds && it.parentCommentId == null&&
+                    uiState.pinnedItems.none { p -> p.comment_id == it.comment_id }
+        }.reversed().forEach {
+            val flatItems = transformCommentToFlatList(it, uiState)
+            flatItems.reversed().forEach { item ->
+                base = base.insertHeaderItem(item = item)
+            }
         }
         return base
     }
 
-    /*
-    val comments: Flow<PagingData<CommentsUiModel>> =
-        combine(
-            pagingComments,
-            commentUiState
 
-        ) {pagingData, uiState->
-            var baseData:PagingData<CommentsUiModel> =
-                pagingData
-                    .filter { pagingItem ->
-                        !uiState.removedIds.contains(pagingItem.comment_id) &&
-                                uiState.pinnedItems.none { it.comment_id == pagingItem.comment_id }
-                    }
-                    .flatMap { comment ->
-                        val updatedComment = uiState.updates[comment.comment_id] ?: comment
 
-                        buildList {
-                            add(CommentsUiModel.CommentItem(updatedComment.toUiItem()))
-
-                            val thread = uiState.replyThreads[comment.comment_id]
-
-                            if (thread == null) {
-                                if (comment.replyCount > 0) {
-                                    add(
-                                        CommentsUiModel.ViewRepliesItem(
-                                            parentCommentId = comment.comment_id,
-                                            remainingCount = comment.replyCount,
-                                            isLoadMore = false
-                                        )
-                                    )
-                                }
-                            } else {
-
-                                thread.replies.take(thread.visibleCount).forEach { reply ->
-                                    add(CommentsUiModel.ReplyItem(reply))
-                                }
-
-                                val remaining = thread.totalCount - thread.visibleCount
-                                if (remaining > 0) {
-                                    add(
-                                        CommentsUiModel.ViewRepliesItem(
-                                            parentCommentId = comment.comment_id,
-                                            remainingCount = remaining.toLong(),
-                                            isLoadMore = true
-                                        )
-                                    )
-                                }
-                            }
-
-                        }
-                    }
-
-            uiState.pinnedItems.take(5).reversed().forEach { pinnedItem ->
-                if (pinnedItem.comment_id !in uiState.removedIds) {
-
-                    val currentState = uiState.updates[pinnedItem.comment_id]
-                        ?: pinnedItem
-                        val mergedItem = currentState.copy(
-                            isPinned = true,
-                        )
-                        val uiItem = mergedItem.toUiItem()
-                        baseData = baseData.insertHeaderItem(
-                            item = CommentsUiModel.CommentItem(uiItem)
-                        )
-                }
-            }
-
-            uiState.newItems
-                .filter { newItem ->
-                    newItem.comment_id !in uiState.removedIds &&
-                            uiState.pinnedItems.none { it.comment_id == newItem.comment_id }
-                }
-                .reversed()
-                .forEach { newItem ->
-                    baseData = baseData.insertHeaderItem(
-                        item = CommentsUiModel.CommentItem(newItem.toUiItem())
-                    )
-                }
-
-            baseData
-        }
-
-     */
-
-    /*
-    fun fetchReplies(parentCommentId: Long) {
+    fun fetchReplies(parentCommentId: Long, totalComments:Long, reset:Boolean) {
         val currentThread = _replyThreads.value[parentCommentId] ?: ReplyThread()
+
         if (currentThread.isLoading) return
+        if (!reset && currentThread.replies.size >= currentThread.totalCount && currentThread.totalCount != 0L) return
 
         viewModelScope.launch {
-            updateThread(parentCommentId) { it.copy(isLoading = true) }
+            updateThread(parentCommentId) {
+                if (reset) ReplyThread(isLoading = true)
+                else it.copy(isLoading = true)
+            }
 
-            val result = repo.subCommentsGet(parentCommentId, currentThread.currentPage)
+            val pageToFetch = if (reset) 0 else currentThread.currentPage
+            val result = repo.subCommentsGet(parentCommentId, pageToFetch)
 
             when (result) {
                 is ResultWrapper.Success -> {
-                    val newReplies = result.data.body().orEmpty()
+                    val newReplies = result.data.orEmpty()
 
                     updateThread(parentCommentId) { state ->
                         val totalReplies = state.replies + newReplies
                         state.copy(
                             replies = totalReplies,
                             visibleCount = totalReplies.size,
-                            totalCount = result.totalCount ?: totalReplies.size.toLong(),
+                            totalCount = totalComments,
                             currentPage = state.currentPage + 1,
                             isLoading = false
                         )
@@ -438,7 +380,6 @@ class CommentsViewModel(
         }
     }
 
-     */
 
     private fun updateThread(commentId: Long, update: (ReplyThread) -> ReplyThread) {
         _replyThreads.update { currentMap ->

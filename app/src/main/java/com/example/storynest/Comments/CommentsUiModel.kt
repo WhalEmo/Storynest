@@ -11,8 +11,10 @@ sealed class CommentsUiModel {
 
     data class ViewRepliesItem(
         val parentCommentId: Long,
-        val remainingCount: Long,
-        val isLoadMore: Boolean
+        val remainingCount: Long?,
+        val totalSubCount: Long,
+        val isLoadMore: Boolean,
+        var isLoading:Boolean
     ) : CommentsUiModel()
 
 }
