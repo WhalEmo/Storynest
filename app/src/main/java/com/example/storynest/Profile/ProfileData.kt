@@ -3,7 +3,7 @@ package com.example.storynest.Profile
 import java.io.Serializable
 
 data class ProfileData(
-    var id : Int,
+    var id : Long,
     var username : String,
     var email : String,
     var name : String,

@@ -47,11 +47,6 @@ class FollowViewModel: ViewModel() {
 
     private var user = TestUserProvider
 
-    private val followUpdates =
-        MutableStateFlow<Map<Long, FollowResponseDTO>>(emptyMap())
-
-    private val removedUserIds = MutableStateFlow<Set<Long>>(emptySet())
-
     val pagingFollowers = _params
         .filterNotNull()
         .flatMapLatest { params ->
@@ -61,7 +56,16 @@ class FollowViewModel: ViewModel() {
 
     init {
         viewModelScope.launch {
-            pagingFollowers.first()
+            repository.globalFollowEvents.collect { (userId, followResponse) ->
+                val action = dtoToAction(
+                    dto = followResponse,
+                    followType = _params.value?.followType ?: return@collect
+                )
+                updateUserActionState(
+                    userId = userId,
+                    newState = action
+                )
+            }
         }
     }
 
@@ -89,18 +93,9 @@ class FollowViewModel: ViewModel() {
         followType: FollowType,
         userId: Long?
     ): Flow<PagingData<FollowRow>> {
-        return Pager(
-            config = PagingConfig(
-                pageSize = 20,
-                enablePlaceholders = false
-            ),
-            pagingSourceFactory = {
-                FollowPagingSource(
-                    repository,
-                    followType,
-                    userId
-                )
-            }
+        return repository.getFollowPager(
+            followType = followType,
+            userId = userId
         ).flow.map { pagingData ->
             pagingData.map { dto ->
                mapToFollowRow(dto, followType) as FollowRow
@@ -307,6 +302,9 @@ class FollowViewModel: ViewModel() {
             }
             dto.pending && !dto.following ->{
                 FollowActionState.OTHER_USER_PENDING
+            }
+            dto.following ->{
+                FollowActionState.OTHER_USER_MESSAGE
             }
             else ->
                 FollowActionState.OTHER_USER_ITEM

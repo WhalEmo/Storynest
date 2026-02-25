@@ -2,7 +2,7 @@ package com.example.storynest.Profile
 
 data class ProfileUiState(
 
-    val id: Int,
+    val id: Long,
     val username: String,
     val name: String,
     val surname: String,

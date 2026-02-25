@@ -13,7 +13,7 @@ data class ProfileResponse(
 )
 
 data class UserResponseDto(
-    val id: Int,
+    val id: Long,
     val username: String,
     val email: String,
     val name: String,

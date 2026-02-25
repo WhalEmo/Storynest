@@ -98,7 +98,6 @@ class ProfileFragment : Fragment(){
         Log.d("ProfileFragment", "userId: $userId")
 
         observeScreenState()
-
         viewModel.init(
             mode = profileMode,
             userId = userId
@@ -202,6 +201,7 @@ class ProfileFragment : Fragment(){
         binding.btnMessage.isVisible = state.showMessageButton ?: false
         binding.btnPendingRequest.isVisible = state.showPendingRequestButton
         binding.btnFollowYour.isVisible = state.btnFollowYour
+        binding.followersCount.text = state.followCount.toString()
     }
 
     private fun setupButtonFlow(

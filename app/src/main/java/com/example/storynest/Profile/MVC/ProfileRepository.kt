@@ -12,6 +12,9 @@ object ProfileRepository{
 
     private val memoryCache = mutableMapOf<Long, ProfileData>()
 
+    fun getUserProfile(userId: Long): ProfileData?{
+        return memoryCache[userId]
+    }
 
     fun loadMyProfile(userId: Long): Flow<ProfileData> = flow{
         memoryCache[userId]?.let {

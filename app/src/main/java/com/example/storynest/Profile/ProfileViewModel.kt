@@ -27,6 +27,7 @@ class ProfileViewModel: ViewModel() {
     private val _uiState = MutableStateFlow<ProfileScreenState?>(null)
     val uiState: StateFlow<ProfileScreenState?> = _uiState.asStateFlow()
 
+    private lateinit var profileData: ProfileData
 
     init {
         Log.d("VM_DEBUG", "MyViewModel oluşturuldu -> ${this.hashCode()}")
@@ -39,6 +40,15 @@ class ProfileViewModel: ViewModel() {
 
             ProfileMode.MY_PROFILE -> loadMyProfile(userId)
         }
+        viewModelScope.launch {
+            followRepository.globalFollowEvents.collect { (userId, followResponse) ->
+                if(userId != profileData.id) return@collect
+                Log.d("ProfileViewModel", "globalFollowEvents userId: $userId and Params userId: ${profileData.id}")
+                _uiState.value = ProfileScreenState.Update(
+                    uiState = followResponse.ToBasicUiState(profileData.followers + 1)
+                )
+            }
+        }
     }
 
     private fun loadMyProfile(userId: Long) {
@@ -47,6 +57,7 @@ class ProfileViewModel: ViewModel() {
             try {
                 profileRepository.loadMyProfile(userId)
                     .collect {
+                        profileData = it
                         _uiState.value = ProfileScreenState.Success(
                             uiState = it.toUiState(
                                 type = ProfileMode.MY_PROFILE
@@ -71,6 +82,7 @@ class ProfileViewModel: ViewModel() {
             try {
                 profileRepository.loadUserProfile(userId)
                     .collect {
+                        profileData = it
                         _uiState.value = ProfileScreenState.Success(
                             uiState = it.toUiState(
                                 type = ProfileMode.USER_PROFILE
@@ -95,24 +107,15 @@ class ProfileViewModel: ViewModel() {
         profileMode: ProfileMode
     ){
         viewModelScope.launch {
-            try {
-                val response = followRepository.follow(userId)
-                response.body()?.let {
-                    _uiState.value = ProfileScreenState.Update(
-                        uiState = it.ToBasicUiState()
-                    )
-                }
-            }
-            catch (e: HttpException) {
-                Log.e("ProfileViewModel", "Error loading user profile", e)
-                _error.value = "Sunucuya bağlanılamadı (HTTP ${e.code()})"
-            } catch (e: IOException) {
-                Log.e("ProfileViewModel", "Error loading user profile", e)
-                _error.value = "İnternet bağlantısı yok!"
-            } catch (e: Exception) {
-                Log.e("ProfileViewModel", "Error loading user profile", e)
-                _error.value = "Beklenmeyen bir hata oluştu"
-            }
+            followRepository.follow(userId)
+        }
+    }
+
+    fun unFollowUser(
+        userId: Long
+    ){
+        viewModelScope.launch {
+            followRepository.unfollow(userId)
         }
     }
 
@@ -147,12 +150,13 @@ class ProfileViewModel: ViewModel() {
 
     }
 
-    private fun FollowResponse.ToBasicUiState(): ProfileBasicUiState{
+    private fun FollowResponse.ToBasicUiState(count: Int): ProfileBasicUiState{
         return ProfileBasicUiState(
             showFollowButton = !follower && !following && !pending,
             showMessageButton = following && !pending,
             showPendingRequestButton = pending && !following,
             btnFollowYour = follower && !following && !pending,
+            followCount = count
         )
     }
 
