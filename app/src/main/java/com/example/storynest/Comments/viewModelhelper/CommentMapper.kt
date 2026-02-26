@@ -1,9 +1,12 @@
 package com.example.storynest.Comments.viewModelhelper
 
 import android.view.View
+import com.example.storynest.Comments.CommentsUiModel
 import com.example.storynest.Comments.commentResponse
 import com.example.storynest.Comments.commentUiItem
+import com.example.storynest.Comments.viewReplysUiItem
 import com.example.storynest.R
+import kotlin.Long
 
 object CommentMapper {
     fun commentResponse.toUiItem(): commentUiItem {
@@ -34,4 +37,5 @@ object CommentMapper {
             subCommentsCount = subCommentsCount
         )
     }
+
 }

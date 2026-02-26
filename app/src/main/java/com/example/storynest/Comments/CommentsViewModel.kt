@@ -15,11 +15,13 @@ import com.example.storynest.ApiClient
 import com.example.storynest.Comments.viewModelhelper.BaseState
 import com.example.storynest.Comments.viewModelhelper.CommentMapper.toUiItem
 import com.example.storynest.Comments.viewModelhelper.CommentUiState
+import com.example.storynest.Comments.viewModelhelper.ReplyAction
 import com.example.storynest.Comments.viewModelhelper.ReplyThread
 import com.example.storynest.CustomViews.UiEvents
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -287,9 +289,21 @@ class CommentsViewModel(
 
         val thread = uiState.replyThreads[comment.comment_id]
 
-       if (thread == null) {
+       if (thread == null|| !thread.isExpanded) {
             if (comment.subCommentsCount > 0) {
-                add(CommentsUiModel.ViewRepliesItem(comment.comment_id, comment.subCommentsCount, comment.subCommentsCount,false,false))
+              //  add(CommentsUiModel.ViewRepliesItem(comment.comment_id, comment.subCommentsCount, comment.subCommentsCount,false,false))
+                add(
+                    CommentsUiModel.ViewRepliesItem(
+                        replyView = viewReplysUiItem(
+                            nextAction = ReplyAction.LOAD_MORE,
+                            parentCommentId = comment.comment_id,
+                            remainingCount = comment.subCommentsCount,
+                            totalSubCount = comment.subCommentsCount,
+                            isLoadMore = false,
+                            isLoading = false
+                        )
+                    )
+                )
             }
        } else {
             thread.replies.take(thread.visibleCount).forEach { reply ->
@@ -301,18 +315,32 @@ class CommentsViewModel(
 
             if (remaining > 0 || thread.isLoading) {
                 add(CommentsUiModel.ViewRepliesItem(
-                    parentCommentId = comment.comment_id,
-                    remainingCount = remaining,
-                    totalSubCount = thread.totalCount,
-                    isLoadMore = true,
-                    isLoading = thread.isLoading
-                ))
-            }else if (thread.replies.isNotEmpty()) {
-
+                    replyView = viewReplysUiItem(
+                        nextAction = ReplyAction.LOAD_MORE,
+                        parentCommentId = comment.comment_id,
+                        remainingCount = remaining,
+                        totalSubCount = thread.totalCount,
+                        isLoadMore = true,
+                        isLoading = thread.isLoading
+                    )
+                  )
+                )
+            }else if (remaining == 0L) {
+                add(
+                    CommentsUiModel.ViewRepliesItem(
+                        replyView = viewReplysUiItem(
+                            nextAction = ReplyAction.HIDE,
+                            parentCommentId = comment.comment_id,
+                            remainingCount = 0,
+                            totalSubCount = thread.totalCount,
+                            isLoadMore = true,
+                            isLoading = false
+                        )
+                    )
+                )
             }
         }
     }
-
     private fun injectDynamicHeaders(
         data: PagingData<CommentsUiModel>,
         uiState: CommentUiState
@@ -341,17 +369,25 @@ class CommentsViewModel(
     }
 
 
-
     fun fetchReplies(parentCommentId: Long, totalComments:Long, reset:Boolean) {
         val currentThread = _replyThreads.value[parentCommentId] ?: ReplyThread()
 
         if (currentThread.isLoading) return
-        if (!reset && currentThread.replies.size >= currentThread.totalCount && currentThread.totalCount != 0L) return
+        if (currentThread.replies.isNotEmpty()) {
+            if (!currentThread.isExpanded) {
+                updateThread(parentCommentId) { it.copy(isExpanded = true) }
+                return
+            }
+
+            if (currentThread.replies.size.toLong() >= totalComments && !reset) {
+                return
+            }
+        }
 
         viewModelScope.launch {
             updateThread(parentCommentId) {
-                if (reset) ReplyThread(isLoading = true)
-                else it.copy(isLoading = true)
+                if (reset) ReplyThread(isLoading = true, isExpanded = true)
+                else it.copy(isLoading = true, isExpanded = true)
             }
 
             val pageToFetch = if (reset) 0 else currentThread.currentPage
@@ -359,16 +395,20 @@ class CommentsViewModel(
 
             when (result) {
                 is ResultWrapper.Success -> {
+                    delay(500)
                     val newReplies = result.data.orEmpty()
 
                     updateThread(parentCommentId) { state ->
                         val totalReplies = state.replies + newReplies
+                        val allFetched = totalReplies.size.toLong() >= totalComments
                         state.copy(
                             replies = totalReplies,
                             visibleCount = totalReplies.size,
                             totalCount = totalComments,
                             currentPage = state.currentPage + 1,
-                            isLoading = false
+                            isLoadMore=!allFetched,
+                            isLoading = false,
+                            isExpanded = true
                         )
                     }
                 }
@@ -379,6 +419,12 @@ class CommentsViewModel(
             }
         }
     }
+    fun onHideReplies(parentCommentId: Long) {
+        updateThread(parentCommentId) { state ->
+            state.copy(isExpanded = false)
+        }
+    }
+
 
 
     private fun updateThread(commentId: Long, update: (ReplyThread) -> ReplyThread) {

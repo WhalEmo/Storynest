@@ -1,6 +1,7 @@
 package com.example.storynest.Comments
 
 import android.os.Build
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +15,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.storynest.Comments.viewModelhelper.CommentFormatter.createMentionText
+import com.example.storynest.Comments.viewModelhelper.ReplyAction
 import com.example.storynest.R
+import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -35,6 +38,10 @@ class CommentsAdapter(
             commentId: Long,
             totalSubComment:Long,
             reset: Boolean
+        )
+        fun hideRepyls(
+            commentId:Long,
+            totalSubComment:Long
         )
     }
 
@@ -85,7 +92,7 @@ class CommentsAdapter(
             }
 
             is CommentsUiModel.ViewRepliesItem -> {
-                (holder as ViewRepliesViewHolder).bind(item)
+                (holder as ViewRepliesViewHolder).bind(item.replyView)
             }
 
             null -> {}
@@ -188,22 +195,18 @@ class CommentsAdapter(
     inner class ViewRepliesViewHolder(itemView: View) :
         RecyclerView.ViewHolder(itemView) {
         private val txtViewReplies: TextView = itemView.findViewById(R.id.txtViewReplies)
-            fun bind(item: CommentsUiModel.ViewRepliesItem) {
-
-                val text = if (item.isLoadMore) {
-                    "${item.remainingCount} yanıt daha yükle"
-                } else {
-                    "${item.remainingCount} yanıtı gör"
-                }
-
-                txtViewReplies.text = text
+            fun bind(item: viewReplysUiItem) {
+                txtViewReplies.text = item.displayText
 
                 txtViewReplies.setOnClickListener {
-                    listener.onViewReplys(
-                        item.parentCommentId,
-                        item.totalSubCount,
-                        reset = !item.isLoadMore
-                    )
+                    when(item.nextAction) {
+                        ReplyAction.LOAD_MORE -> listener.onViewReplys(
+                            item.parentCommentId,
+                            item.totalSubCount,
+                            reset = !item.isLoadMore
+                        )
+                        ReplyAction.HIDE -> listener.hideRepyls(item.parentCommentId,item.totalSubCount)
+                    }
                 }
         }
 
@@ -232,7 +235,7 @@ class CommentsAdapter(
 
                     oldItem is CommentsUiModel.ViewRepliesItem &&
                             newItem is CommentsUiModel.ViewRepliesItem ->
-                        oldItem.parentCommentId == newItem.parentCommentId
+                        oldItem.replyView.parentCommentId == newItem.replyView.parentCommentId
 
                     else -> false
                 }

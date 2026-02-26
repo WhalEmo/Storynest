@@ -9,4 +9,6 @@
     android:text="3 yanıtı gör"
     android:textSize="13sp"
     android:textStyle="bold"
-    android:textColor="@android:color/darker_gray"/>
+    android:textColor="@android:color/darker_gray"
+    />
+

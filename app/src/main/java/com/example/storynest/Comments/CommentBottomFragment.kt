@@ -259,6 +259,10 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             ) {
                 viewModel.fetchReplies(commentId, totalSubComment,reset)
             }
+
+            override fun hideRepyls(commentId: Long, totalSubComment: Long) {
+                viewModel.onHideReplies(commentId)
+            }
         })
 
         commentAdapter.registerAdapterDataObserver(

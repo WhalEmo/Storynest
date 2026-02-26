@@ -15,7 +15,9 @@ data class ReplyThread(
     val visibleCount: Int = 0,
     val totalCount: Long = 0,
     val currentPage: Int = 0,
-    val isLoading: Boolean = false
+    val isLoadMore: Boolean =true,
+    val isLoading: Boolean = false,
+    val isExpanded: Boolean = true
 )
     data class BaseState(
         val removedIds: Set<Long>,

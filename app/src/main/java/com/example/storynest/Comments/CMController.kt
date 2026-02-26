@@ -1,5 +1,6 @@
 package com.example.storynest.Comments
 
+import com.example.storynest.Comments.viewModelhelper.ReplyAction
 import com.google.gson.annotations.SerializedName
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -56,6 +57,26 @@ data class commentUiItem(
     val editDateVisibility: Int,
     var subCommentsCount: Long
 )
+data class viewReplysUiItem(
+    val nextAction: ReplyAction,
+    val parentCommentId: Long,
+    val remainingCount: Long?,
+    val totalSubCount: Long,
+    val isLoadMore: Boolean,
+    var isLoading:Boolean
+){
+    val displayText: String
+        get() = when {
+            isLoading -> {
+                "Yükleniyor..."
+            }
+            !isLoadMore -> "$totalSubCount yanıtı gör"
+            (remainingCount ?: 0) > 0 -> "$remainingCount yanıt daha yükle"
+            else -> "Yanıtları Gizle"
+        }
+}
+
+
 data class userResponseDto(
     val id: Long,
     val username: String,
