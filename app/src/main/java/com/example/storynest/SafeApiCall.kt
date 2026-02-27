@@ -36,8 +36,8 @@ suspend fun <T> safeApiCall(
 
     } catch (e: Exception) {
 
-        Log.e("API_ERROR", "Bilinmeyen Hata: ${e.localizedMessage}")
-        e.printStackTrace() // Tüm hata yığınını yazdır
+        Log.e("API_ERROR", "KRİTİK HATA: ${e.message}", e)
         ResultWrapper.Error(e.message ?: "Bilinmeyen hata", ErrorType.SERVER_ERROR)
+
     }
 }

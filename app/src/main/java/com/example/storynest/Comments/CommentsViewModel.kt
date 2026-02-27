@@ -1,5 +1,6 @@
 package com.example.storynest.Comments
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -170,7 +171,7 @@ class CommentsViewModel(
                         _pinnedCount.update { current ->
                             current - 1
                         }
-                         updateComment(result.data)
+                        // updateComment(result.data)
                         _pinnedComment.update { currentList ->
                             currentList.filterNot{ it.comment_id == result.data.comment_id }
                         }
@@ -282,9 +283,9 @@ class CommentsViewModel(
 
         uiState.newItems
             .filter { it.parentCommentId == comment.comment_id && it.comment_id !in uiState.removedIds }
-            .reversed()
             .forEach{ newReply ->
-                add(CommentsUiModel.ReplyItem(newReply.toUiItem()))
+                val updatedNewReply = uiState.updates[newReply.comment_id] ?: newReply
+                add(CommentsUiModel.ReplyItem(updatedNewReply.toUiItem()))
             }
 
         val thread = uiState.replyThreads[comment.comment_id]
@@ -306,9 +307,10 @@ class CommentsViewModel(
                 )
             }
        } else {
-            thread.replies.take(thread.visibleCount).forEach { reply ->
+            thread.replies.take(thread.visibleCount).forEach{ reply ->
                 if (reply.comment_id !in uiState.removedIds) {
-                    add(CommentsUiModel.ReplyItem(reply.toUiItem()))
+                    val updatedReply = uiState.updates[reply.comment_id] ?: reply
+                    add(CommentsUiModel.ReplyItem(updatedReply.toUiItem()))
                 }
             }
             val remaining = thread.totalCount - thread.visibleCount
@@ -350,7 +352,6 @@ class CommentsViewModel(
         uiState.pinnedItems.filter { it.comment_id !in uiState.removedIds }.reversed().forEach {
             val pinnedWithStatus = it.copy(isPinned = true)
             val flatItems = transformCommentToFlatList(pinnedWithStatus, uiState)
-
             flatItems.reversed().forEach { item ->
                 base = base.insertHeaderItem(item = item)
             }

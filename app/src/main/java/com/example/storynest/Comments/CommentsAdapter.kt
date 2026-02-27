@@ -188,6 +188,21 @@ class CommentsAdapter(
             txtEditDatereply.visibility=comment.editDateVisibility
             txtEditDatereply.text=comment.updateDate
 
+            btnLikereply.setOnClickListener {
+                val position = bindingAdapterPosition
+                if (position == RecyclerView.NO_POSITION) return@setOnClickListener
+
+                val item = getItem(position)
+                if (item is CommentsUiModel.ReplyItem) {
+                    listener.onLikeClicked(item.reply)
+                }
+            }
+
+            layoutreply.setOnLongClickListener {
+                listener.onLongClicked(comment.commentId,comment.contents,comment.userId,comment.postUserId,comment.isPin,layoutreply)
+                true
+            }
+
 
         }
 

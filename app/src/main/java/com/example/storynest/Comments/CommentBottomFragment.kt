@@ -40,6 +40,7 @@ import android.widget.PopupWindow
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DefaultItemAnimator
 import com.example.storynest.CustomViews.InfoMessage
 import com.example.storynest.CustomViews.UiEvents
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -286,6 +287,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             this.adapter = commentAdapter.withLoadStateFooter(
                 footer = CommentLoadStateAdapter { commentAdapter.retry() }
             )
+            (itemAnimator as? DefaultItemAnimator)?.supportsChangeAnimations = false
         }
 
     }

@@ -3,12 +3,12 @@
     android:id="@+id/txtViewReplies"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingStart="60dp"
-    android:paddingTop="6dp"
-    android:paddingBottom="6dp"
+    android:paddingStart="30dp"
+    android:paddingTop="0dp"
+    android:paddingBottom="10dp"
     android:text="3 yanıtı gör"
-    android:textSize="13sp"
+    android:textSize="11sp"
     android:textStyle="bold"
-    android:textColor="@android:color/darker_gray"
+    android:drawableStart="@drawable/line_reply"
+    android:textColor="@color/gray"
     />
-
