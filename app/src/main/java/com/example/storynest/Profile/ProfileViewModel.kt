@@ -7,7 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.storynest.Follow.FollowRepository
 import com.example.storynest.Follow.ResponseDTO.FollowResponse
+import com.example.storynest.GlobalEvent.FollowEvent
 import com.example.storynest.Profile.MVC.ProfileRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,85 +24,68 @@ class ProfileViewModel: ViewModel() {
     private val followRepository = FollowRepository
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
-
+    private var loadJob: Job? = null
 
     private val _uiState = MutableStateFlow<ProfileScreenState?>(null)
     val uiState: StateFlow<ProfileScreenState?> = _uiState.asStateFlow()
 
     private lateinit var profileData: ProfileData
 
-    init {
-        Log.d("VM_DEBUG", "MyViewModel oluşturuldu -> ${this.hashCode()}")
-    }
 
 
     fun init(mode: ProfileMode, userId: Long = -1L) {
-        when(mode){
-            ProfileMode.USER_PROFILE -> loadUserProfile(userId)
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            _uiState.value = ProfileScreenState.Loading
 
-            ProfileMode.MY_PROFILE -> loadMyProfile(userId)
-        }
-        viewModelScope.launch {
-            followRepository.globalFollowEvents.collect { (userId, followResponse) ->
-                if(userId != profileData.id) return@collect
-                Log.d("ProfileViewModel", "globalFollowEvents userId: $userId and Params userId: ${profileData.id}")
-                _uiState.value = ProfileScreenState.Update(
-                    uiState = followResponse.ToBasicUiState(profileData.followers + 1)
+            try {
+                val flow = profileRepository.loadProfile(
+                    userId = userId,
+                    profileMode = mode
                 )
-            }
-        }
-    }
 
-    private fun loadMyProfile(userId: Long) {
-        viewModelScope.launch {
-            _uiState.value = ProfileScreenState.Loading
-            try {
-                profileRepository.loadMyProfile(userId)
-                    .collect {
-                        profileData = it
-                        _uiState.value = ProfileScreenState.Success(
-                            uiState = it.toUiState(
-                                type = ProfileMode.MY_PROFILE
-                            )
-                        )
-                    }
-            }
-            catch (e: HttpException){
-                _error.value = "Sunucuya bağlanılamadı (HTTP ${e.code()})"
-            }
-            catch (e: IOException) {
-                _error.value = "İnternet bağlantısı yok!"
-            }
-            catch (e: Exception) {
-                _error.value = "Beklenmeyen bir hata oluştu"
-            }
-        }
-    }
-    private fun loadUserProfile(userId: Long) {
-        viewModelScope.launch {
-            _uiState.value = ProfileScreenState.Loading
-            try {
-                profileRepository.loadUserProfile(userId)
-                    .collect {
-                        profileData = it
-                        _uiState.value = ProfileScreenState.Success(
-                            uiState = it.toUiState(
-                                type = ProfileMode.USER_PROFILE
-                            )
-                        )
-                    }
+                flow.collect { profile ->
+                    profileData = profile
+                    _uiState.value = ProfileScreenState.Success(
+                        uiState = profile.toUiState(type = mode)
+                    )
+                }
+
             } catch (e: HttpException) {
-                Log.e("ProfileViewModel", "Error loading user profile", e)
                 _error.value = "Sunucuya bağlanılamadı (HTTP ${e.code()})"
             } catch (e: IOException) {
-                Log.e("ProfileViewModel", "Error loading user profile", e)
                 _error.value = "İnternet bağlantısı yok!"
             } catch (e: Exception) {
-                Log.e("ProfileViewModel", "Error loading user profile", e)
                 _error.value = "Beklenmeyen bir hata oluştu"
+            }
+            globalFollowEvents(userId)
+        }
+    }
+
+    fun globalFollowEvents(profileUserId: Long){
+        viewModelScope.launch {
+            followRepository.globalFollowEvents.collect { (userId, eventCapsule) ->
+                if(userId != profileUserId) return@collect
+                val followResponse = eventCapsule.data
+                val followEvent = eventCapsule.event
+                when(followEvent){
+                    FollowEvent.FOLLOW -> {
+                        _uiState.value = ProfileScreenState.Update(
+                            uiState = followResponse.ToBasicUiState(profileData.followers + 1)
+                        )
+                    }
+                    FollowEvent.UNFOLLOW -> {
+                        _uiState.value = ProfileScreenState.Update(
+                            uiState = followResponse.ToBasicUiState(profileData.followers - 1)
+                        )
+                    }
+                }
+                profileData = profileRepository.updateUserProfile(userId, followResponse) ?: profileData
             }
         }
     }
+
+
 
     fun followUser(
         userId: Long,

@@ -15,7 +15,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.storynest.CustomViews.ConfirmDialog
+import com.example.storynest.CustomViews.ConfirmDialog.ConfirmDialog
+import com.example.storynest.CustomViews.ConfirmDialog.ConfirmDialogStatus
 import com.example.storynest.CustomViews.InfoMessage
 import com.example.storynest.Follow.Adapter.FollowAdapter
 import com.example.storynest.Follow.FollowOptions.FollowOptionClickListener
@@ -236,8 +237,8 @@ class FollowListFragment: Fragment() {
 
     private fun onUnFollowMy(usrResponse: FollowRow.FollowUserItem){
         ConfirmDialog(
-            title = "Takipçiyi Çıkar?",
-            message = "${usrResponse.username} kullanıcıyı takipten çıkarmak istiyor musunuz?",
+            status = ConfirmDialogStatus.UN_FOLLOW_DIALOG,
+            username = usrResponse.username,
             imageUrl = usrResponse.profile,
             onConfirm = {
                 viewModel.removeFollower(

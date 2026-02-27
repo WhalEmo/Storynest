@@ -18,6 +18,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import coil.load
 import com.example.storynest.Follow.FollowType
 import com.example.storynest.Navigator
+import com.example.storynest.Profile.ProfileOptions.ProfileOptionsBottomSheet
+import com.example.storynest.Profile.ProfileOptions.ProfileOptionsClickListener
 import com.example.storynest.R
 import com.example.storynest.databinding.ProfileFragmentBinding
 import kotlinx.coroutines.launch
@@ -29,6 +31,7 @@ class ProfileFragment : Fragment(){
     private val binding get() = _binding!!
     private val viewModel: ProfileViewModel by viewModels()
     private val navigator = Navigator
+    private lateinit var userData: ProfileUiState
 
 
 
@@ -193,6 +196,7 @@ class ProfileFragment : Fragment(){
         binding.btnFollowYour.isVisible = state.btnFollowYour
         binding.btnShareProfile.isVisible = state.btnShareProfile
         binding.btnPendingRequest.isVisible = state.showPendingRequestButton
+        userData = state
 
     }
 
@@ -258,6 +262,42 @@ class ProfileFragment : Fragment(){
                 profileMode = profileMode
             )
         }
+
+        binding.dotMenu.setOnClickListener {
+            showProfileOptions()
+        }
+    }
+
+
+    private fun showProfileOptions(){
+        val sheet = ProfileOptionsBottomSheet.newInstance(
+            userId = userId,
+            username = userData.username,
+            profileImage = userData.profileImageUrl ?: ""
+        )
+        createOptionsListener(sheet)
+        sheet.show(parentFragmentManager, "ProfileOptions")
+
+    }
+
+    private fun createOptionsListener(sheet: ProfileOptionsBottomSheet){
+        val listener = object : ProfileOptionsClickListener {
+            override fun onUnFollow(userId: Long) {
+                viewModel.unFollowUser(userId)
+            }
+
+            override fun onBlock(userId: Long) {
+            }
+
+            override fun onMessage(userId: Long) {
+
+            }
+
+            override fun onShare(userId: Long) {
+            }
+
+        }
+        sheet.setListener(listener)
     }
 
 }

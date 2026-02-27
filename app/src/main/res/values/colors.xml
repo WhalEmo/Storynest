@@ -32,6 +32,9 @@
     <color name="colorError">#E53935</color>
 
 
+    <color name="un_follow_dialog">#2563EB</color>
+
+
     <!-- Unfollow (Warning - Soft Red) -->
     <!--
     <color name="un_follow">#F97316</color>

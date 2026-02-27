@@ -1,6 +1,7 @@
-package com.example.storynest.CustomViews
+package com.example.storynest.CustomViews.ConfirmDialog
 
 import android.app.Dialog
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -8,16 +9,17 @@ import android.view.View
 import android.view.Window
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import coil.load
 import com.example.storynest.R
 import com.google.android.material.button.MaterialButton
 
 class ConfirmDialog(
-    private val title: String,
-    private val message: String,
+    private val status: ConfirmDialogStatus,
+    private val username: String,
     private val imageUrl: String? = null,
-    private val onConfirm: () -> Unit
+    private val onConfirm: () -> Unit,
 ) : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -32,10 +34,13 @@ class ConfirmDialog(
         val btnCancel = dialog.findViewById<MaterialButton>(R.id.btnCancel)
         val imgIcon = dialog.findViewById<ImageView>(R.id.imgIcon)
 
-        titleTv.text = title
-        messageTv.text = message
+        titleTv.text = status.title
+        messageTv.text = username.plus(status.message)
+        btnConfirm.text = status.confirmText
+        btnCancel.text = status.cancelText
 
         setupImage(imgIcon)
+        setupStatusDialog(btnConfirm, btnCancel)
 
         btnConfirm.setOnClickListener {
             onConfirm.invoke()
@@ -61,6 +66,33 @@ class ConfirmDialog(
             crossfade(false)
             placeholder(R.drawable.placeholder)
             allowHardware(true)
+        }
+    }
+
+    private fun setupStatusDialog(
+        btnConfirm: MaterialButton,
+        btnCancel: MaterialButton
+    ) {
+        when (status) {
+
+            ConfirmDialogStatus.UN_FOLLOW_DIALOG -> {
+                btnConfirm.backgroundTintList =
+                    ColorStateList.valueOf(
+                        ContextCompat.getColor(requireContext(), R.color.un_follow_dialog)
+                    )
+
+                btnConfirm.setTextColor(Color.WHITE)
+            }
+
+            ConfirmDialogStatus.BLOCK_DIALOG -> {
+                btnConfirm.backgroundTintList =
+                    ColorStateList.valueOf(
+                        ContextCompat.getColor(requireContext(), R.color.block_text_selector)
+                    )
+                btnConfirm.strokeWidth = 0
+                btnConfirm.elevation = 2f
+                btnConfirm.setTextColor(Color.WHITE)
+            }
         }
     }
 }

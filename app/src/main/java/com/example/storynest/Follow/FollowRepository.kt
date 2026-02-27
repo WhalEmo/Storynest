@@ -6,10 +6,9 @@ import androidx.paging.PagingConfig
 import com.example.storynest.ApiClient
 import com.example.storynest.Follow.Paging.FollowPagingSource
 import com.example.storynest.Follow.RequestDTO.FollowDTO
-import com.example.storynest.Follow.RequestDTO.FollowRequestDTO
 import com.example.storynest.Follow.ResponseDTO.FollowResponse
-import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
-import com.example.storynest.Notification.FollowResponseDTO
+import com.example.storynest.GlobalEvent.FollowEvent
+import com.example.storynest.GlobalEvent.EventCapsule
 import com.example.storynest.TestUserProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import retrofit2.Response
@@ -23,7 +22,7 @@ object FollowRepository {
     val followApiController = ApiClient.getClient(token).create(FollowApiController::class.java)
 
     private val _globalFollowEvents =
-        MutableSharedFlow<Pair<Long, FollowResponse>>(extraBufferCapacity = 1)
+        MutableSharedFlow<Pair<Long, EventCapsule<FollowResponse>>>(extraBufferCapacity = 1)
 
     val globalFollowEvents = _globalFollowEvents
 
@@ -61,7 +60,7 @@ object FollowRepository {
     suspend fun removeFollower(userId: Long): Response<FollowDTO> {
         Log.e("userId", userId.toString())
         val request = FollowDTO(
-            followingId = TestUserProvider.STATIC_USER_ID.toLong(),
+            followingId = TestUserProvider.STATIC_USER_ID,
             followerId = userId,
             followed = true
         )
@@ -77,7 +76,8 @@ object FollowRepository {
         )
         return addGlobalFollowEvent(
             userId = userId,
-            response = followApiController.unfollow(request)
+            response = followApiController.unfollow(request),
+            FollowEvent.UNFOLLOW
         )
     }
 
@@ -89,18 +89,23 @@ object FollowRepository {
         )
         return addGlobalFollowEvent(
             userId = userId,
-            response = followApiController.follow(request)
+            response = followApiController.follow(request),
+            FollowEvent.FOLLOW
         )
     }
 
     private fun addGlobalFollowEvent(
         userId: Long,
-        response: Response<FollowResponse>
+        response: Response<FollowResponse>,
+        followEvent: FollowEvent
     ) : Response<FollowResponse>
     {
         response.body()?.let {
             _globalFollowEvents.tryEmit(
-                userId to it
+                userId to EventCapsule(
+                    data = it,
+                    event = followEvent
+                )
             )
         }
         return response

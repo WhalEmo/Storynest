@@ -56,9 +56,9 @@ class FollowViewModel: ViewModel() {
 
     init {
         viewModelScope.launch {
-            repository.globalFollowEvents.collect { (userId, followResponse) ->
+            repository.globalFollowEvents.collect { (userId, eventCapsule) ->
                 val action = dtoToAction(
-                    dto = followResponse,
+                    dto = eventCapsule.data,
                     followType = _params.value?.followType ?: return@collect
                 )
                 updateUserActionState(
@@ -276,7 +276,7 @@ class FollowViewModel: ViewModel() {
             dto.follower && !dto.following ->{
                 FollowActionState.OTHER_USER_ACCEPT
             }
-            dto.follower && dto.following ->{
+            dto.following ->{
                 FollowActionState.OTHER_USER_MESSAGE
             }
             dto.pending && !dto.following ->{
