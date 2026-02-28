@@ -266,19 +266,44 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             }
         })
 
+        rvComment.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING || newState == RecyclerView.SCROLL_STATE_SETTLING) {
+                    Glide.with(requireContext()).pauseRequests()
+                } else {
+                    Glide.with(requireContext()).resumeRequests()
+                }
+            }
+        })
+
         commentAdapter.registerAdapterDataObserver(
             object : RecyclerView.AdapterDataObserver() {
                 override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
                     if (positionStart == 0) {
-                        rvComment.smoothScrollToPosition(0)
+                        val firstItem = try {
+                            commentAdapter.peek(0)
+                        } catch (e: Exception) {
+                            null
+                        }
+
+                        if (firstItem is CommentsUiModel.CommentItem) {
+                            rvComment.smoothScrollToPosition(0)
+                        }
                     }
                 }
-                override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
-                    rvComment.smoothScrollToPosition(0)
-                }
 
+                override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
+                    if (toPosition == 0) {
+                        val movedItem = try { commentAdapter.peek(0) } catch (e: Exception) { null }
+                        if (movedItem is CommentsUiModel.CommentItem) {
+                            rvComment.smoothScrollToPosition(0)
+                        }
+                    }
+                }
             }
         )
+
+
 
 
         val layoutManager = LinearLayoutManager(requireContext())
@@ -434,6 +459,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                             ).show()
                         }
                     }
+
                 }
 
                 launch {

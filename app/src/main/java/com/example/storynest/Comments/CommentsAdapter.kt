@@ -78,24 +78,35 @@ class CommentsAdapter(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int
+    ) {
+        val item = getItem(position) ?: return
 
-        when (val item = getItem(position)) {
+        when (item) {
+            is CommentsUiModel.CommentItem -> (holder as CommentViewHolder).bind(item.comment)
+            is CommentsUiModel.ReplyItem -> (holder as ReplyViewHolder).bind(item.reply)
+            is CommentsUiModel.ViewRepliesItem -> (holder as ViewRepliesViewHolder).bind(item.replyView)
+        }
+    }
 
-            is CommentsUiModel.CommentItem -> {
-                (holder as CommentViewHolder).bind(item.comment)
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
+        val item = getItem(position) ?: return
+
+        if (payloads.isEmpty()) {
+            when (item) {
+                is CommentsUiModel.CommentItem -> (holder as CommentViewHolder).bind(item.comment)
+                is CommentsUiModel.ReplyItem -> (holder as ReplyViewHolder).bind(item.reply)
+                is CommentsUiModel.ViewRepliesItem -> (holder as ViewRepliesViewHolder).bind(item.replyView)
             }
-
-            is CommentsUiModel.ReplyItem -> {
-                (holder as ReplyViewHolder).bind(item.reply)
+        } else {
+            val changes = payloads[0] as Set<String>
+            when (holder) {
+                is CommentViewHolder -> holder.updateWithPayload((item as CommentsUiModel.CommentItem).comment, changes)
+                is ReplyViewHolder -> holder.updateWithPayload((item as CommentsUiModel.ReplyItem).reply, changes)
+                is ViewRepliesViewHolder -> holder.updateWithPayload((item as CommentsUiModel.ViewRepliesItem).replyView, changes)
             }
-
-            is CommentsUiModel.ViewRepliesItem -> {
-                (holder as ViewRepliesViewHolder).bind(item.replyView)
-            }
-
-            null -> {}
         }
     }
 
@@ -152,6 +163,28 @@ class CommentsAdapter(
                 true
             }
         }
+        fun updateWithPayload(comment: commentUiItem, changes: Set<String>) {
+            if (changes.contains("LIKE_COUNT")) txtLikeCount.text = comment.number_of_like
+            if (changes.contains("LIKE_ICON")) btnLike.setImageResource(comment.likeIconRes)
+            if (changes.contains("PIN_STATUS")) imgPin.visibility = comment.pinVisibility
+            if (changes.contains("CONTENT")) txtComment.text = comment.contents
+            if (changes.contains("EDIT_STATUS")) txtEdited.visibility = comment.editedVisibility
+            if (changes.contains("EDIT_DATE_VISIBILITY"))txtEditDate.visibility = comment.editDateVisibility
+            if (changes.contains("PIN_STATUS")) {
+                imgPin.visibility = comment.pinVisibility
+                layout.setOnLongClickListener {
+                    listener.onLongClicked(
+                        comment.commentId,
+                        comment.contents,
+                        comment.userId,
+                        comment.postUserId,
+                        comment.isPin,
+                        layout
+                    )
+                    true
+                }
+            }
+        }
     }
 
 
@@ -198,12 +231,34 @@ class CommentsAdapter(
                 }
             }
 
+
             layoutreply.setOnLongClickListener {
                 listener.onLongClicked(comment.commentId,comment.contents,comment.userId,comment.postUserId,comment.isPin,layoutreply)
                 true
             }
 
-
+        }
+        fun updateWithPayload(comment: commentUiItem, changes: Set<String>) {
+            if (changes.contains("LIKE_COUNT")) txtLikeCountreply.text = comment.number_of_like
+            if (changes.contains("LIKE_ICON")) btnLikereply.setImageResource(comment.likeIconRes)
+            if (changes.contains("PIN_STATUS")) imgPinreply.visibility = comment.pinVisibility
+            if (changes.contains("CONTENT")) txtCommentreply.text = createMentionText(comment.parentCommentUsername,comment.contents)
+            if (changes.contains("EDIT_STATUS")) txtEditedreply.visibility = comment.editedVisibility
+            if (changes.contains("EDIT_DATE_VISIBILITY"))txtEditDatereply.visibility = comment.editDateVisibility
+            if (changes.contains("PIN_STATUS")) {
+                imgPinreply.visibility = comment.pinVisibility
+                layoutreply.setOnLongClickListener {
+                    listener.onLongClicked(
+                        comment.commentId,
+                        comment.contents,
+                        comment.userId,
+                        comment.postUserId,
+                        comment.isPin,
+                        layoutreply
+                    )
+                    true
+                }
+            }
         }
 
     }
@@ -212,46 +267,38 @@ class CommentsAdapter(
         private val txtViewReplies: TextView = itemView.findViewById(R.id.txtViewReplies)
             fun bind(item: viewReplysUiItem) {
                 txtViewReplies.text = item.displayText
+                setupClick(item)
 
-                txtViewReplies.setOnClickListener {
-                    when(item.nextAction) {
-                        ReplyAction.LOAD_MORE -> listener.onViewReplys(
-                            item.parentCommentId,
-                            item.totalSubCount,
-                            reset = !item.isLoadMore
-                        )
-                        ReplyAction.HIDE -> listener.hideRepyls(item.parentCommentId,item.totalSubCount)
-                    }
+        }
+        fun updateWithPayload(item: viewReplysUiItem, changes: Set<String>) {
+            if (changes.contains("REPLY_TEXT")) txtViewReplies.text = item.displayText
+            if (changes.contains("REPLY_ACTION")) setupClick(item)
+        }
+        private fun setupClick(item: viewReplysUiItem) {
+            txtViewReplies.setOnClickListener {
+                when (item.nextAction) {
+                    ReplyAction.LOAD_MORE -> listener.onViewReplys(item.parentCommentId, item.totalSubCount, !item.isLoadMore)
+                    ReplyAction.HIDE -> listener.hideRepyls(item.parentCommentId, item.totalSubCount)
                 }
+            }
         }
 
     }
 
     companion object {
-
         private const val TYPE_COMMENT = 0
         private const val TYPE_REPLY = 1
         private const val TYPE_VIEW_REPLIES = 2
 
         val DIFF_CALLBACK = object : DiffUtil.ItemCallback<CommentsUiModel>() {
-
             override fun areItemsTheSame(
                 oldItem: CommentsUiModel,
                 newItem: CommentsUiModel
             ): Boolean {
                 return when {
-                    oldItem is CommentsUiModel.CommentItem &&
-                            newItem is CommentsUiModel.CommentItem ->
-                        oldItem.comment.commentId == newItem.comment.commentId
-
-                    oldItem is CommentsUiModel.ReplyItem &&
-                            newItem is CommentsUiModel.ReplyItem ->
-                        oldItem.reply.commentId == newItem.reply.commentId
-
-                    oldItem is CommentsUiModel.ViewRepliesItem &&
-                            newItem is CommentsUiModel.ViewRepliesItem ->
-                        oldItem.replyView.parentCommentId == newItem.replyView.parentCommentId
-
+                    oldItem is CommentsUiModel.CommentItem && newItem is CommentsUiModel.CommentItem -> oldItem.comment.commentId == newItem.comment.commentId
+                    oldItem is CommentsUiModel.ReplyItem && newItem is CommentsUiModel.ReplyItem -> oldItem.reply.commentId == newItem.reply.commentId
+                    oldItem is CommentsUiModel.ViewRepliesItem && newItem is CommentsUiModel.ViewRepliesItem -> oldItem.replyView.parentCommentId == newItem.replyView.parentCommentId
                     else -> false
                 }
             }
@@ -260,6 +307,48 @@ class CommentsAdapter(
                 oldItem: CommentsUiModel,
                 newItem: CommentsUiModel
             ): Boolean = oldItem == newItem
+
+            override fun getChangePayload(
+                oldItem: CommentsUiModel,
+                newItem: CommentsUiModel
+            ): Any? {
+                val diffBundle = mutableSetOf<String>()
+                if (oldItem is CommentsUiModel.CommentItem && newItem is CommentsUiModel.CommentItem) {
+                    if (oldItem.comment.number_of_like != newItem.comment.number_of_like) diffBundle.add(
+                        "LIKE_COUNT"
+                    )
+
+                    if (oldItem.comment.editedVisibility != newItem.comment.editedVisibility) diffBundle.add("EDIT_STATUS")
+                    if (oldItem.comment.editDateVisibility != newItem.comment.editedVisibility) diffBundle.add("EDIT_DATE_VISIBILITY")
+
+                    if (oldItem.comment.likeIconRes != newItem.comment.likeIconRes) diffBundle.add("LIKE_ICON")
+                    if (oldItem.comment.pinVisibility != newItem.comment.pinVisibility) diffBundle.add(
+                        "PIN_STATUS"
+                    )
+                    if (oldItem.comment.isPin != newItem.comment.isPin) diffBundle.add("PIN_STATUS")
+                    if (oldItem.comment.contents != newItem.comment.contents) diffBundle.add("CONTENT")
+
+                } else if (oldItem is CommentsUiModel.ReplyItem && newItem is CommentsUiModel.ReplyItem) {
+                    if (oldItem.reply.number_of_like != newItem.reply.number_of_like) diffBundle.add(
+                        "LIKE_COUNT"
+                    )
+                    if (oldItem.reply.editedVisibility != newItem.reply.editedVisibility) diffBundle.add("EDIT_STATUS")
+                    if (oldItem.reply.editDateVisibility != newItem.reply.editedVisibility) diffBundle.add("EDIT_DATE_VISIBILITY")
+                    if (oldItem.reply.likeIconRes != newItem.reply.likeIconRes) diffBundle.add("LIKE_ICON")
+                    if (oldItem.reply.pinVisibility != newItem.reply.pinVisibility) diffBundle.add("PIN_STATUS")
+                    if (oldItem.reply.isPin != newItem.reply.isPin) diffBundle.add("PIN_STATUS")
+                    if (oldItem.reply.contents != newItem.reply.contents) diffBundle.add("CONTENT")
+
+                } else if (oldItem is CommentsUiModel.ViewRepliesItem && newItem is CommentsUiModel.ViewRepliesItem) {
+                    if (oldItem.replyView.displayText != newItem.replyView.displayText) diffBundle.add(
+                        "REPLY_TEXT"
+                    )
+                    if (oldItem.replyView.nextAction != newItem.replyView.nextAction) diffBundle.add(
+                        "REPLY_ACTION"
+                    )
+                }
+                return if (diffBundle.isEmpty()) null else diffBundle
+            }
         }
     }
 }

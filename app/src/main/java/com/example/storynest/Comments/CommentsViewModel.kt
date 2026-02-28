@@ -148,12 +148,20 @@ class CommentsViewModel(
             val result = repo.pin(commentId)
             when (result) {
                 is ResultWrapper.Success -> {
+                    val pinnedData = result.data
+                    if(result.data.parentCommentId==null){
+                        _pinState.emit(true)
+                    }
                     _pinnedCount.update { current ->
                         current + 1
                     }
-                    _pinState.emit(true)
                     _pinnedComment.update { currentList ->
-                        listOf(result.data) + currentList
+                        listOf(pinnedData) + currentList
+                    }
+                    _newComments.update { currentList ->
+                        currentList.map {
+                            if (it.comment_id == pinnedData.comment_id) pinnedData else it
+                        }
                     }
                 }
                 is ResultWrapper.Error -> {
@@ -168,13 +176,19 @@ class CommentsViewModel(
             val result= repo.removePin(commentId)
                 when(result){
                     is ResultWrapper.Success -> {
+                        val unpinnedData = result.data
                         _pinnedCount.update { current ->
                             current - 1
                         }
-                        // updateComment(result.data)
                         _pinnedComment.update { currentList ->
                             currentList.filterNot{ it.comment_id == result.data.comment_id }
                         }
+                        _newComments.update { currentList ->
+                            currentList.map {
+                                if (it.comment_id == unpinnedData.comment_id) unpinnedData else it
+                            }
+                        }
+
                         _uiEvent.trySend(UiEvents.showInfoMessage("Sabitleme kaldırıldı."))
                     }
                     is ResultWrapper.Error -> {
@@ -281,8 +295,19 @@ class CommentsViewModel(
     ): List<CommentsUiModel> = buildList {
         add(CommentsUiModel.CommentItem(comment.toUiItem()))
 
-        uiState.newItems
+        uiState.pinnedItems
             .filter { it.parentCommentId == comment.comment_id && it.comment_id !in uiState.removedIds }
+            .forEach { pinnedReply ->
+                val updatedNewReply = uiState.updates[pinnedReply.comment_id] ?: pinnedReply
+                add(CommentsUiModel.ReplyItem(updatedNewReply.toUiItem()))
+            }
+
+        uiState.newItems
+            .filter {
+                it.parentCommentId == comment.comment_id &&
+                        it.comment_id !in uiState.removedIds &&
+                        uiState.pinnedItems.none { p -> p.comment_id == it.comment_id }
+            }
             .forEach{ newReply ->
                 val updatedNewReply = uiState.updates[newReply.comment_id] ?: newReply
                 add(CommentsUiModel.ReplyItem(updatedNewReply.toUiItem()))
@@ -308,10 +333,12 @@ class CommentsViewModel(
             }
        } else {
             thread.replies.take(thread.visibleCount).forEach{ reply ->
-                if (reply.comment_id !in uiState.removedIds) {
+                val isAlreadyPinned = uiState.pinnedItems.any { it.comment_id == reply.comment_id }
+                if (reply.comment_id !in uiState.removedIds && !isAlreadyPinned) {
                     val updatedReply = uiState.updates[reply.comment_id] ?: reply
                     add(CommentsUiModel.ReplyItem(updatedReply.toUiItem()))
                 }
+
             }
             val remaining = thread.totalCount - thread.visibleCount
 
@@ -349,7 +376,7 @@ class CommentsViewModel(
     ): PagingData<CommentsUiModel> {
         var base = data
 
-        uiState.pinnedItems.filter { it.comment_id !in uiState.removedIds }.reversed().forEach {
+        uiState.pinnedItems.filter { it.comment_id !in uiState.removedIds && it.parentCommentId == null}.reversed().forEach {
             val pinnedWithStatus = it.copy(isPinned = true)
             val flatItems = transformCommentToFlatList(pinnedWithStatus, uiState)
             flatItems.reversed().forEach { item ->
@@ -361,7 +388,8 @@ class CommentsViewModel(
             it.comment_id !in uiState.removedIds && it.parentCommentId == null&&
                     uiState.pinnedItems.none { p -> p.comment_id == it.comment_id }
         }.reversed().forEach {
-            val flatItems = transformCommentToFlatList(it, uiState)
+           val flatItems = transformCommentToFlatList(it, uiState)
+
             flatItems.reversed().forEach { item ->
                 base = base.insertHeaderItem(item = item)
             }
