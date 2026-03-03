@@ -31,7 +31,7 @@ class CommentsAdapter(
 
 
     interface OnCommentInteractionListener {
-        fun onLikeClicked(comment:commentUiItem)
+        fun onLikeClicked(comment:commentUiItem,likeView: View)
         fun onLongClicked(commentId: Long,commentContents:String,userId: Long,postUserId:Long,isPin:Boolean,anchorView: View)
         fun onReplyClicked(comment: commentUiItem)
         fun onViewReplys(
@@ -125,6 +125,31 @@ class CommentsAdapter(
         val txtEditDate: TextView=itemView.findViewById(R.id.txtEditDate)
         val imgPin: ImageView=itemView.findViewById(R.id.imgPin)
 
+        init {
+            btnLike.setOnClickListener {
+                val item = getCommentAtCurrentPosition()
+                item?.let { listener.onLikeClicked(it, btnLike) }
+            }
+
+            txtReply.setOnClickListener {
+                val item = getCommentAtCurrentPosition()
+                item?.let { listener.onReplyClicked(it) }
+            }
+            layout.setOnLongClickListener {
+                val item = getCommentAtCurrentPosition()
+                item?.let { listener.onLongClicked(it.commentId,it.contents,it.userId,it.postUserId,it.isPin,layout) }
+                true
+            }
+
+        }
+
+        private fun getCommentAtCurrentPosition(): commentUiItem? {
+            val position = bindingAdapterPosition
+            if (position == RecyclerView.NO_POSITION) return null
+            val uiModel = getItem(position)
+            return (uiModel as? CommentsUiModel.CommentItem)?.comment
+        }
+
         fun bind(comment: commentUiItem) {
             Glide.with(itemView.context)
                 .load(comment.profileUrl)
@@ -143,25 +168,6 @@ class CommentsAdapter(
             txtEditDate.visibility=comment.editDateVisibility
             txtEditDate.text=comment.updateDate
 
-            btnLike.setOnClickListener {
-                val position = bindingAdapterPosition
-                if (position == RecyclerView.NO_POSITION) return@setOnClickListener
-
-                val item = getItem(position)
-                if (item is CommentsUiModel.CommentItem) {
-                    listener.onLikeClicked(item.comment)
-                }
-            }
-
-            txtReply.setOnClickListener {
-                listener.onReplyClicked(comment)
-            }
-
-
-            layout.setOnLongClickListener {
-                listener.onLongClicked(comment.commentId,comment.contents,comment.userId,comment.postUserId,comment.isPin,layout)
-                true
-            }
         }
         fun updateWithPayload(comment: commentUiItem, changes: Set<String>) {
             if (changes.contains("LIKE_COUNT")) txtLikeCount.text = comment.number_of_like
@@ -172,17 +178,6 @@ class CommentsAdapter(
             if (changes.contains("EDIT_DATE_VISIBILITY"))txtEditDate.visibility = comment.editDateVisibility
             if (changes.contains("PIN_STATUS")) {
                 imgPin.visibility = comment.pinVisibility
-                layout.setOnLongClickListener {
-                    listener.onLongClicked(
-                        comment.commentId,
-                        comment.contents,
-                        comment.userId,
-                        comment.postUserId,
-                        comment.isPin,
-                        layout
-                    )
-                    true
-                }
             }
         }
     }
@@ -203,6 +198,30 @@ class CommentsAdapter(
         val txtEditDatereply: TextView=itemView.findViewById(R.id.txtEditDatereply)
         val imgPinreply: ImageView=itemView.findViewById(R.id.imgPinreply)
 
+        init {
+            btnLikereply.setOnClickListener {
+                val item = getReplyAtCurrentPosition()
+                item?.let { listener.onLikeClicked(it, btnLikereply) }
+            }
+            txtReplyreply.setOnClickListener {
+                val item = getReplyAtCurrentPosition()
+                item?.let {  listener.onReplyClicked(it)}
+            }
+            layoutreply.setOnLongClickListener {
+                val item= getReplyAtCurrentPosition()
+                item?.let {   listener.onLongClicked(it.commentId,it.contents,it.userId,it.postUserId,it.isPin,layoutreply) }
+                true
+            }
+
+        }
+
+        private fun getReplyAtCurrentPosition(): commentUiItem? {
+            val position = bindingAdapterPosition
+            if (position == RecyclerView.NO_POSITION) return null
+            val uiModel = getItem(position)
+            return (uiModel as? CommentsUiModel.ReplyItem)?.reply
+        }
+
         fun bind(comment: commentUiItem) {
             Glide.with(itemView.context)
                 .load(comment.profileUrl)
@@ -221,22 +240,6 @@ class CommentsAdapter(
             txtEditDatereply.visibility=comment.editDateVisibility
             txtEditDatereply.text=comment.updateDate
 
-            btnLikereply.setOnClickListener {
-                val position = bindingAdapterPosition
-                if (position == RecyclerView.NO_POSITION) return@setOnClickListener
-
-                val item = getItem(position)
-                if (item is CommentsUiModel.ReplyItem) {
-                    listener.onLikeClicked(item.reply)
-                }
-            }
-
-
-            layoutreply.setOnLongClickListener {
-                listener.onLongClicked(comment.commentId,comment.contents,comment.userId,comment.postUserId,comment.isPin,layoutreply)
-                true
-            }
-
         }
         fun updateWithPayload(comment: commentUiItem, changes: Set<String>) {
             if (changes.contains("LIKE_COUNT")) txtLikeCountreply.text = comment.number_of_like
@@ -247,17 +250,6 @@ class CommentsAdapter(
             if (changes.contains("EDIT_DATE_VISIBILITY"))txtEditDatereply.visibility = comment.editDateVisibility
             if (changes.contains("PIN_STATUS")) {
                 imgPinreply.visibility = comment.pinVisibility
-                layoutreply.setOnLongClickListener {
-                    listener.onLongClicked(
-                        comment.commentId,
-                        comment.contents,
-                        comment.userId,
-                        comment.postUserId,
-                        comment.isPin,
-                        layoutreply
-                    )
-                    true
-                }
             }
         }
 
@@ -265,23 +257,45 @@ class CommentsAdapter(
     inner class ViewRepliesViewHolder(itemView: View) :
         RecyclerView.ViewHolder(itemView) {
         private val txtViewReplies: TextView = itemView.findViewById(R.id.txtViewReplies)
-            fun bind(item: viewReplysUiItem) {
-                txtViewReplies.text = item.displayText
-                setupClick(item)
 
-        }
-        fun updateWithPayload(item: viewReplysUiItem, changes: Set<String>) {
-            if (changes.contains("REPLY_TEXT")) txtViewReplies.text = item.displayText
-            if (changes.contains("REPLY_ACTION")) setupClick(item)
-        }
-        private fun setupClick(item: viewReplysUiItem) {
+        init {
             txtViewReplies.setOnClickListener {
-                when (item.nextAction) {
-                    ReplyAction.LOAD_MORE -> listener.onViewReplys(item.parentCommentId, item.totalSubCount, !item.isLoadMore)
-                    ReplyAction.HIDE -> listener.hideRepyls(item.parentCommentId, item.totalSubCount)
+                val item = getReplyViewAtCurrentPosition()
+                item?.let { replyItem ->
+                    when (replyItem.nextAction) {
+                        ReplyAction.LOAD_MORE -> {
+                            listener.onViewReplys(
+                                replyItem.parentCommentId,
+                                replyItem.totalSubCount,
+                                !replyItem.isLoadMore
+                            )
+                        }
+
+                        ReplyAction.HIDE -> {
+                            listener.hideRepyls(
+                                replyItem.parentCommentId,
+                                replyItem.totalSubCount
+                            )
+                        }
+                    }
                 }
             }
         }
+
+            fun bind(item: viewReplysUiItem) {
+                txtViewReplies.text = item.displayText
+        }
+        private fun getReplyViewAtCurrentPosition(): viewReplysUiItem? {
+            val position = bindingAdapterPosition
+            if (position == RecyclerView.NO_POSITION) return null
+            val uiModel = getItem(position)
+            return (uiModel as? CommentsUiModel.ViewRepliesItem)?.replyView
+        }
+
+        fun updateWithPayload(item: viewReplysUiItem, changes: Set<String>) {
+            if (changes.contains("REPLY_TEXT")) txtViewReplies.text = item.displayText
+        }
+
 
     }
 
@@ -319,7 +333,7 @@ class CommentsAdapter(
                     )
 
                     if (oldItem.comment.editedVisibility != newItem.comment.editedVisibility) diffBundle.add("EDIT_STATUS")
-                    if (oldItem.comment.editDateVisibility != newItem.comment.editedVisibility) diffBundle.add("EDIT_DATE_VISIBILITY")
+                    if (oldItem.comment.editDateVisibility != newItem.comment.editDateVisibility) diffBundle.add("EDIT_DATE_VISIBILITY")
 
                     if (oldItem.comment.likeIconRes != newItem.comment.likeIconRes) diffBundle.add("LIKE_ICON")
                     if (oldItem.comment.pinVisibility != newItem.comment.pinVisibility) diffBundle.add(
@@ -333,7 +347,7 @@ class CommentsAdapter(
                         "LIKE_COUNT"
                     )
                     if (oldItem.reply.editedVisibility != newItem.reply.editedVisibility) diffBundle.add("EDIT_STATUS")
-                    if (oldItem.reply.editDateVisibility != newItem.reply.editedVisibility) diffBundle.add("EDIT_DATE_VISIBILITY")
+                    if (oldItem.reply.editDateVisibility != newItem.reply.editDateVisibility) diffBundle.add("EDIT_DATE_VISIBILITY")
                     if (oldItem.reply.likeIconRes != newItem.reply.likeIconRes) diffBundle.add("LIKE_ICON")
                     if (oldItem.reply.pinVisibility != newItem.reply.pinVisibility) diffBundle.add("PIN_STATUS")
                     if (oldItem.reply.isPin != newItem.reply.isPin) diffBundle.add("PIN_STATUS")

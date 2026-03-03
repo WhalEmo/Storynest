@@ -36,6 +36,9 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.view.Gravity
+import android.view.HapticFeedbackConstants
+import android.view.MotionEvent
+import android.view.animation.AnimationUtils
 import android.widget.PopupWindow
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -147,7 +150,10 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
     }
     private fun setUpRecyclerView() {
         commentAdapter = CommentsAdapter(object : CommentsAdapter.OnCommentInteractionListener {
-            override fun onLikeClicked(comment: commentUiItem) {
+            override fun onLikeClicked(comment: commentUiItem,likeView:View) {
+                val animation = AnimationUtils.loadAnimation(context, R.anim.pop_heart)
+                likeView.startAnimation(animation)
+                likeView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                 viewModel.toggleLike(comment)
             }
 
@@ -168,16 +174,23 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     true
                 )
-
                 popupWindow.isOutsideTouchable = true
                 popupWindow.isFocusable = true
+                popupWindow.setTouchInterceptor { _, event ->
+                    if (event.action == MotionEvent.ACTION_OUTSIDE) {
+                        endPopupAnimation(popupWindow, view)
+                        true
+                    } else {
+                        false
+                    }
+                }
                 popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
                 val editItem = view.findViewById<LinearLayout>(R.id.item_edit)
                 if(userId == UserStaticClass.userId) {
                     editItem.visibility = View.VISIBLE
                     editItem.setOnClickListener {
-                        popupWindow.dismiss()
+                        endPopupAnimation(popupWindow,view)
                         showUpdateDialog(commentId, commentContents)
                     }
                 } else {
@@ -191,14 +204,14 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                     val clip = ClipData.newPlainText("comment", textCopy)
                     clipboard.setPrimaryClip(clip)
                     goBar()
-                    popupWindow.dismiss()
+                    endPopupAnimation(popupWindow,view)
                 }
                 val deleteItem=view.findViewById<LinearLayout>(R.id.item_delete)
                 if(userId== UserStaticClass.userId) {
                     deleteItem.visibility=View.VISIBLE
                     view.findViewById<LinearLayout>(R.id.item_delete).setOnClickListener {
                         viewModel.deleteComment(commentId)
-                        popupWindow.dismiss()
+                        endPopupAnimation(popupWindow,view)
                     }
                 }else{
                     deleteItem.visibility=View.GONE
@@ -212,14 +225,14 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                         removepinItem.visibility=View.VISIBLE
                         removepinItem.setOnClickListener {
                             viewModel.removePin(commentId)
-                            popupWindow.dismiss()
+                            endPopupAnimation(popupWindow,view)
                         }
                     }else{
                         pinItem.visibility=View.VISIBLE
                         removepinItem.visibility=View.GONE
                         pinItem.setOnClickListener {
                             viewModel.pinComments(commentId)
-                            popupWindow.dismiss()
+                            endPopupAnimation(popupWindow,view)
                         }
                     }
 
@@ -235,21 +248,34 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
                 val location = IntArray(2)
                 anchorView.getLocationOnScreen(location)
-                val anchorX = location[0]
-                val anchorY = location[1]+anchorView.height
 
                 val xOffset = anchorView.width - popupWidth
                 val yOffset = -popupHeight
 
-                popupWindow.showAtLocation(anchorView, Gravity.NO_GRAVITY, anchorX + xOffset, anchorY + yOffset)
+                popupWindow.showAsDropDown(anchorView, xOffset, yOffset)
+                startPopupAnimation(view)
+                //popupWindow.showAtLocation(anchorView, Gravity.NO_GRAVITY, anchorX + xOffset, anchorY + yOffset)
             }
 
             override fun onReplyClicked(comment: commentUiItem) {
                 commentforReply = comment
-                replyLayout.visibility = View.VISIBLE
-                txtReplyingTo.text = comment.parentCommentUsername
+                replyLayout.apply {
+                    visibility = View.VISIBLE
+                    alpha = 0f
+                    scaleY = 0.8f
+                    pivotY = height.toFloat()
+
+                    animate()
+                        .alpha(1f)
+                        .scaleY(1f)
+                        .setDuration(200)
+                        .setInterpolator(android.view.animation.DecelerateInterpolator())
+                        .start()
+                }
+                txtReplyingTo.text = "${comment.userName} 'e yanıt veriyorsun"
+
                 btnCancelReply.setOnClickListener {
-                    replyLayout.visibility = View.GONE
+                    hideReplyLayout()
                 }
             }
 
@@ -304,8 +330,6 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
         )
 
 
-
-
         val layoutManager = LinearLayoutManager(requireContext())
         rvComment.apply {
             this.layoutManager = layoutManager
@@ -315,6 +339,42 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             (itemAnimator as? DefaultItemAnimator)?.supportsChangeAnimations = false
         }
 
+    }
+
+    private fun hideReplyLayout() {
+        replyLayout.animate()
+            .alpha(0f)
+            .scaleY(0.8f)
+            .translationY(20f)
+            .setDuration(200)
+            .withEndAction {
+                replyLayout.visibility = View.GONE
+                replyLayout.translationY = 0f
+            }
+            .start()
+    }
+    private fun startPopupAnimation(view: View){
+        view.alpha=0f
+        view.scaleX=0.85f
+        view.scaleY=0.85f
+        view.animate()
+            .alpha(1f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(180)
+            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .start()
+    }
+    private fun endPopupAnimation(popupWindow: PopupWindow,view: View){
+        view.animate()
+            .alpha(0f)
+            .scaleX(0.85f)
+            .scaleY(0.85f)
+            .setDuration(180)
+            .withEndAction {
+                popupWindow.dismiss()
+            }
+            .start()
     }
 
     private fun showUpdateDialog(commentId: Long, commentContents: String) {

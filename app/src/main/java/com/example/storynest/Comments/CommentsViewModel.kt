@@ -149,20 +149,21 @@ class CommentsViewModel(
             when (result) {
                 is ResultWrapper.Success -> {
                     val pinnedData = result.data
+                    Log.d("PinTest", "Sabitlenen yorumun yanıt sayısı: ${pinnedData.subCommentsCount}")
                     if(result.data.parentCommentId==null){
                         _pinState.emit(true)
                     }
+                    updateComment(pinnedData)
                     _pinnedCount.update { current ->
                         current + 1
                     }
                     _pinnedComment.update { currentList ->
                         listOf(pinnedData) + currentList
                     }
-                    _newComments.update { currentList ->
-                        currentList.map {
-                            if (it.comment_id == pinnedData.comment_id) pinnedData else it
-                        }
+                    if (pinnedData.parentCommentId != null) {
+                        updateReplyInThreads(pinnedData)
                     }
+
                 }
                 is ResultWrapper.Error -> {
                     UiState.Error(result.message)
@@ -180,6 +181,7 @@ class CommentsViewModel(
                         _pinnedCount.update { current ->
                             current - 1
                         }
+                        updateComment(unpinnedData)
                         _pinnedComment.update { currentList ->
                             currentList.filterNot{ it.comment_id == result.data.comment_id }
                         }
@@ -187,6 +189,9 @@ class CommentsViewModel(
                             currentList.map {
                                 if (it.comment_id == unpinnedData.comment_id) unpinnedData else it
                             }
+                        }
+                        if (unpinnedData.parentCommentId != null) {
+                            updateReplyInThreads(unpinnedData)
                         }
 
                         _uiEvent.trySend(UiEvents.showInfoMessage("Sabitleme kaldırıldı."))
@@ -201,28 +206,30 @@ class CommentsViewModel(
 
     private val _errorMessage = MutableSharedFlow<String>()
     val errorMessage = _errorMessage.asSharedFlow()
-    fun addSubComment(
-        postId: Long,
-        userId: Long?,
-        contents: String,
-        parentUsername:String,
-        parentCommentId: Long
-    ) {
-        val request = commentRequest(postId, userId, contents, parentUsername,parentCommentId)
-
+    fun addSubComment(postId: Long, userId: Long?, contents: String, parentUsername: String, parentCommentId: Long) {
+        val request = commentRequest(postId, userId, contents, parentUsername, parentCommentId)
         viewModelScope.launch {
             val result = repo.addSubComment(request)
             when (result) {
                 is ResultWrapper.Success -> {
-                    _commentAddState.emit(true)
-                    _newComments.update { currentList ->
-                        listOf(result.data) + currentList
+                    val newReply = result.data
+                    _replyThreads.update { currentMap ->
+                        val thread = currentMap[parentCommentId]
+                        if (thread != null) {
+                            val updatedReplies = listOf(newReply) + thread.replies
+                            currentMap + (parentCommentId to thread.copy(
+                                replies = updatedReplies,
+                                totalCount = thread.totalCount + 1,
+                                visibleCount = thread.visibleCount + 1
+                            ))
+                        } else {
+                            _commentAddState.emit(true)
+                            _newComments.update { listOf(newReply) + it }
+                            currentMap
+                        }
                     }
                 }
-                is ResultWrapper.Error -> {
-                    _commentAddState.emit(false)
-                    _errorMessage.emit(result.toString() ?: "Bilinmeyen hata oluştu")
-                }
+                is ResultWrapper.Error -> { _commentAddState.emit(false) }
             }
         }
     }
@@ -281,7 +288,11 @@ class CommentsViewModel(
     val comments: Flow<PagingData<CommentsUiModel>> = pagingComments
         .combine(commentUiState) { pagingData, uiState ->
             pagingData
-                .filter { it.comment_id !in uiState.removedIds && uiState.pinnedItems.none { p -> p.comment_id == it.comment_id } }
+                .filter {item ->
+                    item.comment_id !in uiState.removedIds &&
+                            uiState.pinnedItems.none { it.comment_id == item.comment_id } &&
+                            uiState.newItems.none { it.comment_id == item.comment_id }
+                }
                 .flatMap { comment ->
                     val updated = uiState.updates[comment.comment_id] ?: comment
                     transformCommentToFlatList(updated, uiState)
@@ -462,6 +473,21 @@ class CommentsViewModel(
             currentMap + (commentId to update(thread))
         }
     }
+    private fun updateReplyInThreads(updatedReply: commentResponse) {
+        val parentId = updatedReply.parentCommentId ?: return
+
+        _replyThreads.update { currentMap ->
+            val thread = currentMap[parentId]
+            if (thread != null) {
+                val updatedList = thread.replies.map {
+                    if (it.comment_id == updatedReply.comment_id) updatedReply else it
+                }
+                currentMap + (parentId to thread.copy(replies = updatedList))
+            } else {
+                currentMap
+            }
+        }
+    }
 
 
     fun deleteComment(commentId: Long) {
@@ -495,6 +521,7 @@ class CommentsViewModel(
             when (result) {
                 is ResultWrapper.Success -> {
                     val updatedComment = result.data
+
                     updateComment(updatedComment)
                     _newComments.update { currentList ->
                         currentList.map {
@@ -505,6 +532,9 @@ class CommentsViewModel(
                         currentList.map {
                             if (it.comment_id == updatedComment.comment_id) updatedComment else it
                         }
+                    }
+                    if (updatedComment.parentCommentId != null) {
+                        updateReplyInThreads(updatedComment)
                     }
                 }
                 is ResultWrapper.Error -> {
@@ -532,7 +562,11 @@ class CommentsViewModel(
                             if (it.comment_id == updatedComment.comment_id) updatedComment else it
                         }
                     }
+                    if (updatedComment.parentCommentId != null) {
+                        updateReplyInThreads(updatedComment)
+                    }
                 }
+                //yanıtları da guncellemek isterse 11 yanıtı gor gibi replytheradı de gunceleyebilir
                 is ResultWrapper.Error -> {
                 }
             }

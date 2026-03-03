@@ -13,10 +13,4 @@
     <!-- Köşeleri yumuşat -->
     <corners android:radius="12dp" />
 
-    <!-- İç boşluk -->
-    <padding
-        android:left="12dp"
-        android:top="12dp"
-        android:right="12dp"
-        android:bottom="12dp" />
 </shape>

@@ -8,6 +8,8 @@
     android:paddingStart="60dp"
     android:paddingHorizontal="12dp"
     android:paddingVertical="12dp"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:text="3 yanıtı gör"
     android:textSize="13sp"
     android:textStyle="bold"
@@ -16,8 +18,8 @@
     <!-- Profil Foto -->
     <androidx.cardview.widget.CardView
         android:id="@+id/imgProfilereply"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         app:cardCornerRadius="18dp"
         app:cardElevation="0dp"
         app:layout_constraintStart_toStartOf="parent"
@@ -37,8 +39,8 @@
         android:layout_height="14dp"
         android:src="@drawable/pin"
         android:visibility="gone"
-        app:layout_constraintStart_toEndOf="@id/imgProfilereply"
-        app:layout_constraintTop_toTopOf="@id/imgProfilereply"
+        app:layout_constraintStart_toEndOf="@id/txtUsernamereply"
+        app:layout_constraintTop_toTopOf="@id/txtUsernamereply"
         app:layout_constraintBottom_toBottomOf="@id/txtUsernamereply"
         android:layout_marginStart="6dp"/>
 
@@ -50,7 +52,7 @@
         android:textStyle="bold"
         android:textSize="13sp"
         android:textColor="@color/black"
-        app:layout_constraintStart_toEndOf="@id/imgPinreply"
+        app:layout_constraintStart_toEndOf="@id/imgProfilereply"
         app:layout_constraintTop_toTopOf="@id/imgProfilereply"
         android:layout_marginStart="4dp"/>
 
@@ -65,7 +67,7 @@
         android:textStyle="italic"
         android:visibility="gone"
         android:layout_marginStart="4dp"
-        app:layout_constraintStart_toEndOf="@id/txtUsernamereply"
+        app:layout_constraintStart_toEndOf="@id/imgPinreply"
         app:layout_constraintBottom_toBottomOf="@id/txtUsernamereply"/>
 
     <TextView
@@ -126,14 +128,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:gravity="center_horizontal"
         app:layout_constraintTop_toTopOf="@id/txtUsernamereply"
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
             android:id="@+id/btnLikereply"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
             android:src="@drawable/baseline_favorite_border_24"/>
 
         <TextView
