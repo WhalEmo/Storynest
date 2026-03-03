@@ -223,21 +223,9 @@ class FollowListFragment: Fragment() {
         viewModel.followUser(userId, followType)
     }
 
-    private fun onCancelRequest(followId: Long?){
-        soundPool.play(
-            cancelSoundId,
-            1f,
-            1f,
-            1,
-            0,
-            1f
-        )
-       // viewModel.cancelFollowRequest(followId, followType)
-    }
-
     private fun onUnFollowMy(usrResponse: FollowRow.FollowUserItem){
         ConfirmDialog(
-            status = ConfirmDialogStatus.UN_FOLLOW_DIALOG,
+            status = ConfirmDialogStatus.REMOVE_FOLLOW_DIALOG,
             username = usrResponse.username,
             imageUrl = usrResponse.profile,
             onConfirm = {

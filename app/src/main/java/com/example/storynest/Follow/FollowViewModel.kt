@@ -58,7 +58,7 @@ class FollowViewModel: ViewModel() {
         viewModelScope.launch {
             repository.globalFollowEvents.collect { (userId, eventCapsule) ->
                 val action = dtoToAction(
-                    dto = eventCapsule.data,
+                    dto = eventCapsule.data.updateFollow,
                     followType = _params.value?.followType ?: return@collect
                 )
                 updateUserActionState(

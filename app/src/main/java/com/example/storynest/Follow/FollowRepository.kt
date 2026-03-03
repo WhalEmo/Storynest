@@ -9,6 +9,9 @@ import com.example.storynest.Follow.RequestDTO.FollowDTO
 import com.example.storynest.Follow.ResponseDTO.FollowResponse
 import com.example.storynest.GlobalEvent.FollowEvent
 import com.example.storynest.GlobalEvent.EventCapsule
+import com.example.storynest.GlobalEvent.FollowEventData
+import com.example.storynest.Profile.Data.UpdateProfileData
+import com.example.storynest.Profile.MVC.ProfileRepository
 import com.example.storynest.TestUserProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import retrofit2.Response
@@ -21,8 +24,10 @@ object FollowRepository {
     }
     val followApiController = ApiClient.getClient(token).create(FollowApiController::class.java)
 
+    private val profileRepo: ProfileRepository = ProfileRepository
+
     private val _globalFollowEvents =
-        MutableSharedFlow<Pair<Long, EventCapsule<FollowResponse>>>(extraBufferCapacity = 1)
+        MutableSharedFlow<Pair<Long, EventCapsule<FollowEventData>>>(extraBufferCapacity = 1)
 
     val globalFollowEvents = _globalFollowEvents
 
@@ -57,7 +62,7 @@ object FollowRepository {
     }
 
 
-    suspend fun removeFollower(userId: Long): Response<FollowDTO> {
+    suspend fun removeFollower(userId: Long): Response<FollowResponse> {
         Log.e("userId", userId.toString())
         val request = FollowDTO(
             followingId = TestUserProvider.STATIC_USER_ID,
@@ -101,14 +106,40 @@ object FollowRepository {
     ) : Response<FollowResponse>
     {
         response.body()?.let {
+            val profileData = profileRepo.updateUserProfile(it, followEvent)
+            val followersCount = profileData?.followerCount ?: 0
+            val followingCount = profileData?.followedCount ?: 0
+            val updateProfileData = it.toUpdateProfileData(
+                followersCount = followersCount,
+                followingCount = followingCount
+            )
+            val eventCapsule = EventCapsule(
+                data = updateProfileData,
+                event = followEvent
+            )
             _globalFollowEvents.tryEmit(
-                userId to EventCapsule(
-                    data = it,
-                    event = followEvent
-                )
+                userId to eventCapsule
             )
         }
         return response
+    }
+
+    private fun FollowResponse.toUpdateProfileData(
+        followersCount: Int,
+        followingCount: Int
+    ): FollowEventData {
+        val updateProfileData = UpdateProfileData(
+            userId = userId,
+            follower = follower,
+            following = following,
+            pending = pending,
+            followersCount = followersCount,
+            followingCount = followingCount
+        )
+        return FollowEventData(
+            updateFollow = this,
+            updateProfile = updateProfileData
+        )
     }
 
 }

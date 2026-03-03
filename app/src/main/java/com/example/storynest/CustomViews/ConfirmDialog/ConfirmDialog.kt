@@ -74,7 +74,6 @@ class ConfirmDialog(
         btnCancel: MaterialButton
     ) {
         when (status) {
-
             ConfirmDialogStatus.UN_FOLLOW_DIALOG -> {
                 btnConfirm.backgroundTintList =
                     ColorStateList.valueOf(
@@ -83,7 +82,6 @@ class ConfirmDialog(
 
                 btnConfirm.setTextColor(Color.WHITE)
             }
-
             ConfirmDialogStatus.BLOCK_DIALOG -> {
                 btnConfirm.backgroundTintList =
                     ColorStateList.valueOf(
@@ -93,6 +91,7 @@ class ConfirmDialog(
                 btnConfirm.elevation = 2f
                 btnConfirm.setTextColor(Color.WHITE)
             }
+            else -> {}
         }
     }
 }

@@ -20,14 +20,20 @@ import com.example.storynest.Follow.FollowType
 import com.example.storynest.Navigator
 import com.example.storynest.Profile.ProfileOptions.ProfileOptionsBottomSheet
 import com.example.storynest.Profile.ProfileOptions.ProfileOptionsClickListener
+import com.example.storynest.Profile.ProfileUiStates.ProfileBasicUiState
+import com.example.storynest.Profile.ProfileUiStates.ProfileBlockUiState
+import com.example.storynest.Profile.ProfileUiStates.ProfileUiState
 import com.example.storynest.R
 import com.example.storynest.databinding.ProfileFragmentBinding
+import com.example.storynest.databinding.ProfileHeaderBinding
 import kotlinx.coroutines.launch
 
 
 class ProfileFragment : Fragment(){
 
     private var _binding: ProfileFragmentBinding? = null
+    private var _headerBinding: ProfileHeaderBinding? = null
+    private val headerBinding get() = _headerBinding!!
     private val binding get() = _binding!!
     private val viewModel: ProfileViewModel by viewModels()
     private val navigator = Navigator
@@ -80,6 +86,7 @@ class ProfileFragment : Fragment(){
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        _headerBinding = ProfileHeaderBinding.bind(binding.root)
 
         settingsButtonAnimation()
 
@@ -88,11 +95,11 @@ class ProfileFragment : Fragment(){
             userId = userId
         )
 
-        binding.backButton.setOnClickListener {
+        binding.toolBar.backButton.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
 
-        binding.notificationBook.setOnClickListener {
+        binding.toolBar.notificationBook.setOnClickListener {
             navigator.openNotification(
                 activity = requireActivity() as AppCompatActivity
             )
@@ -115,7 +122,7 @@ class ProfileFragment : Fragment(){
     @SuppressLint("ClickableViewAccessibility")
     private fun settingsButtonAnimation() {
 
-        binding.settingsButton.setOnTouchListener { view, event ->
+        binding.toolBar.settingsButton.setOnTouchListener { view, event ->
             when (event.action) {
 
                 MotionEvent.ACTION_DOWN -> {
@@ -166,6 +173,9 @@ class ProfileFragment : Fragment(){
                         is ProfileScreenState.Update -> {
                             basicRender(state.uiState)
                         }
+                        is ProfileScreenState.Blocked -> {
+                            blockRender(state.uiState)
+                        }
                         else -> {}
                     }
                 }
@@ -174,38 +184,47 @@ class ProfileFragment : Fragment(){
     }
 
     private fun render(state: ProfileUiState) {
-        binding.username.text = state.username
-        binding.nameSurname.text = "${state.name} ${state.surname}"
-        binding.biography.text = state.biography
+        binding.profileHeaderGroup.isVisible = true
+        binding.containerBlockedByMe.isVisible = false
 
-        binding.profileImage.load(state.profileImageUrl){
+        headerBinding.username.text = state.username
+        headerBinding.nameSurname.text = "${state.name} ${state.surname}"
+        headerBinding.biography.text = state.biography
+
+        headerBinding.profileImage.load(state.profileImageUrl){
             crossfade(true)
             placeholder(R.drawable.placeholder)
         }
 
-        binding.followersCount.text = state.followers.toString()
-        binding.followingCount.text = state.following.toString()
+        headerBinding.followersCount.text = state.followers.toString()
+        headerBinding.followingCount.text = state.following.toString()
 
-        binding.btnEditProfile.isVisible = state.showEditButton
-        binding.btnFollow.isVisible = state.showFollowButton
-        binding.settingsButton.isVisible = state.showSettingsButton
-        binding.dotMenu.isVisible = state.showDotMenuButton
-        binding.notificationContainer.isVisible = state.showNotificationButton
-        binding.btnMessage.isVisible = state.showMessageButton
+        headerBinding.btnEditProfile.isVisible = state.showEditButton
+        headerBinding.btnFollow.isVisible = state.showFollowButton
+        binding.toolBar.settingsButton.isVisible = state.showSettingsButton
+        binding.toolBar.dotMenu.isVisible = state.showDotMenuButton
+        binding.toolBar.notificationContainer.isVisible = state.showNotificationButton
+        headerBinding.btnMessage.isVisible = state.showMessageButton
 
-        binding.btnFollowYour.isVisible = state.btnFollowYour
-        binding.btnShareProfile.isVisible = state.btnShareProfile
-        binding.btnPendingRequest.isVisible = state.showPendingRequestButton
+        headerBinding.btnFollowYour.isVisible = state.btnFollowYour
+        headerBinding.btnShareProfile.isVisible = state.btnShareProfile
+        headerBinding.btnPendingRequest.isVisible = state.showPendingRequestButton
         userData = state
 
     }
 
+    private fun blockRender(state: ProfileBlockUiState){
+        binding.profileHeaderGroup.isVisible = false
+        binding.containerBlockedByMe.isVisible = true
+    }
+
     private fun basicRender(state: ProfileBasicUiState){
-        binding.btnFollow.isVisible = state.showFollowButton ?: false
-        binding.btnMessage.isVisible = state.showMessageButton ?: false
-        binding.btnPendingRequest.isVisible = state.showPendingRequestButton
-        binding.btnFollowYour.isVisible = state.btnFollowYour
-        binding.followersCount.text = state.followCount.toString()
+        headerBinding.btnFollow.isVisible = state.showFollowButton ?: false
+        headerBinding.btnMessage.isVisible = state.showMessageButton ?: false
+        headerBinding.btnPendingRequest.isVisible = state.showPendingRequestButton
+        headerBinding.btnFollowYour.isVisible = state.btnFollowYour
+        headerBinding.followersCount.text = state.followersCount.toString()
+        headerBinding.followingCount.text = state.followingCount.toString()
     }
 
     private fun setupButtonFlow(
@@ -236,34 +255,34 @@ class ProfileFragment : Fragment(){
                 FollowType.USER_FOLLOWERS
             }
         }
-        binding.followersContainer.setOnClickListener {
+        headerBinding.followersContainer.setOnClickListener {
             navigator.openFollowList(
                 activity = requireActivity() as AppCompatActivity,
                 type = followersContainerType,
                 userId = userId
             )
         }
-        binding.followingContainer.setOnClickListener {
+        headerBinding.followingContainer.setOnClickListener {
             navigator.openFollowList(
                 activity = requireActivity() as AppCompatActivity,
                 type = followingContainerType,
                 userId = userId
             )
         }
-        binding.btnFollow.setOnClickListener {
+        headerBinding.btnFollow.setOnClickListener {
             viewModel.followUser(
                 userId = userId,
                 profileMode = profileMode
             )
         }
-        binding.btnFollowYour.setOnClickListener {
+        headerBinding.btnFollowYour.setOnClickListener {
             viewModel.followUser(
                 userId = userId,
                 profileMode = profileMode
             )
         }
 
-        binding.dotMenu.setOnClickListener {
+        binding.toolBar.dotMenu.setOnClickListener {
             showProfileOptions()
         }
     }

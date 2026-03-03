@@ -5,14 +5,21 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.storynest.Api.NetworkResult
+import com.example.storynest.Block.BlockStatus
 import com.example.storynest.Follow.FollowRepository
 import com.example.storynest.Follow.ResponseDTO.FollowResponse
 import com.example.storynest.GlobalEvent.FollowEvent
+import com.example.storynest.Profile.Data.UpdateProfileData
 import com.example.storynest.Profile.MVC.ProfileRepository
+import com.example.storynest.Profile.ProfileUiStates.ProfileBasicUiState
+import com.example.storynest.Profile.ProfileUiStates.ProfileBlockUiState
+import com.example.storynest.Profile.ProfileUiStates.ProfileUiState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.IOException
 import retrofit2.HttpException
@@ -29,58 +36,41 @@ class ProfileViewModel: ViewModel() {
     private val _uiState = MutableStateFlow<ProfileScreenState?>(null)
     val uiState: StateFlow<ProfileScreenState?> = _uiState.asStateFlow()
 
-    private lateinit var profileData: ProfileData
 
 
 
     fun init(mode: ProfileMode, userId: Long = -1L) {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
-            _uiState.value = ProfileScreenState.Loading
-
-            try {
-                val flow = profileRepository.loadProfile(
-                    userId = userId,
-                    profileMode = mode
-                )
-
-                flow.collect { profile ->
-                    profileData = profile
-                    _uiState.value = ProfileScreenState.Success(
-                        uiState = profile.toUiState(type = mode)
-                    )
+            profileRepository
+                .loadProfile(userId, mode)
+                .collectLatest { result ->
+                    _uiState.value = result.ToScreenState(mode)
+                    Log.d("ProfileViewModel", "init: ${result}")
                 }
-
-            } catch (e: HttpException) {
-                _error.value = "Sunucuya bağlanılamadı (HTTP ${e.code()})"
-            } catch (e: IOException) {
-                _error.value = "İnternet bağlantısı yok!"
-            } catch (e: Exception) {
-                _error.value = "Beklenmeyen bir hata oluştu"
-            }
-            globalFollowEvents(userId)
         }
+        globalFollowEvents(userId)
     }
 
     fun globalFollowEvents(profileUserId: Long){
         viewModelScope.launch {
             followRepository.globalFollowEvents.collect { (userId, eventCapsule) ->
                 if(userId != profileUserId) return@collect
-                val followResponse = eventCapsule.data
+                val updateProfile = eventCapsule.data.updateProfile
                 val followEvent = eventCapsule.event
+                Log.d("ProfileViewModel", "globalFollowEvents: ${profileUserId}")
                 when(followEvent){
                     FollowEvent.FOLLOW -> {
                         _uiState.value = ProfileScreenState.Update(
-                            uiState = followResponse.ToBasicUiState(profileData.followers + 1)
+                            uiState = updateProfile.ToBasicUiState()
                         )
                     }
                     FollowEvent.UNFOLLOW -> {
                         _uiState.value = ProfileScreenState.Update(
-                            uiState = followResponse.ToBasicUiState(profileData.followers - 1)
+                            uiState = updateProfile.ToBasicUiState()
                         )
                     }
                 }
-                profileData = profileRepository.updateUserProfile(userId, followResponse) ?: profileData
             }
         }
     }
@@ -135,14 +125,70 @@ class ProfileViewModel: ViewModel() {
 
     }
 
-    private fun FollowResponse.ToBasicUiState(count: Int): ProfileBasicUiState{
+    private fun UpdateProfileData.ToBasicUiState(): ProfileBasicUiState {
         return ProfileBasicUiState(
             showFollowButton = !follower && !following && !pending,
             showMessageButton = following && !pending,
             showPendingRequestButton = pending && !following,
             btnFollowYour = follower && !following && !pending,
-            followCount = count
+            followersCount = this.followersCount,
+            followingCount = this.followingCount
         )
     }
 
+    private fun NetworkResult<ProfileResponse>.ToScreenState(profileMode: ProfileMode): ProfileScreenState{
+        return when(this){
+            is NetworkResult.Error ->{
+                this.toScreenState()
+            }
+            is NetworkResult.Loading -> {
+                ProfileScreenState.Loading
+            }
+            is NetworkResult.Success<*> -> {
+                val data = this.data as ProfileResponse
+                ProfileScreenState.Success(
+                    uiState = data.toProfileData().toUiState(profileMode)
+                )
+            }
+        }
+    }
+
+
+    private fun ProfileResponse.toProfileData(): ProfileData{
+        return ProfileData(
+            id = userResponseDto.id,
+            username = userResponseDto.username,
+            email = userResponseDto.email,
+            name = userResponseDto.name,
+            surname = userResponseDto.surname,
+            profile = userResponseDto.profile?: "",
+            biography = userResponseDto.biography,
+            followers = followerCount,
+            following = followedCount,
+            isFollowing = following,
+            isOwnProfile = ownProfile,
+            isFollower = follower,
+            isPending = pending
+        )
+    }
+
+    private fun NetworkResult.Error.toScreenState(): ProfileScreenState {
+        if(this.status == BlockStatus.YOU_BLOCKER.name){
+            return ProfileScreenState.Blocked(
+                uiState = ProfileBlockUiState(
+                    status = BlockStatus.YOU_BLOCKER
+                )
+            )
+        }
+        if (this.status == BlockStatus.TARGET_BLOCKER.name){
+            return ProfileScreenState.Blocked(
+                uiState = ProfileBlockUiState(
+                    status = BlockStatus.TARGET_BLOCKER
+                )
+            )
+        }
+        return ProfileScreenState.Error(
+            message = this.message ?: "Unknown Error"
+        )
+    }
 }

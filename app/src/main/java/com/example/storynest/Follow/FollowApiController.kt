@@ -18,7 +18,7 @@ interface FollowApiController {
     @POST("follow/removeFollower")
     suspend fun removeFollower(
         @Body request: FollowDTO
-    ): Response<FollowDTO>
+    ): Response<FollowResponse>
 
     @GET("follow/otherUserFollowing/{userId}")
     suspend fun getOtherUserFollowing(

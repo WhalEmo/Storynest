@@ -47,7 +47,17 @@ class FollowAdapter(
                 oldItem: FollowRow,
                 newItem: FollowRow
             ): Boolean {
-                return oldItem == newItem
+                return when{
+                    oldItem is FollowRow.FollowUserItem &&
+                            newItem is FollowRow.FollowUserItem ->
+                        oldItem.visibleViews.size == newItem.visibleViews.size &&
+                                oldItem.visibleViews.containsAll(newItem.visibleViews)
+
+                    oldItem is FollowRow.FollowHeaderItem &&
+                            newItem is FollowRow.FollowHeaderItem ->
+                        oldItem == newItem
+                    else -> false
+                }
             }
 
         }
