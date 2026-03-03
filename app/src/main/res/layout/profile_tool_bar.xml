@@ -1,0 +1,75 @@
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@null"
+    android:padding="16dp">
+    <ImageButton
+        android:id="@+id/backButton"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/back_button_selector"
+        android:scaleType="centerInside"
+        app:tint="#000000"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
+
+
+
+
+    <FrameLayout
+    android:id="@+id/notificationContainer"
+    android:layout_width="40dp"
+    android:layout_height="40dp"
+    android:layout_marginEnd="15dp"
+    app:layout_constraintEnd_toStartOf="@id/settingsButton"
+    app:layout_constraintTop_toTopOf="parent">
+    <ImageButton
+        android:id="@+id/notificationBook"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/book_selector"
+        android:scaleType="centerInside"
+        app:tint="#000000"
+        tools:ignore="ContentDescription" />
+    <View
+        android:id="@+id/notificationDot"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="2dp"
+        android:background="@drawable/red_dot"
+        android:visibility="visible" />
+
+    </FrameLayout>
+
+    <ImageButton
+    android:id="@+id/dotMenu"
+    android:layout_width="40dp"
+    android:layout_height="40dp"
+    android:background="?attr/selectableItemBackgroundBorderless"
+    android:src="@drawable/dot_menu"
+    android:scaleType="centerInside"
+    app:tint="#000000"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    tools:ignore="ContentDescription" />
+
+    <ImageButton
+    android:id="@+id/settingsButton"
+    android:layout_width="40dp"
+    android:layout_height="40dp"
+    android:background="?attr/selectableItemBackgroundBorderless"
+    android:src="@drawable/settings"
+    android:scaleType="centerInside"
+    app:tint="#000000"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    tools:ignore="ContentDescription" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
