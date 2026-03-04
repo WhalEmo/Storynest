@@ -114,7 +114,6 @@ class PostAdapter(
             listener.onReadMoreClicked(post)
         }
         holder.txtLikeCount.setOnClickListener {
-            Log.d("POST_ADAPTER", "Like count clicked: ${post.post_id}")
             listener.getLikeUsers(post.post_id)
         }
         holder.btnComment.setOnClickListener {

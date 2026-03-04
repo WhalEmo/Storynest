@@ -46,6 +46,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DefaultItemAnimator
 import com.example.storynest.CustomViews.InfoMessage
 import com.example.storynest.CustomViews.UiEvents
+import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
@@ -78,8 +79,8 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
     private lateinit var commentforReply: commentUiItem
 
     private lateinit var dragHandle: View
-
-
+    private lateinit var shimmerLayout: ShimmerFrameLayout
+    private lateinit var shimmerRecyclerView: RecyclerView
     private var postId: Long = -1L
     private var pinnedCount:Long=-1L
 
@@ -115,6 +116,19 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
         btnCancelReply=view.findViewById(R.id.btnCancelReply)
         dragHandle=view.findViewById(R.id.dragHandle)
 
+        shimmerLayout = view.findViewById(R.id.shimmerLayout)
+        shimmerRecyclerView= view.findViewById(R.id.shimmerRecyclerView)
+
+
+        shimmerRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        shimmerRecyclerView.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+                val v = LayoutInflater.from(parent.context).inflate(R.layout.item_comment_placeholder, parent, false)
+                return object : RecyclerView.ViewHolder(v) {}
+            }
+            override fun getItemCount() = 10
+            override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {}
+        }
 
         setUpRecyclerView()
         setupLifecyle()
@@ -403,7 +417,6 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
             val isChanged = trimmedCurrent.isNotEmpty() && trimmedCurrent != trimmedOriginal
 
-            // Buton durumu
             btnUpdate.isEnabled = isChanged
             btnUpdate.alpha = if (isChanged) 1f else 0.5f
             btnUpdate.setTextColor(
@@ -524,37 +537,46 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
                 launch {
                     commentAdapter.loadStateFlow.collectLatest { loadStates ->
-
                         val isRefreshing = loadStates.refresh is LoadState.Loading
-                        progressBar.visibility =
-                            if (isRefreshing) View.VISIBLE else View.GONE
 
-                        val isListEmpty =
-                            loadStates.refresh is LoadState.NotLoading &&
-                                    commentAdapter.itemCount == 0
+                        if (isRefreshing) {
+                            shimmerLayout.startShimmer()
+                            shimmerLayout.visibility = View.VISIBLE
+                            rvComment.visibility = View.GONE
+                            txtEmpty.visibility = View.GONE
 
-                        val errorState = loadStates.source.refresh as? LoadState.Error
-                            ?: loadStates.source.append as? LoadState.Error
-                            ?: loadStates.source.prepend as? LoadState.Error
+                        } else {
+                            shimmerLayout.stopShimmer()
+                            shimmerLayout.visibility = View.GONE
+                            rvComment.visibility = View.VISIBLE
 
-                        when {
-                            errorState != null -> {
-                                txtEmpty.visibility = View.VISIBLE
-                                txtEmpty.text = "Bir hata oluştu: ${errorState.error.localizedMessage}"
-                            }
+                            val isListEmpty =
+                                loadStates.refresh is LoadState.NotLoading &&
+                                        commentAdapter.itemCount == 0
 
-                            isListEmpty -> {
-                                txtEmpty.visibility = View.VISIBLE
-                                txtEmpty.text = "Henüz yorum yapılmamış."
-                            }
+                            val errorState = loadStates.source.refresh as? LoadState.Error
+                                ?: loadStates.source.append as? LoadState.Error
+                                ?: loadStates.source.prepend as? LoadState.Error
 
-                            else -> {
-                                txtEmpty.visibility = View.GONE
+                            when {
+                                errorState != null -> {
+                                    txtEmpty.visibility = View.VISIBLE
+                                    txtEmpty.text =
+                                        "Bir hata oluştu: ${errorState.error.localizedMessage}"
+                                }
+
+                                isListEmpty -> {
+                                    txtEmpty.visibility = View.VISIBLE
+                                    txtEmpty.text = "Henüz yorum yapılmamış."
+                                }
+
+                                else -> {
+                                    txtEmpty.visibility = View.GONE
+                                }
                             }
                         }
                     }
                 }
-
 
             }
         }

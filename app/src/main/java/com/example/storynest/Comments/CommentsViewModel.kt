@@ -16,6 +16,7 @@ import com.example.storynest.ApiClient
 import com.example.storynest.Comments.viewModelhelper.BaseState
 import com.example.storynest.Comments.viewModelhelper.CommentMapper.toUiItem
 import com.example.storynest.Comments.viewModelhelper.CommentUiState
+import com.example.storynest.Comments.viewModelhelper.PinStatus
 import com.example.storynest.Comments.viewModelhelper.ReplyAction
 import com.example.storynest.Comments.viewModelhelper.ReplyThread
 import com.example.storynest.CustomViews.UiEvents
@@ -60,7 +61,7 @@ class CommentsViewModel(
     private val _updatedComments = MutableStateFlow<Map<Long, commentResponse>>(emptyMap())
     val updatedComments: StateFlow<Map<Long, commentResponse>> = _updatedComments.asStateFlow()
 
-    private val _pinState = MutableSharedFlow<Boolean>()
+    private val _pinState = MutableSharedFlow<PinStatus>()
     val pinState = _pinState.asSharedFlow()
 
     private val _uiEvent = Channel<UiEvents>()
@@ -136,14 +137,14 @@ class CommentsViewModel(
         }
     }
 
-    fun pinComments(commentId: Long) {
+    suspend fun pinComments(commentId: Long) {
         if (pinnedCount.value >= MAX_PIN_COUNT) {
             _uiEvent.trySend(
                 UiEvents.showInfoMessage("En fazla $MAX_PIN_COUNT yorum sabitleyebilirsiniz.")
             )
             return
         }
-
+        _pinState.emit(PinStatus.Loading)
         viewModelScope.launch {
             val result = repo.pin(commentId)
             when (result) {
@@ -151,7 +152,7 @@ class CommentsViewModel(
                     val pinnedData = result.data
                     Log.d("PinTest", "Sabitlenen yorumun yanıt sayısı: ${pinnedData.subCommentsCount}")
                     if(result.data.parentCommentId==null){
-                        _pinState.emit(true)
+                        _pinState.emit(PinStatus.Succes)
                     }
                     updateComment(pinnedData)
                     _pinnedCount.update { current ->

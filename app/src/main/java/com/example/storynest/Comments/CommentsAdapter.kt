@@ -77,7 +77,6 @@ class CommentsAdapter(
             else -> throw IllegalArgumentException("Invalid view type")
         }
     }
-
     override fun onBindViewHolder(
         holder: RecyclerView.ViewHolder,
         position: Int
