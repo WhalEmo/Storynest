@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.storynest.Api.NetworkResult
+import com.example.storynest.Block.BlockRepository
 import com.example.storynest.Block.BlockStatus
 import com.example.storynest.Follow.FollowRepository
 import com.example.storynest.Follow.ResponseDTO.FollowResponse
@@ -21,14 +22,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.io.IOException
-import retrofit2.HttpException
 
 
 class ProfileViewModel: ViewModel() {
 
     private val profileRepository = ProfileRepository
     private val followRepository = FollowRepository
+    private val blockRepository = BlockRepository
+
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
     private var loadJob: Job? = null
@@ -91,6 +92,37 @@ class ProfileViewModel: ViewModel() {
     ){
         viewModelScope.launch {
             followRepository.unfollow(userId)
+        }
+    }
+
+    fun blockUser(
+        userId: Long
+    ) {
+        viewModelScope.launch {
+            val response = blockRepository.block(userId)
+            if(response){
+                _uiState.value = ProfileScreenState.Blocked(
+                    uiState = ProfileBlockUiState(
+                        showUnBlockButton = true,
+                        textUnBlock = "Bu hesabı engelledin"
+                    )
+                )
+            }
+        }
+    }
+
+    fun unBlockUser(
+        userId: Long,
+        mode: ProfileMode
+    ) {
+        viewModelScope.launch {
+            val response = blockRepository.unBlock(userId)
+            if(response){
+                init(
+                    mode = mode,
+                    userId = userId
+                )
+            }
         }
     }
 
@@ -176,14 +208,16 @@ class ProfileViewModel: ViewModel() {
         if(this.status == BlockStatus.YOU_BLOCKER.name){
             return ProfileScreenState.Blocked(
                 uiState = ProfileBlockUiState(
-                    status = BlockStatus.YOU_BLOCKER
+                    showUnBlockButton = true,
+                    textUnBlock = "Bu hesabı engelledin"
                 )
             )
         }
         if (this.status == BlockStatus.TARGET_BLOCKER.name){
             return ProfileScreenState.Blocked(
                 uiState = ProfileBlockUiState(
-                    status = BlockStatus.TARGET_BLOCKER
+                    showUnBlockButton = false,
+                    textUnBlock = "Bu hesaba erişilemiyor"
                 )
             )
         }

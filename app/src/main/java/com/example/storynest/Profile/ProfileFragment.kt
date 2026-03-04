@@ -24,6 +24,7 @@ import com.example.storynest.Profile.ProfileUiStates.ProfileBasicUiState
 import com.example.storynest.Profile.ProfileUiStates.ProfileBlockUiState
 import com.example.storynest.Profile.ProfileUiStates.ProfileUiState
 import com.example.storynest.R
+import com.example.storynest.databinding.ProfileBlockedBinding
 import com.example.storynest.databinding.ProfileFragmentBinding
 import com.example.storynest.databinding.ProfileHeaderBinding
 import kotlinx.coroutines.launch
@@ -86,7 +87,9 @@ class ProfileFragment : Fragment(){
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        _headerBinding = ProfileHeaderBinding.bind(binding.root)
+        if(_headerBinding == null){
+            _headerBinding = ProfileHeaderBinding.bind(binding.root)
+        }
 
         settingsButtonAnimation()
 
@@ -117,6 +120,7 @@ class ProfileFragment : Fragment(){
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        _headerBinding = null
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -216,6 +220,18 @@ class ProfileFragment : Fragment(){
     private fun blockRender(state: ProfileBlockUiState){
         binding.profileHeaderGroup.isVisible = false
         binding.containerBlockedByMe.isVisible = true
+        binding.toolBar.settingsButton.isVisible = false
+        binding.toolBar.notificationContainer.isVisible = false
+
+        val blockBinding = ProfileBlockedBinding.bind(binding.containerBlockedByMe)
+
+        blockBinding.txtBlockTitle.text = state.textUnBlock
+        blockBinding.btnUnblock.isVisible = state.showUnBlockButton
+
+        blockBinding.btnUnblock.setOnClickListener {
+            viewModel.unBlockUser(userId, profileMode)
+        }
+
     }
 
     private fun basicRender(state: ProfileBasicUiState){
@@ -306,6 +322,7 @@ class ProfileFragment : Fragment(){
             }
 
             override fun onBlock(userId: Long) {
+                viewModel.unBlockUser(userId, profileMode)
             }
 
             override fun onMessage(userId: Long) {

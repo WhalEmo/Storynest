@@ -99,6 +99,7 @@ object FollowRepository {
         )
     }
 
+
     private fun addGlobalFollowEvent(
         userId: Long,
         response: Response<FollowResponse>,

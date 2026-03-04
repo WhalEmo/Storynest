@@ -3,6 +3,7 @@ package com.example.storynest.Profile.MVC
 import com.example.storynest.Api.BaseRepository
 import com.example.storynest.Api.NetworkResult
 import com.example.storynest.ApiClient
+import com.example.storynest.Block.BlockStatus
 import com.example.storynest.Follow.ResponseDTO.FollowResponse
 import com.example.storynest.GlobalEvent.FollowEvent
 import com.example.storynest.Profile.ProfileData
@@ -21,7 +22,6 @@ object ProfileRepository: BaseRepository(){
         token = TestUserProvider.STATIC_TOKEN
     }
 
-    private val profileService = ProfileService()
     private val profileController = ApiClient.getClient(token).create(ProfileApiController::class.java)
     private val memoryCache = mutableMapOf<Long, ProfileResponse>()
 
@@ -91,6 +91,7 @@ object ProfileRepository: BaseRepository(){
 
         when(fresh){
             is NetworkResult.Error -> {
+                fresh.status
                 emit(fresh)
             }
             NetworkResult.Loading -> emit(fresh)
@@ -101,5 +102,4 @@ object ProfileRepository: BaseRepository(){
             }
         }
     }
-
 }
