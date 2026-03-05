@@ -125,6 +125,41 @@ object FollowRepository {
         return response
     }
 
+    fun addBlockGlobalFollowEvent(
+        userId: Long,
+        followEvent: FollowEvent
+    ) {
+        val updateProfileData = UpdateProfileData(
+            userId = userId,
+            follower = false,
+            following = false,
+            pending = false,
+            followersCount = 0,
+            followingCount = 0
+        )
+        val eventData = FollowEventData(
+            updateFollow = FollowResponse(
+                userId = userId,
+                username = "",
+                bio = "",
+                profileUrl = "",
+                follower = false,
+                following = false,
+                pending = false
+            ),
+            updateProfile = updateProfileData
+        )
+
+        val eventCapsule = EventCapsule(
+            data = eventData,
+            event = followEvent
+        )
+        _globalFollowEvents.tryEmit(
+            userId to eventCapsule
+        )
+
+    }
+
     private fun FollowResponse.toUpdateProfileData(
         followersCount: Int,
         followingCount: Int

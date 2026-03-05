@@ -9,8 +9,8 @@ import com.example.storynest.Api.NetworkResult
 import com.example.storynest.Block.BlockRepository
 import com.example.storynest.Block.BlockStatus
 import com.example.storynest.Follow.FollowRepository
-import com.example.storynest.Follow.ResponseDTO.FollowResponse
 import com.example.storynest.GlobalEvent.FollowEvent
+import com.example.storynest.Profile.Data.ProfileData
 import com.example.storynest.Profile.Data.UpdateProfileData
 import com.example.storynest.Profile.MVC.ProfileRepository
 import com.example.storynest.Profile.ProfileUiStates.ProfileBasicUiState
@@ -47,7 +47,6 @@ class ProfileViewModel: ViewModel() {
                 .loadProfile(userId, mode)
                 .collectLatest { result ->
                     _uiState.value = result.ToScreenState(mode)
-                    Log.d("ProfileViewModel", "init: ${result}")
                 }
         }
         globalFollowEvents(userId)
@@ -127,7 +126,7 @@ class ProfileViewModel: ViewModel() {
     }
 
 
-    private fun ProfileData.toUiState(type: ProfileMode): ProfileUiState {
+    private fun ProfileUiData.toUiState(type: ProfileMode): ProfileUiState {
         Log.d("Model", type.name)
         return ProfileUiState(
             id = id,
@@ -168,7 +167,7 @@ class ProfileViewModel: ViewModel() {
         )
     }
 
-    private fun NetworkResult<ProfileResponse>.ToScreenState(profileMode: ProfileMode): ProfileScreenState{
+    private fun NetworkResult<ProfileData>.ToScreenState(profileMode: ProfileMode): ProfileScreenState{
         return when(this){
             is NetworkResult.Error ->{
                 this.toScreenState()
@@ -186,8 +185,8 @@ class ProfileViewModel: ViewModel() {
     }
 
 
-    private fun ProfileResponse.toProfileData(): ProfileData{
-        return ProfileData(
+    private fun ProfileResponse.toProfileData(): ProfileUiData{
+        return ProfileUiData(
             id = userResponseDto.id,
             username = userResponseDto.username,
             email = userResponseDto.email,

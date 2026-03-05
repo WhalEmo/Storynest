@@ -21,6 +21,7 @@ import com.example.storynest.TestUserProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -80,13 +81,15 @@ class FollowViewModel: ViewModel() {
                     if (row is FollowRow.FollowUserItem){
                         val updatedState = actionUpdates[row.id]
                         if(updatedState!=null){
-                            row.copy(
-                                visibleViews = updatedState.actionState.toVisibleViews()
-                            )
+                            val newViews = updatedState.actionState.toVisibleViews()
+                            if(newViews != row.visibleViews){
+                                row.copy(visibleViews = newViews)
+                            }else row
                         }else row
                     }else row
                 }
-        }
+        }.distinctUntilChanged()
+            .cachedIn(viewModelScope)
 
 
     private fun getFollowList(

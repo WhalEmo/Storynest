@@ -1,9 +1,7 @@
 package com.example.storynest.Profile.MVC
 
 import com.example.storynest.Api.BaseRepository
-import com.example.storynest.Api.NetworkResult
 import com.example.storynest.ApiClient
-import com.example.storynest.Profile.ProfileData
 import com.example.storynest.TestUserProvider
 
 class ProfileService: BaseRepository() {

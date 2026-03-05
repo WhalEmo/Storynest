@@ -2,7 +2,6 @@ package com.example.storynest.Api
 
 import android.util.Log
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import retrofit2.Response
 
 abstract class BaseRepository {

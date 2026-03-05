@@ -6,7 +6,7 @@ import com.example.storynest.ApiClient
 import com.example.storynest.Block.BlockStatus
 import com.example.storynest.Follow.ResponseDTO.FollowResponse
 import com.example.storynest.GlobalEvent.FollowEvent
-import com.example.storynest.Profile.ProfileData
+import com.example.storynest.Profile.Data.ProfileData
 import com.example.storynest.Profile.ProfileMode
 import com.example.storynest.Profile.ProfileMode.*
 import com.example.storynest.Profile.ProfileResponse
@@ -23,53 +23,41 @@ object ProfileRepository: BaseRepository(){
     }
 
     private val profileController = ApiClient.getClient(token).create(ProfileApiController::class.java)
-    private val memoryCache = mutableMapOf<Long, ProfileResponse>()
+    private val memoryCache = mutableMapOf<Long, ProfileData>()
 
-    fun getUserProfile(userId: Long): ProfileResponse?{
-        return memoryCache[userId]
-    }
 
     fun updateUserProfile(data: FollowResponse, event: FollowEvent): ProfileResponse?{
         val userId = data.userId
-        when(event){
-            FollowEvent.FOLLOW -> {
+        val profileData = memoryCache[userId]
 
+        if(profileData is ProfileData.CreateProfileData){
+            val currentData = profileData.data
+            val newCount = when(event){
+                FollowEvent.FOLLOW -> currentData.followerCount + 1
+                FollowEvent.UNFOLLOW -> currentData.followerCount - 1
             }
-            FollowEvent.UNFOLLOW -> {
-
-            }
-        }
-        memoryCache[userId]?.let {
-            memoryCache[userId] = it.copy(
+            val updateInnerData = currentData.copy(
+                followerCount = newCount,
                 follower = data.follower,
                 following = data.following,
-                pending = data.pending,
-                followerCount = if(event == FollowEvent.FOLLOW) it.followerCount + 1 else it.followerCount - 1
+                pending = data.pending
             )
+            val updateProfileWrapper = ProfileData.CreateProfileData(data = updateInnerData)
+            memoryCache[userId] = updateProfileWrapper
+            return updateInnerData
         }
-
-        return memoryCache[userId]
+        return null
     }
 
-    /*
-    private fun updateMyUserData(event: FollowEvent){
-        memoryCache[TestUserProvider.STATIC_USER_ID]?.let {
-            memoryCache[TestUserProvider.STATIC_USER_ID] = it.copy(
-                followers = if(event == FollowEvent.FOLLOW) it.following + 1 else it.following - 1
-            )
-        }
-    }
-
-     */
 
     fun loadProfile(
         userId: Long,
         profileMode: ProfileMode
-    ): Flow<NetworkResult<ProfileResponse>> = flow {
+    ): Flow<NetworkResult<ProfileData>> = flow {
 
         val cached = memoryCache[userId]
 
-        if (cached != null) {
+        if(cached != null){
             emit(NetworkResult.Success(cached))
         }
         else{
@@ -90,15 +78,30 @@ object ProfileRepository: BaseRepository(){
         }
 
         when(fresh){
-            is NetworkResult.Error -> {
-                fresh.status
-                emit(fresh)
+            is NetworkResult.Loading -> {
+                emit(NetworkResult.Loading)
             }
-            NetworkResult.Loading -> emit(fresh)
+            is NetworkResult.Error -> {
+                val status = fresh.status?.let {
+                    BlockStatus.valueOf(fresh.status)
+                }
+                if(status is BlockStatus){
+                    val blockedProfile = ProfileData.BlockProfileData(
+                        userId = userId,
+                        blockStatus = status
+                    )
+                    memoryCache[userId] = blockedProfile
+                    emit(NetworkResult.Success(blockedProfile))
+                }
+                else{
+                    emit(fresh)
+                }
+            }
             is NetworkResult.Success -> {
                 val data = fresh.data
-                memoryCache[userId] = data
-                emit(NetworkResult.Success(data))
+                val profileData = ProfileData.CreateProfileData(data)
+                memoryCache[userId] = profileData
+                emit(NetworkResult.Success(profileData))
             }
         }
     }

@@ -322,7 +322,7 @@ class ProfileFragment : Fragment(){
             }
 
             override fun onBlock(userId: Long) {
-                viewModel.unBlockUser(userId, profileMode)
+                viewModel.blockUser(userId)
             }
 
             override fun onMessage(userId: Long) {

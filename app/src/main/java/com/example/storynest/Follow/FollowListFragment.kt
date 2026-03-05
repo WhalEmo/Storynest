@@ -204,7 +204,6 @@ class FollowListFragment: Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.followers.collectLatest { pagingData ->
-                    delay(50)
                     adapter.submitData(pagingData)
                 }
             }
