@@ -126,12 +126,6 @@ interface CMController{
     @POST("/api/comments/{commentId}/like")
      suspend fun toggleLike(@Path("commentId") commentId: Long): commentResponse
 
-    @GET("/api/comments/{commentId}/getUsersWhoLike")
-     suspend fun getUsersWhoLike(
-        @Path("commentId") commentId: Long,
-        @Query("page") page: Int = 0,
-        @Query("size") size: Int = 10
-    ): List<userResponseDto>
 
     @DELETE("/api/comments/{commentId}/deleteComment")
      suspend fun deleteComment(

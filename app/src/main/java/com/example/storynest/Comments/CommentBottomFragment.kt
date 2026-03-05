@@ -34,16 +34,20 @@ import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.media.Image
 import android.os.Build
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.animation.AnimationUtils
+import android.view.animation.LinearInterpolator
 import android.widget.PopupWindow
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DefaultItemAnimator
+import com.example.storynest.AppError
+import com.example.storynest.Comments.viewModelhelper.PinStatus
 import com.example.storynest.CustomViews.InfoMessage
 import com.example.storynest.CustomViews.UiEvents
 import com.facebook.shimmer.ShimmerFrameLayout
@@ -66,6 +70,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
     private lateinit var progressBar: ProgressBar
     private lateinit var commentAdapter: CommentsAdapter
     private lateinit var txtEmpty: TextView
+    private lateinit var btnRetry: ImageView
     private lateinit var commentInputContainer: ConstraintLayout
 
     private lateinit var imgProfile: ImageView
@@ -118,6 +123,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
         shimmerLayout = view.findViewById(R.id.shimmerLayout)
         shimmerRecyclerView= view.findViewById(R.id.shimmerRecyclerView)
+        btnRetry=view.findViewById(R.id.btnRetry)
 
 
         shimmerRecyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -159,8 +165,8 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
     }
 
 
-    private fun goBar(){
-        InfoMessage.show(this,"Yorum kopyalandı.")
+    private fun goBar(message:String){
+        InfoMessage.show(this,message)
     }
     private fun setUpRecyclerView() {
         commentAdapter = CommentsAdapter(object : CommentsAdapter.OnCommentInteractionListener {
@@ -217,7 +223,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
                     val clip = ClipData.newPlainText("comment", textCopy)
                     clipboard.setPrimaryClip(clip)
-                    goBar()
+                    goBar("Yorum kopyalandı.")
                     endPopupAnimation(popupWindow,view)
                 }
                 val deleteItem=view.findViewById<LinearLayout>(R.id.item_delete)
@@ -325,7 +331,6 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                         } catch (e: Exception) {
                             null
                         }
-
                         if (firstItem is CommentsUiModel.CommentItem) {
                             rvComment.smoothScrollToPosition(0)
                         }
@@ -501,16 +506,11 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                         commentAdapter.submitData(pagingData)
                     }
                 }
-                launch {
-                    viewModel.errorMessage.collect { message ->
-                        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
-                    }
-                }
 
                 launch {
-
                     viewModel.commentAddState.collect { success ->
                         if (success) {
+                            txtEmpty.visibility= View.GONE
                         } else {
                             /*Toast.makeText(
                                 requireContext(),
@@ -522,28 +522,44 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                 }
                 launch {
                     viewModel.pinState.collect { result ->
-                        if(result){
-                            rvComment.smoothScrollToPosition(0)
-                        }else{
-                            Toast.makeText(
-                                requireContext(),
-                                "Yorum sabitlenemedi",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                        when(result){
+                            is PinStatus.Loading ->{
+                                shimmerLayout.startShimmer()
+                                shimmerLayout.visibility = View.VISIBLE
+                                rvComment.visibility = View.GONE
+                            }
+                            PinStatus.Error -> {
+                                shimmerLayout.stopShimmer()
+                                shimmerLayout.visibility = View.GONE
+                                rvComment.visibility = View.VISIBLE
+
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Yorum sabitlenemedi",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                            }
+                            is PinStatus.Success -> {
+                                shimmerLayout.stopShimmer()
+                                shimmerLayout.visibility = View.GONE
+                                rvComment.visibility = View.VISIBLE
+                            }
                         }
                     }
 
                 }
-
                 launch {
                     commentAdapter.loadStateFlow.collectLatest { loadStates ->
+                        val hasData = commentAdapter.itemCount > 0
                         val isRefreshing = loadStates.refresh is LoadState.Loading
 
-                        if (isRefreshing) {
+                        if (isRefreshing&& !hasData) {
                             shimmerLayout.startShimmer()
                             shimmerLayout.visibility = View.VISIBLE
                             rvComment.visibility = View.GONE
                             txtEmpty.visibility = View.GONE
+                            btnRetry.visibility=View.GONE
 
                         } else {
                             shimmerLayout.stopShimmer()
@@ -560,18 +576,36 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
                             when {
                                 errorState != null -> {
-                                    txtEmpty.visibility = View.VISIBLE
-                                    txtEmpty.text =
-                                        "Bir hata oluştu: ${errorState.error.localizedMessage}"
+                                    val message = when (val error = errorState.error) {
+                                        is AppError.NetworkError -> {
+                                            error.msg
+                                        }
+                                        is AppError.NgrokError -> error.msg
+                                        is AppError.ServerError -> "Kod: ${error.code} - ${error.msg}"
+                                        is AppError.UnknownError -> error.msg
+                                        else -> "Bilinmeyen bir hata"
+                                    }
+                                    if (hasData) {
+                                        rvComment.visibility = View.VISIBLE
+                                        txtEmpty.visibility = View.GONE
+                                        btnRetry.visibility = View.GONE
+                                        goBar(message)
+                                    } else {
+                                        rvComment.visibility = View.GONE
+                                        txtEmpty.visibility = View.VISIBLE
+                                        btnRetry.visibility = View.VISIBLE
+                                        txtEmpty.text = message
+                                    }
                                 }
 
                                 isListEmpty -> {
                                     txtEmpty.visibility = View.VISIBLE
-                                    txtEmpty.text = "Henüz yorum yapılmamış."
+                                    txtEmpty.text = "Henüz yorum yapılmamış. İlk yorumu sen yap!"
                                 }
 
                                 else -> {
                                     txtEmpty.visibility = View.GONE
+                                    btnRetry.visibility=View.GONE
                                 }
                             }
                         }
@@ -613,12 +647,21 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
             if (replyLayout.visibility == View.VISIBLE) {
                 viewModel.addSubComment(postId, UserStaticClass.userId,commentText,commentforReply.userName,commentforReply.commentId)
             } else {
-
-                viewModel.addComment(postId, UserStaticClass.userId,commentText,null)
+                viewModel.addComment(postId, UserStaticClass.userId,commentText)
             }
 
             etComment.text.clear()
             replyLayout.visibility = View.GONE
+        }
+        btnRetry.setOnClickListener {
+            it.isClickable = false
+            it.animate()
+                .rotationBy(360f)
+                .setDuration(600)
+                .withEndAction { it.isClickable = true }
+                .start()
+
+            commentAdapter.retry()
         }
 
     }

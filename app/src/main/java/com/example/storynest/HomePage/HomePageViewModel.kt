@@ -4,8 +4,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.example.storynest.ApiClient
+import com.example.storynest.GenericPagingSource
 import com.example.storynest.RegisterLogin.LoginResponse
 import com.example.storynest.dataLocal.UserStaticClass
 
@@ -34,6 +38,54 @@ class HomePageViewModel(
 
     private val _homepagePosts = MutableLiveData<UiState<List<postResponse>>>()
     val homepagePosts: LiveData<UiState<List<postResponse>>> = _homepagePosts
+    private val api = ApiClient.postApi
+
+
+
+    private var currentPageHome = 0
+    private val pageSizeHome = 10
+    var isLoadingHome = false
+    var isLastPageHome = false
+    fun homePagePosts(
+        reset: Boolean = false
+    ){
+        if (isLoadingHome || isLastPageHome) return
+        if (reset) currentPageHome = 0
+
+        _homepagePosts.value = UiState.Loading
+        isLoadingHome = true
+
+        viewModelScope.launch {
+            val result=repo.HomePagePosts(currentPageHome,pageSizeHome)
+            when (result) {
+                is ResultWrapper.Success -> {
+                    val currentList = (_homepagePosts.value as? UiState.Success)?.data ?: emptyList()
+                    val newList = if (reset) result.data else currentList + result.data
+                    _homepagePosts.value = UiState.Success(newList)
+                    isLastPageHome = result.data.size < pageSizeHome
+                    if (!isLastPageHome) currentPageHome++
+                }
+                is ResultWrapper.Error -> _homepagePosts.value = UiState.Error(result.message)
+            }
+            isLoadingHome = false
+        }
+    }
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val PagingPosts: Flow<PagingData<postResponse>> =
+        Pager(
+            config = PagingConfig(
+                pageSize = 20,
+                initialLoadSize = 20,
+                enablePlaceholders = false,
+                prefetchDistance = 3
+            ),
+            pagingSourceFactory = {
+                GenericPagingSource { page, size ->
+                    api.HomePagePosts(page, size)
+                }
+            }
+        ).flow.cachedIn(viewModelScope)
+
 
 
     fun addPost(
@@ -104,34 +156,6 @@ class HomePageViewModel(
         }
     }
 
-    private var currentPageHome = 0
-    private val pageSizeHome = 10
-    var isLoadingHome = false
-    var isLastPageHome = false
-    fun homePagePosts(
-        reset: Boolean = false
-    ){
-        if (isLoadingHome || isLastPageHome) return
-        if (reset) currentPageHome = 0
-
-        _homepagePosts.value = UiState.Loading
-        isLoadingHome = true
-
-        viewModelScope.launch {
-            val result=repo.HomePagePosts(currentPageHome,pageSizeHome)
-            when (result) {
-                is ResultWrapper.Success -> {
-                    val currentList = (_homepagePosts.value as? UiState.Success)?.data ?: emptyList()
-                    val newList = if (reset) result.data else currentList + result.data
-                    _homepagePosts.value = UiState.Success(newList)
-                    isLastPageHome = result.data.size < pageSizeHome
-                    if (!isLastPageHome) currentPageHome++
-                }
-                is ResultWrapper.Error -> _homepagePosts.value = UiState.Error(result.message)
-            }
-            isLoadingHome = false
-        }
-    }
 
 
 }

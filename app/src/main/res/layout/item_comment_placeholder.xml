@@ -19,7 +19,7 @@
             android:id="@+id/ppfoto"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/placeholder"
+            android:src="@drawable/shimmerplaceholder"
             app:tint="#DDDDDD"
             android:scaleType="centerCrop"/>
     </androidx.cardview.widget.CardView>

@@ -27,7 +27,6 @@ suspend fun <T> safeApiCall(
 
         val errorBody = e.response()?.errorBody()?.string()
 
-        Log.e("API_ERROR", "HTTP ${e.code()} - $errorBody")
 
         ResultWrapper.Error(
             errorBody ?: "Server hatası oluştu",
@@ -36,7 +35,6 @@ suspend fun <T> safeApiCall(
 
     } catch (e: Exception) {
 
-        Log.e("API_ERROR", "KRİTİK HATA: ${e.message}", e)
         ResultWrapper.Error(e.message ?: "Bilinmeyen hata", ErrorType.SERVER_ERROR)
 
     }

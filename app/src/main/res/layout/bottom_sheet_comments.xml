@@ -81,11 +81,30 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/rvComment" />
 
+    <ImageView
+        android:id="@+id/btnRetry"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="12dp"
+        android:visibility="gone"
+        android:src="@drawable/spinner_vector"
+        app:layout_constraintBottom_toBottomOf="@id/rvComment"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/txtEmpty"
+        />
+
     <TextView
         android:id="@+id/txtEmpty"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Henüz yorum yok"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:textSize="25dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/rvComment"
         app:layout_constraintEnd_toEndOf="parent"

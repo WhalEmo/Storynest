@@ -1,8 +1,5 @@
 package com.example.storynest.Comments
 
-import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -13,6 +10,7 @@ import androidx.paging.filter
 import androidx.paging.flatMap
 import androidx.paging.insertHeaderItem
 import com.example.storynest.ApiClient
+import com.example.storynest.GenericPagingSource
 import com.example.storynest.Comments.viewModelhelper.BaseState
 import com.example.storynest.Comments.viewModelhelper.CommentMapper.toUiItem
 import com.example.storynest.Comments.viewModelhelper.CommentUiState
@@ -31,6 +29,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -45,15 +44,6 @@ class CommentsViewModel(
 
     private val _commentAddState = MutableSharedFlow<Boolean>()
     val commentAddState = _commentAddState.asSharedFlow()
-
-    private val _addSubCommentResult = MutableLiveData<UiState<commentResponse>>()
-    val addSubCommentResult: LiveData<UiState<commentResponse>> = _addSubCommentResult
-
-
-    private val _subCommentsState =
-        MutableStateFlow<Map<Long, UiState<List<commentResponse>>>>(emptyMap())
-
-    val subCommentsState: StateFlow<Map<Long, UiState<List<commentResponse>>>> = _subCommentsState
 
     private val _removedCommentIds = MutableStateFlow<Set<Long>>(emptySet())
     val removedCommentIds: StateFlow<Set<Long>> = _removedCommentIds
@@ -103,20 +93,12 @@ class CommentsViewModel(
         _pinnedCount.value =count
     }
 
-    val pagingComments: Flow<PagingData<commentResponse>> =
-        postId
-            .filterNotNull()
-            .flatMapLatest { id ->
-                getComments(id)
-            }
-
 
 
     fun addComment(
         postId: Long,
         userId: Long?,
         contents: String,
-        parentCommentId: Long?
     ) {
         val request = commentRequest(postId, userId, contents, null,null)
         viewModelScope.launch {
@@ -137,23 +119,22 @@ class CommentsViewModel(
         }
     }
 
-    suspend fun pinComments(commentId: Long) {
+     fun pinComments(commentId: Long) {
         if (pinnedCount.value >= MAX_PIN_COUNT) {
             _uiEvent.trySend(
                 UiEvents.showInfoMessage("En fazla $MAX_PIN_COUNT yorum sabitleyebilirsiniz.")
             )
             return
         }
-        _pinState.emit(PinStatus.Loading)
         viewModelScope.launch {
+            _pinState.emit(PinStatus.Loading)
             val result = repo.pin(commentId)
             when (result) {
                 is ResultWrapper.Success -> {
                     val pinnedData = result.data
-                    Log.d("PinTest", "Sabitlenen yorumun yanıt sayısı: ${pinnedData.subCommentsCount}")
-                    if(result.data.parentCommentId==null){
-                        _pinState.emit(PinStatus.Succes)
-                    }
+
+                    _pinState.emit(PinStatus.Success)
+
                     updateComment(pinnedData)
                     _pinnedCount.update { current ->
                         current + 1
@@ -168,6 +149,7 @@ class CommentsViewModel(
                 }
                 is ResultWrapper.Error -> {
                     UiState.Error(result.message)
+                    _pinState.emit(PinStatus.Error)
                 }
             }
         }
@@ -204,9 +186,6 @@ class CommentsViewModel(
         }
     }
 
-
-    private val _errorMessage = MutableSharedFlow<String>()
-    val errorMessage = _errorMessage.asSharedFlow()
     fun addSubComment(postId: Long, userId: Long?, contents: String, parentUsername: String, parentCommentId: Long) {
         val request = commentRequest(postId, userId, contents, parentUsername, parentCommentId)
         viewModelScope.launch {
@@ -236,21 +215,26 @@ class CommentsViewModel(
     }
 
 
-    fun getComments(postId: Long): Flow<PagingData<commentResponse>> {
-        return Pager(
-            config = PagingConfig(
-                pageSize = 20,
-                initialLoadSize = 20,
-                enablePlaceholders = false,
-                prefetchDistance = 3
-            ),
-            pagingSourceFactory = {
-                CommentPagingSource { page, size ->
-                    api.commentsGet(postId, page, size)
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val pagingComments: Flow<PagingData<commentResponse>> = _postId
+        .filterNotNull()
+        .distinctUntilChanged()
+        .flatMapLatest { id ->
+            Pager(
+                config = PagingConfig(
+                    pageSize = 20,
+                    initialLoadSize = 20,
+                    enablePlaceholders = false,
+                    prefetchDistance = 3
+                ),
+                pagingSourceFactory = {
+                    GenericPagingSource { page, size ->
+                        api.commentsGet(id, page, size)
+                    }
                 }
-            }
-        ).flow.cachedIn(viewModelScope)
-    }
+            ).flow
+        }
+        .cachedIn(viewModelScope)
 
 
     private val _replyThreads =
@@ -329,7 +313,6 @@ class CommentsViewModel(
 
        if (thread == null|| !thread.isExpanded) {
             if (comment.subCommentsCount > 0) {
-              //  add(CommentsUiModel.ViewRepliesItem(comment.comment_id, comment.subCommentsCount, comment.subCommentsCount,false,false))
                 add(
                     CommentsUiModel.ViewRepliesItem(
                         replyView = viewReplysUiItem(

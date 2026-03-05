@@ -46,14 +46,6 @@ class CommentRepo(
             api.toggleLike(commentId)
         }
 
-    suspend fun getUsersWhoLike(
-        commentId: Long,
-        page: Int = 0,
-        size: Int = 10
-    ): ResultWrapper<List<userResponseDto>> =
-        safeApiCall {
-            api.getUsersWhoLike(commentId, page, size)
-        }
 
     suspend fun deleteComment(
         commentId: Long
