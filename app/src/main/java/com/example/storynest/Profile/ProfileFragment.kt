@@ -308,7 +308,8 @@ class ProfileFragment : Fragment(){
         val sheet = ProfileOptionsBottomSheet.newInstance(
             userId = userId,
             username = userData.username,
-            profileImage = userData.profileImageUrl ?: ""
+            profileImage = userData.profileImageUrl ?: "",
+            status = viewModel.getMenuState()
         )
         createOptionsListener(sheet)
         sheet.show(parentFragmentManager, "ProfileOptions")
@@ -330,6 +331,9 @@ class ProfileFragment : Fragment(){
             }
 
             override fun onShare(userId: Long) {
+            }
+            override fun onUnBlock(userId: Long) {
+                viewModel.unBlockUser(userId, profileMode)
             }
 
         }

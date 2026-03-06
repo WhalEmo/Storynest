@@ -9,9 +9,12 @@ import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
+import com.example.storynest.Block.BlockStatus
 import com.example.storynest.CustomViews.ConfirmDialog.ConfirmDialog
 import com.example.storynest.CustomViews.ConfirmDialog.ConfirmDialogStatus
 import com.example.storynest.R
+import com.example.storynest.databinding.ItemActionRowBinding
 import com.example.storynest.databinding.ProfileOptionsBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
@@ -20,9 +23,21 @@ class ProfileOptionsBottomSheet: BottomSheetDialogFragment() {
     private var _binging: ProfileOptionsBinding? = null
     private val binding get() = _binging!!
 
-    private var userId: Long = -1L
-    private var username: String = ""
-    private var profileImage: String = ""
+    private val userId by lazy {
+        arguments?.getLong(ARG_USER_ID) ?: -1
+    }
+    private val username by lazy {
+        arguments?.getString(ARG_USERNAME).orEmpty()
+    }
+    private val profileImage by lazy {
+        arguments?.getString(ARG_PROFILE_IMAGE).orEmpty()
+    }
+    private val status by lazy {
+        arguments?.getString(ARG_STATUS).let {
+            if(it == null) return@let ProfileOptionsState.NORMAL_OPTIONS
+            ProfileOptionsState.valueOf(it)
+        }
+    }
 
     private lateinit var listener: ProfileOptionsClickListener
 
@@ -30,13 +45,15 @@ class ProfileOptionsBottomSheet: BottomSheetDialogFragment() {
         private const val ARG_USER_ID = "arg_user_id"
         private const val ARG_USERNAME = "arg_username"
         private const val ARG_PROFILE_IMAGE = "arg_profile_image"
+        private const val ARG_STATUS = "arg__status"
 
-        fun newInstance(userId: Long, username: String, profileImage: String): ProfileOptionsBottomSheet{
+        fun newInstance(userId: Long, username: String, profileImage: String, status: ProfileOptionsState): ProfileOptionsBottomSheet{
             return ProfileOptionsBottomSheet().apply {
                 arguments = Bundle().apply {
                     putLong(ARG_USER_ID, userId)
                     putString(ARG_USERNAME, username)
                     putString(ARG_PROFILE_IMAGE, profileImage)
+                    putString(ARG_STATUS, status.name)
                 }
             }
         }
@@ -51,86 +68,92 @@ class ProfileOptionsBottomSheet: BottomSheetDialogFragment() {
         return binding.root
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let { bundle ->
-            userId = bundle.getLong(ARG_USER_ID)
-            username = bundle.getString(ARG_USERNAME).orEmpty()
-            profileImage = bundle.getString(ARG_PROFILE_IMAGE).orEmpty()
-        }
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupActions()
-        setupButtonActions()
+        renderUi()
     }
 
-
-    private fun setupActions() {
-        binding.actionUnfollow.tvActionTitle.text = "Takipten Çık"
-
-
-        binding.actionBlock.tvActionTitle.setColorAndText(
-            colorRes = R.color.block_text_selector,
-            text = "Engelle"
-        )
-        binding.actionBlock.ivActionIcon.setColoredIcon(
-            iconRes = R.drawable.block,
-            colorRes = R.color.block_text_selector
-        )
-        binding.actionUnfollow.tvActionTitle.setColorAndText(
-            colorRes = R.color.unfollow_text_selector,
-            text = "Takipten Çık"
-        )
-        binding.actionUnfollow.ivActionIcon.setColoredIcon(
-            iconRes = R.drawable.unfollow_icon,
-            colorRes = R.color.unfollow_text_selector
-        )
-        binding.actionMessage.tvActionTitle.setColorAndText(
-            colorRes = R.color.colorTextPrimary,
-            text = "Mesaj Gönder"
-        )
-        binding.actionMessage.ivActionIcon.setColoredIcon(
-            iconRes = R.drawable.message_icon,
-            colorRes = R.color.colorTextPrimary
-        )
-        binding.actionShare.tvActionTitle.setColorAndText(
-            colorRes = R.color.colorTextPrimary,
-            text = "Profili Paylaş"
-        )
-        binding.actionShare.ivActionIcon.setColoredIcon(
-            iconRes = R.drawable.share_icon,
-            colorRes = R.color.colorTextPrimary
-        )
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binging = null
     }
 
-    private fun setupButtonActions(){
-        binding.actionUnfollow.root.setOnClickListener {
-            showDialog(
-                status = ConfirmDialogStatus.UN_FOLLOW_DIALOG,
-                onConfirm = {
-                    listener.onUnFollow(userId)
-                    dismiss()
+    private fun renderUi(){
+        hideAllActions()
+
+        setupAction(
+            actionBinding = binding.actionUnfollow,
+            title = "Takipten Çık",
+            icon = R.drawable.unfollow_icon,
+            color = R.color.unfollow_text_selector,
+            isVisibility = status.showUnfollow,
+            onClick = { listener.onUnFollow(userId) }
+        )
+
+        setupAction(
+            actionBinding = binding.actionBlock,
+            title = status.blockText,
+            icon = R.drawable.block,
+            color = R.color.block_text_selector,
+            isVisibility = status.showBlock,
+            onClick = {
+                if(status == ProfileOptionsState.BLOCKER_OPTIONS) {
+                    listener.onUnBlock(userId)
                 }
-            )
-        }
-        binding.actionBlock.root.setOnClickListener {
-            showDialog(
-                status = ConfirmDialogStatus.BLOCK_DIALOG,
-                onConfirm = {
+                else{
                     listener.onBlock(userId)
-                    dismiss()
                 }
-            )
+            }
+        )
+
+        setupAction(
+            actionBinding = binding.actionMessage,
+            title = "Mesaj Gönder",
+            icon = R.drawable.message_icon,
+            color = R.color.colorTextPrimary,
+            isVisibility = status.showMessage,
+            onClick = { listener.onMessage(userId) }
+        )
+
+        setupAction(
+            actionBinding = binding.actionShare,
+            title = "Hesabı Paylaş",
+            icon = R.drawable.share_icon,
+            color = R.color.colorTextPrimary,
+            isVisibility = status.showShare,
+            onClick = { listener.onShare(userId) }
+        )
+
+    }
+
+    private fun setupAction(
+        actionBinding: ItemActionRowBinding,
+        title: String,
+        isVisibility: Boolean = true,
+        @DrawableRes icon: Int,
+        @ColorRes color: Int,
+        onClick: () -> Unit = {}
+    ) {
+        if(!isVisibility){
+            actionBinding.root.isVisible = false
+            return
         }
-        binding.actionMessage.root.setOnClickListener {
-            listener.onMessage(userId)
+        actionBinding.root.isVisible = true
+        actionBinding.tvActionTitle.setColorAndText(color, title)
+        actionBinding.ivActionIcon.setColoredIcon(icon, color)
+        actionBinding.root.setOnClickListener {
+            onClick()
             dismiss()
         }
-        binding.actionShare.root.setOnClickListener {
-            listener.onShare(userId)
-            dismiss()
+    }
+
+    private fun hideAllActions() {
+        binding.apply {
+            actionBlock.root.isVisible = false
+            actionUnfollow.root.isVisible = false
+            actionMessage.root.isVisible = false
+            actionShare.root.isVisible = false
         }
     }
 

@@ -5,4 +5,5 @@ interface ProfileOptionsClickListener {
     fun onBlock(userId: Long)
     fun onMessage(userId: Long)
     fun onShare(userId: Long)
+    fun onUnBlock(userId: Long)
 }

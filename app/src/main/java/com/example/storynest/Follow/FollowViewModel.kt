@@ -11,6 +11,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
+import com.example.storynest.Block.BlockRepository
 import com.example.storynest.Follow.Paging.FollowPagingSource
 import com.example.storynest.Follow.RequestDTO.FollowDTO
 import com.example.storynest.Follow.ResponseDTO.FollowResponse
@@ -32,6 +33,7 @@ import java.io.IOException
 
 class FollowViewModel: ViewModel() {
     private val repository: FollowRepository = FollowRepository
+    private val blockRepository = BlockRepository
 
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
@@ -186,6 +188,12 @@ class FollowViewModel: ViewModel() {
             catch (e: Exception) {
                 _error.value = "Beklenmeyen bir hata oluştu"
             }
+        }
+    }
+
+    fun blockUser(userId: Long){
+        viewModelScope.launch {
+            blockRepository.block(userId)
         }
     }
 

@@ -13,6 +13,7 @@ import com.example.storynest.GlobalEvent.FollowEvent
 import com.example.storynest.Profile.Data.ProfileData
 import com.example.storynest.Profile.Data.UpdateProfileData
 import com.example.storynest.Profile.MVC.ProfileRepository
+import com.example.storynest.Profile.ProfileOptions.ProfileOptionsState
 import com.example.storynest.Profile.ProfileUiStates.ProfileBasicUiState
 import com.example.storynest.Profile.ProfileUiStates.ProfileBlockUiState
 import com.example.storynest.Profile.ProfileUiStates.ProfileUiState
@@ -34,11 +35,12 @@ class ProfileViewModel: ViewModel() {
     val error: LiveData<String> = _error
     private var loadJob: Job? = null
 
+
     private val _uiState = MutableStateFlow<ProfileScreenState?>(null)
     val uiState: StateFlow<ProfileScreenState?> = _uiState.asStateFlow()
 
 
-
+    fun getMenuState() = _uiState.value?.toProfileOptionsState() ?: ProfileOptionsState.NORMAL_OPTIONS
 
     fun init(mode: ProfileMode, userId: Long = -1L) {
         loadJob?.cancel()
@@ -176,10 +178,22 @@ class ProfileViewModel: ViewModel() {
                 ProfileScreenState.Loading
             }
             is NetworkResult.Success<*> -> {
-                val data = this.data as ProfileResponse
-                ProfileScreenState.Success(
-                    uiState = data.toProfileData().toUiState(profileMode)
-                )
+                val data = this.data
+                if(data is ProfileData.CreateProfileData) {
+                    ProfileScreenState.Success(
+                        uiState = data.data.toProfileData().toUiState(profileMode)
+                    )
+                }
+                else if(data is ProfileData.BlockProfileData){
+                    ProfileScreenState.Blocked(
+                        uiState = data.toUiState()
+                    )
+                }
+                else{
+                    ProfileScreenState.Error(
+                        message = "Unknown Success Error"
+                    )
+                }
             }
         }
     }
@@ -201,6 +215,32 @@ class ProfileViewModel: ViewModel() {
             isFollower = follower,
             isPending = pending
         )
+    }
+
+    private fun ProfileData.BlockProfileData.toUiState(): ProfileBlockUiState {
+        return ProfileBlockUiState(
+            showUnBlockButton = this.blockStatus == BlockStatus.YOU_BLOCKER,
+            textUnBlock = if(this.blockStatus == BlockStatus.YOU_BLOCKER) "Bu hesabı engelledin" else "Bu hesaba erişilemiyor"
+        )
+    }
+
+    private fun ProfileScreenState.toProfileOptionsState(): ProfileOptionsState{
+        return when(this){
+            is ProfileScreenState.Success -> {
+                ProfileOptionsState.NORMAL_OPTIONS
+            }
+            is ProfileScreenState.Blocked -> {
+                if(this.uiState.showUnBlockButton){
+                    ProfileOptionsState.BLOCKER_OPTIONS
+                }
+                else{
+                    ProfileOptionsState.BLOCKED_OPTIONS
+                }
+            }
+            else -> {
+                ProfileOptionsState.NORMAL_OPTIONS
+            }
+        }
     }
 
     private fun NetworkResult.Error.toScreenState(): ProfileScreenState {

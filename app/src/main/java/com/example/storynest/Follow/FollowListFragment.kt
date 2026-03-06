@@ -335,7 +335,7 @@ class FollowListFragment: Fragment() {
             }
 
             override fun onBlock(userId: Long) {
-
+                viewModel.blockUser(userId)
             }
         }
         sheet.setFollowOptionClickListener(
