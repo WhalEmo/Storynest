@@ -8,6 +8,8 @@ val devBaseUrl = localProps.getProperty("DEV_BASE_URL") ?: ""
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
+    id("com.google.dagger.hilt.android")
+    id("kotlin-kapt")
     kotlin("kapt")
 }
 
@@ -54,6 +56,12 @@ android {
 
 dependencies {
     implementation(libs.androidxCoreKtx)
+    val room_version = "2.6.1"
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+    implementation("com.google.dagger:hilt-android:2.50")
+    kapt("com.google.dagger:hilt-android-compiler:2.50")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation ("com.facebook.shimmer:shimmer:0.5.0")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")

@@ -9,7 +9,6 @@ import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.flatMap
 import androidx.paging.insertHeaderItem
-import com.example.storynest.ApiClient
 import com.example.storynest.GenericPagingSource
 import com.example.storynest.Comments.viewModelhelper.BaseState
 import com.example.storynest.Comments.viewModelhelper.CommentMapper.toUiItem
@@ -20,6 +19,7 @@ import com.example.storynest.Comments.viewModelhelper.ReplyThread
 import com.example.storynest.CustomViews.UiEvents
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -35,10 +35,11 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
-
-class CommentsViewModel(
+@HiltViewModel
+class CommentsViewModel @Inject constructor(
     private val repo: CommentRepo
 ) : ViewModel() {
 
@@ -57,7 +58,7 @@ class CommentsViewModel(
     private val _uiEvent = Channel<UiEvents>()
     val uiEvent = _uiEvent.receiveAsFlow()
 
-    private val api = ApiClient.commentApi
+
 
 
     fun removeComment(commentId: Long) {
@@ -229,7 +230,7 @@ class CommentsViewModel(
                 ),
                 pagingSourceFactory = {
                     GenericPagingSource { page, size ->
-                        api.commentsGet(id, page, size)
+                        repo.commentsGet(id, page, size)
                     }
                 }
             ).flow

@@ -10,18 +10,20 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.example.storynest.ApiClient
 import com.example.storynest.GenericPagingSource
+import com.example.storynest.Posts.AppDatabase
 import com.example.storynest.RegisterLogin.LoginResponse
 import com.example.storynest.dataLocal.UserStaticClass
 
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 
 import kotlinx.coroutines.launch
-
-
+@HiltViewModel
 class HomePageViewModel(
-    private val repo: HomePageRepo
+    private val repo: HomePageRepo,
+    private val database: AppDatabase
 ) : ViewModel() {
 
     private val _addPostResult = MutableLiveData<UiState<postResponse>>()

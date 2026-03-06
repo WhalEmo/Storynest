@@ -57,15 +57,14 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class CommentBottomFragment: BottomSheetDialogFragment() {
-    private val CommentRepo by lazy { CommentRepo(ApiClient.commentApi) }
 
-    private val viewModel: CommentsViewModel by activityViewModels {
-        CommentsViewModelFactory(CommentRepo)
-    }
+@AndroidEntryPoint
+class CommentBottomFragment: BottomSheetDialogFragment() {
+    private val viewModel: CommentsViewModel by activityViewModels()
     private lateinit var rvComment: RecyclerView
     private lateinit var progressBar: ProgressBar
     private lateinit var commentAdapter: CommentsAdapter

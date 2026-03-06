@@ -34,7 +34,6 @@ import com.google.android.material.chip.ChipGroup
 
 class AddPostFragmnet : Fragment() {
     private val homePageRepo by lazy { HomePageRepo(ApiClient.postApi) }
-
     private val viewModel: HomePageViewModel by activityViewModels() {
         HomePageViewModelFactory(homePageRepo)
     }

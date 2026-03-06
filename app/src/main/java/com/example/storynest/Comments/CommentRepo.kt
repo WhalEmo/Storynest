@@ -4,10 +4,11 @@ import android.util.Log
 import com.example.storynest.ResultWrapper
 import com.example.storynest.safeApiCall
 import retrofit2.Response
+import javax.inject.Inject
 
-class CommentRepo(
+class CommentRepo @Inject constructor(
     private val api: CMController
-) {
+){
 
     suspend fun addComment(request: commentRequest)
             : ResultWrapper<commentResponse> =
@@ -25,10 +26,9 @@ class CommentRepo(
         postId: Long,
         page: Int = 0,
         size: Int = 10
-    ): ResultWrapper<List<commentResponse>> =
-        safeApiCall {
-            api.commentsGet(postId, page, size)
-        }
+    ): List<commentResponse> =
+        api.commentsGet(postId, page, size)
+
 
     suspend fun subCommentsGet(
         parentCommentId: Long,
