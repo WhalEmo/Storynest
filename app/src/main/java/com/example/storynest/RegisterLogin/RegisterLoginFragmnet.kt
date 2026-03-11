@@ -18,23 +18,24 @@ import androidx.activity.addCallback
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.LiveData
 import com.example.storynest.ApiClient
+import com.example.storynest.HomePage.HomePageViewModel
 import com.example.storynest.R
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
 import com.example.storynest.dataLocal.UserPreferences
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import dagger.hilt.android.AndroidEntryPoint
+import kotlin.getValue
 
+@AndroidEntryPoint
 class RegisterLoginFragmnet : Fragment() {
     private val userPrefs by lazy { UserPreferences.getInstance(requireContext()) }
-    private val registerLoginRepo by lazy { RegisterLoginRepo(ApiClient.api) }
-
-    private val viewModel: RegisterLoginViewModel by viewModels {
-       RegisterLoginViewModelFactory(userPrefs,registerLoginRepo)
-   }
+    private val viewModel: RegisterLoginViewModel by activityViewModels()
     //private val viewModel: RegisterLoginViewModel by viewModels()
     private lateinit var lamp: ImageView
     private lateinit var layoutButtons: LinearLayout

@@ -19,24 +19,19 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.LiveData
 import com.bumptech.glide.Glide
-import com.example.storynest.ApiClient
-import com.example.storynest.HomePage.HomePageRepo
 import com.example.storynest.HomePage.HomePageViewModel
-import com.example.storynest.HomePage.HomePageViewModelFactory
 import com.example.storynest.R
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
-import com.example.storynest.dataLocal.UserPreferences
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AddPostFragmnet : Fragment() {
-    private val homePageRepo by lazy { HomePageRepo(ApiClient.postApi) }
-    private val viewModel: HomePageViewModel by activityViewModels() {
-        HomePageViewModelFactory(homePageRepo)
-    }
+    private val viewModel: HomePageViewModel by activityViewModels()
 
     private lateinit var edtStoryTitle: EditText
     private lateinit var imgCover: ImageView

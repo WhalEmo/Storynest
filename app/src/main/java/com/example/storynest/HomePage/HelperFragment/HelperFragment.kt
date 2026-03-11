@@ -10,20 +10,14 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.activityViewModels
 import com.bumptech.glide.Glide
-import com.example.storynest.ApiClient
-import com.example.storynest.HomePage.HomePageRepo
 import com.example.storynest.HomePage.HomePageViewModel
-import com.example.storynest.HomePage.HomePageViewModelFactory
 import com.example.storynest.HomePage.postResponse
 import com.example.storynest.R
-import com.example.storynest.dataLocal.UserPreferences
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class HelperFragment :  Fragment() {
-    private val homePageRepo by lazy { HomePageRepo(ApiClient.postApi) }
-
-    private val viewModel: HomePageViewModel by activityViewModels() {
-        HomePageViewModelFactory(homePageRepo)
-    }
+    private val viewModel: HomePageViewModel by activityViewModels()
     private lateinit var imgBookCover: ImageView
     private lateinit var categories: TextView
     private lateinit var txtBookContent: TextView

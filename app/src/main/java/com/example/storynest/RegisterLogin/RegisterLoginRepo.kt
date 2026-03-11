@@ -5,9 +5,10 @@ import com.example.storynest.mapSuccess
 import com.example.storynest.safeApiCall
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 
-class RegisterLoginRepo(
+class RegisterLoginRepo @Inject constructor(
     private val api: RLController
 ) {
     suspend fun login(request: loginRequest): ResultWrapper<LoginResponse> =

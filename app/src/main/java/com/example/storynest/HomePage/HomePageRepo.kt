@@ -4,10 +4,10 @@ import android.util.Log
 import com.example.storynest.ErrorType
 import com.example.storynest.ResultWrapper
 import com.example.storynest.safeApiCall
+import javax.inject.Inject
 
 
-
-class HomePageRepo(
+class HomePageRepo @Inject constructor(
     private val api: HPController
 ) {
     suspend fun addPost(request: postRequest): ResultWrapper<postResponse> =

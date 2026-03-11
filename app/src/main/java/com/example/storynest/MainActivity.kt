@@ -15,7 +15,9 @@ import com.example.storynest.HomePage.HomePageFragment
 import com.example.storynest.HomePage.BarFragmnets.AddPostFragmnet
 import com.example.storynest.HomePage.BarFragmnets.SearchFragment
 import com.example.storynest.HomePage.BarFragmnets.ProfileFragmnet
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var btnHome: ImageView
     private lateinit var btnSearch: ImageView

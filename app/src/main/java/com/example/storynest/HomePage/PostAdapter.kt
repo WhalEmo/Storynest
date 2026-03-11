@@ -9,22 +9,18 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.storynest.Comments.commentUiItem
 import com.example.storynest.R
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
-import kotlin.math.log
+
 class PostAdapter(
     private val listener: OnPostInteractionListener
-) : ListAdapter<postResponse, PostAdapter.PostViewHolder>(DIFF_CALLBACK) {
+) : PagingDataAdapter<HomePageUiModel, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
 
     interface OnPostInteractionListener {
         fun onLikeClicked(Id: Long)
@@ -34,16 +30,46 @@ class PostAdapter(
         fun clickComment(Id: Long,commentsPinned:Long);
     }
 
-    companion object {
-        val DIFF_CALLBACK = object : DiffUtil.ItemCallback<postResponse>() {
-            override fun areItemsTheSame(oldItem: postResponse, newItem: postResponse) =
-                oldItem.post_id == newItem.post_id
-
-            override fun areContentsTheSame(oldItem: postResponse, newItem: postResponse) =
-                oldItem == newItem
+    override fun getItemViewType(position: Int): Int {
+        return when(getItem(position)){
+            is HomePageUiModel.PostItem -> TYPE_POST
+            is HomePageUiModel.AdvertItem -> TYPE_ADVERT
+            is HomePageUiModel.SuggestedUserItem -> TYPE_SUGGESTED
+            else -> throw IllegalArgumentException("Unknown type")
         }
     }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
 
+        return when (viewType) {
+            TYPE_POST -> {
+                val view = inflater.inflate(R.layout.item_post, parent, false)
+                PostViewHolder(view)
+            }
+
+            TYPE_ADVERT -> {
+                val view = inflater.inflate(R.layout., parent, false)
+                AdvertViewHolder(view)
+            }
+
+            TYPE_SUGGESTED -> {
+                val view = inflater.inflate(R.layout., parent, false)
+                SuggestedViewHolder(view)
+            }
+
+            else -> throw IllegalArgumentException("Invalid view type")
+        }
+
+    }
+
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val item = getItem(position) ?: return
+        when (item){
+            is HomePageUiModel.PostItem -> (holder as PostViewHolder).bind(item.post)
+        }
+
+    }
     inner class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imgUserProfile: ImageView = itemView.findViewById(R.id.imgUserProfile)
         val txtUsername: TextView = itemView.findViewById(R.id.txtUsername)
@@ -56,6 +82,12 @@ class PostAdapter(
         val btnComment: ImageView = itemView.findViewById(R.id.btnComment)
         val txtLikeCount: TextView = itemView.findViewById(R.id.txtLikeCount)
         val txtReadMore: TextView = itemView.findViewById(R.id.txtReadMore)
+
+
+        fun bind(post: postUiItem) {
+
+
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
@@ -121,37 +153,19 @@ class PostAdapter(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun formatPostDate(postDate: String): String {
+    companion object {
+        private const val TYPE_POST = 0
+        private const val TYPE_ADVERT = 1
+        private const val TYPE_SUGGESTED= 2
+        val DIFF_CALLBACK = object : DiffUtil.ItemCallback<HomePageUiModel>() {
+            override fun areItemsTheSame(oldItem: HomePageUiModel, newItem: HomePageUiModel) =
+                oldItem.post_id == newItem.post_id
 
-        // Backend formatı: 2025-12-20T09:08:24.056984
-        val parser = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
-
-        // 1️⃣ String → LocalDateTime
-        val postUtc = LocalDateTime.parse(postDate, parser)
-            .atZone(ZoneOffset.UTC)
-
-        // 2️⃣ UTC → Türkiye saati
-        val postTr = postUtc.withZoneSameInstant(ZoneId.of("Europe/Istanbul"))
-
-        // 3️⃣ Şu anki zamanı da Türkiye saatinde al
-        val nowTr = ZonedDateTime.now(ZoneId.of("Europe/Istanbul"))
-
-        val days = ChronoUnit.DAYS.between(postTr, nowTr)
-        val hours = ChronoUnit.HOURS.between(postTr, nowTr)
-        val minutes = ChronoUnit.MINUTES.between(postTr, nowTr)
-
-        return when {
-            days >= 7 -> {
-                val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-                postTr.format(formatter)
-            }
-            days >= 1 -> "$days gün önce"
-            hours >= 1 -> "$hours saat önce"
-            minutes >= 1 -> "$minutes dakika önce"
-            else -> "Şimdi"
+            override fun areContentsTheSame(oldItem: HomePageUiModel, newItem: HomePageUiModel) =
+                oldItem == newItem
         }
     }
+
 
 
 

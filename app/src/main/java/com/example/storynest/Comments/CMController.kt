@@ -1,6 +1,6 @@
 package com.example.storynest.Comments
 
-import com.example.storynest.Comments.viewModelhelper.ReplyAction
+import com.example.storynest.Comments.viewModelChelper.ReplyAction
 import com.google.gson.annotations.SerializedName
 import retrofit2.http.Body
 import retrofit2.http.DELETE

@@ -11,22 +11,20 @@ import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.storynest.ApiClient
+import com.example.storynest.Comments.CommentsViewModel
 import com.example.storynest.HomePage.HomePageRepo
 import com.example.storynest.HomePage.HomePageViewModel
-import com.example.storynest.HomePage.HomePageViewModelFactory
 import com.example.storynest.HomePage.UserResponse
 import com.example.storynest.R
 import com.example.storynest.UiState
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import dagger.hilt.android.AndroidEntryPoint
 import kotlin.getValue
 
+@AndroidEntryPoint
 class LikeUsersBottomSheet: BottomSheetDialogFragment()  {
-    private val homePageRepo by lazy { HomePageRepo(ApiClient.postApi) }
-    private val viewModel: HomePageViewModel by activityViewModels() {
-        HomePageViewModelFactory(homePageRepo)
-    }
+    private val viewModel: HomePageViewModel by activityViewModels()
     private lateinit var rvLikeUsers: RecyclerView
     private lateinit var Likeadapter: LikeUsersAdapter
     private lateinit var progressBar: ProgressBar

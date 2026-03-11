@@ -1,4 +1,4 @@
-package com.example.storynest.Comments.viewModelhelper
+package com.example.storynest.Comments.viewModelChelper
 
 sealed class PinStatus {
     object Loading: PinStatus()

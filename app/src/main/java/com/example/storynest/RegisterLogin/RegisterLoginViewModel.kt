@@ -6,9 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.storynest.*
 import com.example.storynest.dataLocal.UserPreferences
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class RegisterLoginViewModel(
+@HiltViewModel
+class RegisterLoginViewModel @Inject constructor(
     private val userPrefs: UserPreferences,
     private val repository: RegisterLoginRepo
 ) : ViewModel() {

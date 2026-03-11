@@ -7,7 +7,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
@@ -16,15 +15,18 @@ import com.example.storynest.MainActivity
 import com.example.storynest.R
 import com.example.storynest.dataLocal.UserPreferences
 import com.example.storynest.dataLocal.UserStaticClass
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import javax.inject.Inject
 
+
+@AndroidEntryPoint
 class LaunchActivity : AppCompatActivity() {
+    @Inject
+    lateinit var rlApi: RLController
     private lateinit var userPrefs: UserPreferences
     private lateinit var isTokenExpired: IsTokenExpired
     private lateinit var intentOther: Intent
@@ -146,11 +148,9 @@ class LaunchActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val result = ApiClient.api.verify(token) // suspend çağrı
-                Log.d("VERIFY", result.message ?: "success")
+                val result =rlApi.verify(token) // suspend çağrı
                 dontNormalFlow("login")
             } catch (e: Exception) {
-                Log.e("VERIFY", "network error", e)
                 Toast.makeText(
                     this@LaunchActivity,
                     "Doğrulama linki geçersiz veya internet yok!",
@@ -166,7 +166,7 @@ class LaunchActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val result = ApiClient.api.verifyResetPassword(token) // suspend
+                val result =rlApi.verifyResetPassword(token) // suspend
                 dontNormalFlow("forgotpassword", token)
             } catch (e: Exception) {
                 Log.e("VERIFY", "network error", e)

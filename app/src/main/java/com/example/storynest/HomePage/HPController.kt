@@ -28,6 +28,20 @@ data class postResponse(
     var liked:Boolean,
     var pinnedCount:Long
 )
+
+data class postUiItem(
+    val postId:Long,
+    val userId: Long,
+    val userName: String,
+    val profileUrl: String?,
+    val postName:String,
+    val contents:String,
+    val categories:String,
+    val coverImage:String,
+    var numberof_likes: String,
+    val postDate: String,
+    val likeIconRes: Int,
+)
 data class UserResponse(
     val id: Long,
     val username: String,

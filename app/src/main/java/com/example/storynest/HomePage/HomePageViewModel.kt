@@ -4,13 +4,21 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.example.storynest.ApiClient
+import androidx.paging.filter
+import androidx.paging.flatMap
+import androidx.paging.insertSeparators
+import androidx.paging.map
+import com.example.storynest.Comments.CommentsUiModel
 import com.example.storynest.GenericPagingSource
+import com.example.storynest.HomePage.viewModelHpHelper.PostMapper
 import com.example.storynest.Posts.AppDatabase
+import com.example.storynest.Posts.PostEntity
+import com.example.storynest.Posts.PostRemoteMediator
 import com.example.storynest.RegisterLogin.LoginResponse
 import com.example.storynest.dataLocal.UserStaticClass
 
@@ -18,10 +26,14 @@ import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+
 @HiltViewModel
-class HomePageViewModel(
+class HomePageViewModel  @Inject constructor(
     private val repo: HomePageRepo,
     private val database: AppDatabase
 ) : ViewModel() {
@@ -40,7 +52,6 @@ class HomePageViewModel(
 
     private val _homepagePosts = MutableLiveData<UiState<List<postResponse>>>()
     val homepagePosts: LiveData<UiState<List<postResponse>>> = _homepagePosts
-    private val api = ApiClient.postApi
 
 
 
@@ -72,8 +83,9 @@ class HomePageViewModel(
             isLoadingHome = false
         }
     }
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val PagingPosts: Flow<PagingData<postResponse>> =
+
+    @OptIn(ExperimentalPagingApi::class)
+    val pagingPosts: Flow<PagingData<PostEntity>> =
         Pager(
             config = PagingConfig(
                 pageSize = 20,
@@ -81,15 +93,40 @@ class HomePageViewModel(
                 enablePlaceholders = false,
                 prefetchDistance = 3
             ),
+            remoteMediator = PostRemoteMediator(
+                apiCall = { page, size -> repo.HomePagePosts(page, size) },
+                database = database
+            ),
             pagingSourceFactory = {
-                GenericPagingSource { page, size ->
-                    api.HomePagePosts(page, size)
-                }
+                database.postDao().getAllPosts()
             }
         ).flow.cachedIn(viewModelScope)
 
+    val posts: Flow<PagingData<HomePageUiModel>> = pagingPosts
+        .map { pagingData: PagingData<PostEntity> ->
+            val mappedData: PagingData<HomePageUiModel> = pagingData.map { entity ->
+                HomePageUiModel.PostItem(with(PostMapper) { entity.toUiItem() })
+            }
 
+            mappedData.insertSeparators { before: HomePageUiModel?, after: HomePageUiModel? ->
+                when {
+                    before == null -> {
+                        HomePageUiModel.HeaderItem("Bugünün Akışı")
+                    }
 
+                    before is HomePageUiModel.PostItem && before.post.postId % 5 == 0L -> {
+                        HomePageUiModel.SuggestedUserItem(emptyList())
+                    }
+
+                    before is HomePageUiModel.PostItem && before.post.postId % 10 == 0L -> {
+                        HomePageUiModel.AdvertItem("reklam_123")
+                    }
+
+                    else -> null
+                }
+            }
+        }
+        .cachedIn(viewModelScope)
     fun addPost(
         postName: String,
         contents: String,

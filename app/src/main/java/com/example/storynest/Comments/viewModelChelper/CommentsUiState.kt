@@ -1,7 +1,6 @@
-package com.example.storynest.Comments.viewModelhelper
+package com.example.storynest.Comments.viewModelChelper
 
 import com.example.storynest.Comments.commentResponse
-import com.example.storynest.Comments.commentUiItem
 
 data class CommentUiState(
     val removedIds: Set<Long>,

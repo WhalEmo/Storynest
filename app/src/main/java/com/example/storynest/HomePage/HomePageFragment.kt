@@ -1,9 +1,5 @@
 package com.example.storynest.HomePage
-
-import android.media.Image
-import androidx.fragment.app.viewModels
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -13,21 +9,21 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.storynest.ApiClient
 import com.example.storynest.Comments.CommentBottomFragment
 import com.example.storynest.R
 import com.example.storynest.HomePage.HelperFragment.HelperFragment
 import com.example.storynest.HomePage.PostLikeUser.LikeUsersBottomSheet
-import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class HomePageFragment : Fragment() {
-    private val homePageRepo by lazy { HomePageRepo(ApiClient.postApi) }
-    private val viewModel: HomePageViewModel by activityViewModels() {
-        HomePageViewModelFactory(homePageRepo)
-    }
+    private val viewModel: HomePageViewModel by activityViewModels()
     private lateinit var recyclerViewPosts: RecyclerView
     private lateinit var postAdapter: PostAdapter
     private lateinit var generalProgressBar: ProgressBar
@@ -109,6 +105,11 @@ class HomePageFragment : Fragment() {
         }
        viewModel.postsLike.observe(viewLifecycleOwner){ postsLikeList ->
        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.PagingPosts.collectLatest { pagingData ->
+                postAdapter.submitData(pagingData)
+            }
+        }
 
     }
     private fun <T> observeUiState(
