@@ -2,11 +2,16 @@ package com.example.storynest.Profile
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.transition.ChangeBounds
+import android.transition.Fade
+import android.transition.TransitionManager
+import android.transition.TransitionSet
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -38,7 +43,7 @@ class ProfileFragment : Fragment(){
     private val binding get() = _binding!!
     private val viewModel: ProfileViewModel by viewModels()
     private val navigator = Navigator
-    private lateinit var userData: ProfileUiState
+    private var userData: ProfileUiState? = null
 
 
 
@@ -188,6 +193,13 @@ class ProfileFragment : Fragment(){
     }
 
     private fun render(state: ProfileUiState) {
+        val transition = TransitionSet().apply {
+            ordering = TransitionSet.ORDERING_TOGETHER
+            addTransition(Fade(Fade.IN).setDuration(400))
+            addTransition(ChangeBounds().setDuration(300))
+            interpolator = AccelerateDecelerateInterpolator()
+        }
+        TransitionManager.beginDelayedTransition(binding.root, transition)
         binding.profileHeaderGroup.isVisible = true
         binding.containerBlockedByMe.isVisible = false
 
@@ -218,6 +230,14 @@ class ProfileFragment : Fragment(){
     }
 
     private fun blockRender(state: ProfileBlockUiState){
+        val transition = TransitionSet().apply {
+            addTransition(Fade())
+            addTransition(ChangeBounds())
+            duration = 100
+            interpolator = AccelerateDecelerateInterpolator()
+        }
+        TransitionManager.beginDelayedTransition(binding.root, transition)
+
         binding.profileHeaderGroup.isVisible = false
         binding.containerBlockedByMe.isVisible = true
         binding.toolBar.settingsButton.isVisible = false
@@ -307,8 +327,8 @@ class ProfileFragment : Fragment(){
     private fun showProfileOptions(){
         val sheet = ProfileOptionsBottomSheet.newInstance(
             userId = userId,
-            username = userData.username,
-            profileImage = userData.profileImageUrl ?: "",
+            username = userData?.username ?: "",
+            profileImage = userData?.profileImageUrl ?: "",
             status = viewModel.getMenuState()
         )
         createOptionsListener(sheet)

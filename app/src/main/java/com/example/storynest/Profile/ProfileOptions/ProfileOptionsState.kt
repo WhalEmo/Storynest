@@ -25,6 +25,12 @@ enum class ProfileOptionsState(
     NORMAL_OPTIONS(
         title = "Profil Seçenekleri",
         showMessage = true,
+        showUnfollow = false,
+        showBlock = true
+    ),
+    FOLLOWING_OPTIONS(
+        title = "Takip Ettiği Kişiler",
+        showMessage = true,
         showUnfollow = true,
         showBlock = true
     )

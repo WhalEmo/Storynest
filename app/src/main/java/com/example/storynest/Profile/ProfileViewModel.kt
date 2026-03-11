@@ -165,7 +165,10 @@ class ProfileViewModel: ViewModel() {
             showPendingRequestButton = pending && !following,
             btnFollowYour = follower && !following && !pending,
             followersCount = this.followersCount,
-            followingCount = this.followingCount
+            followingCount = this.followingCount,
+            isFollowing = following,
+            isFollower = follower,
+            isPending = pending
         )
     }
 
@@ -227,7 +230,13 @@ class ProfileViewModel: ViewModel() {
     private fun ProfileScreenState.toProfileOptionsState(): ProfileOptionsState{
         return when(this){
             is ProfileScreenState.Success -> {
-                ProfileOptionsState.NORMAL_OPTIONS
+                val uiState = this.uiState
+                if(uiState.isFollowing){
+                    ProfileOptionsState.FOLLOWING_OPTIONS
+                }
+                else{
+                    ProfileOptionsState.NORMAL_OPTIONS
+                }
             }
             is ProfileScreenState.Blocked -> {
                 if(this.uiState.showUnBlockButton){
@@ -235,6 +244,14 @@ class ProfileViewModel: ViewModel() {
                 }
                 else{
                     ProfileOptionsState.BLOCKED_OPTIONS
+                }
+            }
+            is ProfileScreenState.Update -> {
+                if(this.uiState.isFollowing){
+                    ProfileOptionsState.FOLLOWING_OPTIONS
+                }
+                else{
+                    ProfileOptionsState.NORMAL_OPTIONS
                 }
             }
             else -> {

@@ -5,6 +5,7 @@ import com.example.storynest.Api.NetworkResult
 import com.example.storynest.ApiClient
 import com.example.storynest.Follow.FollowRepository
 import com.example.storynest.GlobalEvent.FollowEvent
+import com.example.storynest.Profile.MVC.ProfileRepository
 import com.example.storynest.TestUserProvider
 
 object BlockRepository: BaseRepository() {
@@ -14,6 +15,7 @@ object BlockRepository: BaseRepository() {
         token = TestUserProvider.STATIC_TOKEN
     }
     private val followRepository = FollowRepository
+    private val profileRepo: ProfileRepository = ProfileRepository
     private val blockApiController = ApiClient.getClient(token).create(BlockApiController::class.java)
 
 
@@ -26,14 +28,25 @@ object BlockRepository: BaseRepository() {
                 userId = userId,
                 followEvent = FollowEvent.UNFOLLOW
             )
+            profileRepo.updateBlockedOrUnBlockedProfile(
+                userId = userId,
+                blockStatus = BlockStatus.YOU_BLOCKER
+            )
         }
         return response is NetworkResult.Success
     }
 
     suspend fun unBlock(userId: Long): Boolean{
-        return safeApiCall {
+        val response = safeApiCall {
             blockApiController.unblock(userId)
-        } is NetworkResult.Success
+        }
+        if(response is NetworkResult.Success){
+            profileRepo.updateBlockedOrUnBlockedProfile(
+                userId = userId,
+                blockStatus = BlockStatus.UNBLOCKED
+            )
+        }
+        return response is NetworkResult.Success
     }
 
 

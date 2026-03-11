@@ -22,6 +22,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="10dp"
+        android:layout_marginTop="20dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <include
@@ -34,7 +35,7 @@
             android:id="@+id/profileHeaderGroup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="gone"
+            android:visibility="visible"
             app:constraint_referenced_ids = "profileImage, nameSurname,username,biography,statsContainer,profileButtonsContainer"
             tools:ignore="NotSibling,UnknownId" />
 

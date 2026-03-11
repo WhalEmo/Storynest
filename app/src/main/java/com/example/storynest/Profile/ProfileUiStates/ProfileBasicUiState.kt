@@ -6,5 +6,9 @@ data class ProfileBasicUiState(
     val showPendingRequestButton: Boolean,
     val btnFollowYour: Boolean,
     val followersCount: Int,
-    val followingCount: Int
+    val followingCount: Int,
+
+    val isFollowing: Boolean,
+    val isFollower: Boolean,
+    val isPending: Boolean
 )

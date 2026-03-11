@@ -49,6 +49,60 @@ object ProfileRepository: BaseRepository(){
         return null
     }
 
+    fun updateBlockedOrUnBlockedProfile(userId: Long, blockStatus: BlockStatus){
+        when(blockStatus){
+            BlockStatus.YOU_BLOCKER -> {
+                cacheUpdateBlockUserProfile(
+                    userId = userId,
+                    blockStatus = blockStatus
+                )
+            }
+            BlockStatus.TARGET_BLOCKER -> TODO()
+            BlockStatus.UNBLOCKED -> {
+                cacheUpdateUnBlockUserProfile(
+                    userId = userId
+                )
+            }
+        }
+    }
+
+    private fun cacheUpdateBlockUserProfile(
+        userId: Long,
+        blockStatus: BlockStatus
+    ){
+        val profileData = memoryCache[userId]
+        when(profileData){
+            is ProfileData.BlockProfileData -> {
+                val updateProfileData = profileData.copy(
+                    blockStatus = blockStatus
+                )
+                memoryCache[userId] = updateProfileData
+            }
+            is ProfileData.CreateProfileData -> {
+                val createBlockProfileData = ProfileData.BlockProfileData(
+                    userId = userId,
+                    blockStatus = blockStatus
+                )
+                memoryCache[userId] = createBlockProfileData
+            }
+            else -> {
+                val createBlockProfileData = ProfileData.BlockProfileData(
+                    userId = userId,
+                    blockStatus = blockStatus
+                )
+                memoryCache[userId] = createBlockProfileData
+            }
+        }
+    }
+
+    private fun cacheUpdateUnBlockUserProfile(
+        userId: Long
+    ){
+        val profileData = memoryCache[userId]
+        if(profileData != null){
+            memoryCache.remove(userId)
+        }
+    }
 
     fun loadProfile(
         userId: Long,
