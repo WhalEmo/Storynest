@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
 
 
 class ProfileViewModel: ViewModel() {
@@ -32,6 +34,7 @@ class ProfileViewModel: ViewModel() {
     private val blockRepository = BlockRepository
 
     private val _error = MutableLiveData<String>()
+
     val error: LiveData<String> = _error
     private var loadJob: Job? = null
 
@@ -83,7 +86,7 @@ class ProfileViewModel: ViewModel() {
         userId: Long,
         profileMode: ProfileMode
     ){
-        viewModelScope.launch {
+        safeLaunch {
             followRepository.follow(userId)
         }
     }
@@ -91,7 +94,7 @@ class ProfileViewModel: ViewModel() {
     fun unFollowUser(
         userId: Long
     ){
-        viewModelScope.launch {
+        safeLaunch {
             followRepository.unfollow(userId)
         }
     }
@@ -99,7 +102,7 @@ class ProfileViewModel: ViewModel() {
     fun blockUser(
         userId: Long
     ) {
-        viewModelScope.launch {
+        safeLaunch {
             val response = blockRepository.block(userId)
             if(response){
                 _uiState.value = ProfileScreenState.Blocked(
@@ -116,13 +119,30 @@ class ProfileViewModel: ViewModel() {
         userId: Long,
         mode: ProfileMode
     ) {
-        viewModelScope.launch {
+        safeLaunch {
             val response = blockRepository.unBlock(userId)
             if(response){
                 init(
                     mode = mode,
                     userId = userId
                 )
+            }
+        }
+    }
+
+    private fun safeLaunch(event: suspend () -> Unit) {
+        viewModelScope.launch {
+            try {
+                event()
+            }
+            catch (e: HttpException){
+                _error.value = "Sunucuya bağlanılamadı (HTTP ${e.code()})"
+            }
+            catch (e: IOException) {
+                _error.value = "İnternet bağlantısı yok!"
+            }
+            catch (e: Exception) {
+                _error.value = "Beklenmeyen bir hata oluştu"
             }
         }
     }

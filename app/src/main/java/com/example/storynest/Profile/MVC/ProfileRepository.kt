@@ -137,7 +137,9 @@ object ProfileRepository: BaseRepository(){
             }
             is NetworkResult.Error -> {
                 val status = fresh.status?.let {
-                    BlockStatus.valueOf(fresh.status)
+                    if (fresh.status == BlockStatus.YOU_BLOCKER.name || fresh.status == BlockStatus.TARGET_BLOCKER.name){
+                        return@let BlockStatus.valueOf(fresh.status)
+                    }
                 }
                 if(status is BlockStatus){
                     val blockedProfile = ProfileData.BlockProfileData(

@@ -21,6 +21,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import coil.load
+import com.example.storynest.CustomViews.InfoMessage
 import com.example.storynest.Follow.FollowType
 import com.example.storynest.Navigator
 import com.example.storynest.Profile.ProfileOptions.ProfileOptionsBottomSheet
@@ -120,6 +121,7 @@ class ProfileFragment : Fragment(){
             mode = profileMode,
             userId = userId
         )
+        observeErrorInfo()
     }
 
     override fun onDestroyView() {
@@ -185,8 +187,27 @@ class ProfileFragment : Fragment(){
                         is ProfileScreenState.Blocked -> {
                             blockRender(state.uiState)
                         }
+                        is ProfileScreenState.Loading -> {
+                            loadRender()
+                        }
+                        is ProfileScreenState.Error -> {
+                            errorRender(state.message)
+                        }
                         else -> {}
                     }
+                }
+            }
+        }
+    }
+    private fun observeErrorInfo(){
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
+                viewModel.error.observe(viewLifecycleOwner){
+                    InfoMessage.show(
+                        activity = requireActivity(),
+                        message = it,
+                        duration = 500
+                    )
                 }
             }
         }
@@ -200,8 +221,9 @@ class ProfileFragment : Fragment(){
             interpolator = AccelerateDecelerateInterpolator()
         }
         TransitionManager.beginDelayedTransition(binding.root, transition)
-        binding.profileHeaderGroup.isVisible = true
-        binding.containerBlockedByMe.isVisible = false
+        hideIncludeViews(
+            unHideView = binding.profileHeaderGroup
+        )
 
         headerBinding.username.text = state.username
         headerBinding.nameSurname.text = "${state.name} ${state.surname}"
@@ -263,6 +285,19 @@ class ProfileFragment : Fragment(){
         headerBinding.followingCount.text = state.followingCount.toString()
     }
 
+    private fun errorRender(message: String){
+        hideIncludeViews(
+            unHideView = binding.errorLayout.root
+        )
+        binding.errorLayout.errorDescription.text = message
+    }
+
+    private fun loadRender(){
+        hideIncludeViews(
+            unHideView = binding.loadingLayout.root
+        )
+    }
+
     private fun setupButtonFlow(
         profileMode: ProfileMode,
         userId: Long
@@ -321,6 +356,21 @@ class ProfileFragment : Fragment(){
         binding.toolBar.dotMenu.setOnClickListener {
             showProfileOptions()
         }
+        binding.errorLayout.btnRetry.setOnClickListener {
+            viewModel.init(
+                mode = profileMode,
+                userId = userId
+            )
+        }
+    }
+
+    private fun hideIncludeViews(
+        unHideView: View
+    ){
+        binding.profileHeaderGroup.isVisible = unHideView == binding.profileHeaderGroup
+        binding.containerBlockedByMe.isVisible = unHideView == binding.containerBlockedByMe
+        binding.loadingLayout.root.isVisible = unHideView == binding.loadingLayout.root
+        binding.errorLayout.root.isVisible = unHideView == binding.errorLayout.root
     }
 
 

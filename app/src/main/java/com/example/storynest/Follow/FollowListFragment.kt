@@ -27,6 +27,7 @@ import com.example.storynest.Navigator
 import com.example.storynest.Profile.ProfileMode
 import com.example.storynest.R
 import com.example.storynest.databinding.MyFollowersFragmentBinding
+import com.example.storynest.databinding.ViewErrorBinding
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -267,10 +268,58 @@ class FollowListFragment: Fragment() {
     ){
         when(uiState){
             is FollowersUiState.Content ->{
+                binding.eventContainer.isVisible = false
                 binding.recycler.recyclerFadeIn()
             }
-            else -> null
+            is FollowersUiState.Error ->{
+                errorRender()
+            }
+            is FollowersUiState.Loading ->{
+                loadingRender()
+            }
+            is FollowersUiState.Empty ->{
+                emptyRender()
+            }
         }
+    }
+
+    private fun errorRender(){
+        binding.eventContainer.isVisible = true
+        binding.recycler.isVisible = false
+        binding.errorEvent.root.isVisible = true
+
+    }
+
+    private fun loadingRender(){
+        binding.eventContainer.isVisible = true
+        binding.recycler.isVisible = false
+        binding.loadingEvent.root.isVisible = true
+        binding.errorEvent.root.isVisible = false
+    }
+
+    private fun emptyRender() {
+        binding.eventContainer.isVisible = true
+        val emptyEvent = binding.emptyEvent
+        binding.recycler.isVisible = false
+        emptyEvent.root.isVisible = true
+        binding.errorEvent.root.isVisible = false
+        binding.loadingEvent.root.isVisible = false
+
+        emptyEvent.emptyTitle.text = when(followType){
+            FollowType.MY_FOLLOWERS -> {
+                "Henüz Takipçi Yok"
+            }
+            FollowType.MY_FOLLOWING -> {
+                "Henüz Takip Etmemişsin"
+            }
+            FollowType.USER_FOLLOWERS -> {
+                "Henüz Takipçi Yok"
+            }
+            FollowType.USER_FOLLOWING -> {
+                "Henüz Takip Etmemişsin"
+            }
+        }
+
     }
 
     private fun sendMessage(){
