@@ -17,7 +17,7 @@ class HomePageRepo @Inject constructor(
 
     suspend fun toggleLike(
         postId: Long
-    ): ResultWrapper<ToggleLikeResponse> =
+    ): ResultWrapper<postResponse> =
         safeApiCall {
             api.toggleLike(postId)
         }

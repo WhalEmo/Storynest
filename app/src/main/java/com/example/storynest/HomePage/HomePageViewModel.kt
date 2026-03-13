@@ -14,6 +14,7 @@ import androidx.paging.flatMap
 import androidx.paging.insertSeparators
 import androidx.paging.map
 import com.example.storynest.Comments.CommentsUiModel
+import com.example.storynest.CustomViews.UiEvents
 import com.example.storynest.GenericPagingSource
 import com.example.storynest.HomePage.viewModelHpHelper.PostMapper
 import com.example.storynest.Posts.AppDatabase
@@ -25,9 +26,11 @@ import com.example.storynest.dataLocal.UserStaticClass
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -44,45 +47,13 @@ class HomePageViewModel  @Inject constructor(
     private val _userPosts = MutableLiveData<UiState<List<postResponse>>>()
     val userPosts: LiveData<UiState<List<postResponse>>> = _userPosts
 
-    private val _postsLike = MutableLiveData<UiState<ToggleLikeResponse>>()
-    val postsLike: LiveData<UiState<ToggleLikeResponse>> = _postsLike
+    private val _uiEvent = Channel<UiEvents>()
+    val uiEvent = _uiEvent.receiveAsFlow()
 
     private val _usersWhoLike = MutableLiveData<UiState<List<UserResponse>>>()
     val usersWhoLike: LiveData<UiState<List<UserResponse>>> = _usersWhoLike
 
-    private val _homepagePosts = MutableLiveData<UiState<List<postResponse>>>()
-    val homepagePosts: LiveData<UiState<List<postResponse>>> = _homepagePosts
 
-
-
-    private var currentPageHome = 0
-    private val pageSizeHome = 10
-    var isLoadingHome = false
-    var isLastPageHome = false
-    fun homePagePosts(
-        reset: Boolean = false
-    ){
-        if (isLoadingHome || isLastPageHome) return
-        if (reset) currentPageHome = 0
-
-        _homepagePosts.value = UiState.Loading
-        isLoadingHome = true
-
-        viewModelScope.launch {
-            val result=repo.HomePagePosts(currentPageHome,pageSizeHome)
-            when (result) {
-                is ResultWrapper.Success -> {
-                    val currentList = (_homepagePosts.value as? UiState.Success)?.data ?: emptyList()
-                    val newList = if (reset) result.data else currentList + result.data
-                    _homepagePosts.value = UiState.Success(newList)
-                    isLastPageHome = result.data.size < pageSizeHome
-                    if (!isLastPageHome) currentPageHome++
-                }
-                is ResultWrapper.Error -> _homepagePosts.value = UiState.Error(result.message)
-            }
-            isLoadingHome = false
-        }
-    }
 
     @OptIn(ExperimentalPagingApi::class)
     val pagingPosts: Flow<PagingData<PostEntity>> =
@@ -102,31 +73,45 @@ class HomePageViewModel  @Inject constructor(
             }
         ).flow.cachedIn(viewModelScope)
 
+
     val posts: Flow<PagingData<HomePageUiModel>> = pagingPosts
-        .map { pagingData: PagingData<PostEntity> ->
-            val mappedData: PagingData<HomePageUiModel> = pagingData.map { entity ->
-                HomePageUiModel.PostItem(with(PostMapper) { entity.toUiItem() })
+        .map { pagingData ->
+            val mappedData = pagingData.map { entity ->
+                HomePageUiModel.PostItem(
+                    post = with(PostMapper) { entity.toUiItem() },
+                    position =entity.orderIndex
+                )
             }
 
-            mappedData.insertSeparators { before: HomePageUiModel?, after: HomePageUiModel? ->
+            mappedData.insertSeparators { before, after ->
+                /*
                 when {
                     before == null -> {
-                        HomePageUiModel.HeaderItem("Bugünün Akışı")
+                        HomePageUiModel.SectionHeader("Bugünün Akışı", HomePageUiModel.HeaderType.FEED_START)
                     }
 
-                    before is HomePageUiModel.PostItem && before.post.postId % 5 == 0L -> {
+                    before is HomePageUiModel.PostItem && before.position == 4 -> {
+                        HomePageUiModel.SectionHeader("Tanıyabileceğiniz Kişiler", HomePageUiModel.HeaderType.SUGGESTED_USERS)
+                    }
+                    before is HomePageUiModel.SectionHeader && before.type == HomePageUiModel.HeaderType.SUGGESTED_USERS -> {
                         HomePageUiModel.SuggestedUserItem(emptyList())
                     }
 
-                    before is HomePageUiModel.PostItem && before.post.postId % 10 == 0L -> {
-                        HomePageUiModel.AdvertItem("reklam_123")
+                    before is HomePageUiModel.PostItem && before.position == 9 -> {
+                        HomePageUiModel.SectionHeader("Sponsorlu İçerik", HomePageUiModel.HeaderType.SPONSORED)
+                    }
+                    before is HomePageUiModel.SectionHeader && before.type == HomePageUiModel.HeaderType.SPONSORED -> {
+                        HomePageUiModel.AdvertItem("ad_unit_001")
                     }
 
                     else -> null
                 }
+
+                 */
+                null
             }
         }
-        .cachedIn(viewModelScope)
+
     fun addPost(
         postName: String,
         contents: String,
@@ -148,18 +133,22 @@ class HomePageViewModel  @Inject constructor(
         }
     }
 
-    fun toggleLike(
-        postId: Long
-    ) {
-        _postsLike.value= UiState.Loading
+    fun toggleLike(post: postUiItem, isCurrentlyLiked: Boolean, currentLikeCount: Int) {
         viewModelScope.launch {
-            val result=repo.toggleLike(postId)
+            val targetLiked = !isCurrentlyLiked
+            val targetCount = if (targetLiked) currentLikeCount + 1 else currentLikeCount - 1
+
+            database.postDao().updateLikeStatus(post.postId, targetLiked, targetCount.toString())
+
+            val result = repo.toggleLike(post.postId)
+
             when (result) {
                 is ResultWrapper.Success -> {
-                    val body = result.data
-                    _postsLike.value = UiState.Success(body)
                 }
-                is ResultWrapper.Error -> _postsLike.value = UiState.Error(result.message)
+                is ResultWrapper.Error -> {
+                    database.postDao().updateLikeStatus(post.postId, isCurrentlyLiked, currentLikeCount.toString())
+                    _uiEvent.trySend(UiEvents.showInfoMessage("Beğenirken bir hata oluştu"))
+                }
             }
         }
     }

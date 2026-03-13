@@ -1,5 +1,6 @@
 package com.example.storynest.HomePage
 
+import com.google.gson.annotations.SerializedName
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -41,6 +42,8 @@ data class postUiItem(
     var numberof_likes: String,
     val postDate: String,
     val likeIconRes: Int,
+    var liked:Boolean,
+    var pinnedCount:Long
 )
 data class UserResponse(
     val id: Long,
@@ -73,7 +76,7 @@ interface HPController {
 
 
     @POST("/api/posts/{postId}/like")
-    suspend fun toggleLike(@Path("postId") postId: Long): ToggleLikeResponse
+    suspend fun toggleLike(@Path("postId") postId: Long): postResponse
 
 
     @GET("/api/posts/{postId}/getUsersWhoLike")

@@ -22,6 +22,8 @@ object PostMapper {
                 R.drawable.baseline_favorite_24
             else
                 R.drawable.baseline_favorite_border_24,
+            liked = liked,
+            pinnedCount = pinnedCount
         )
     }
     fun postResponse.toEntity(index: Int): PostEntity {

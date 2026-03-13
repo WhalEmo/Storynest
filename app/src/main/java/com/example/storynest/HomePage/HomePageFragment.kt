@@ -1,18 +1,24 @@
 package com.example.storynest.HomePage
 import android.os.Bundle
+import android.view.HapticFeedbackConstants
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.ProgressBar
 
 import android.widget.Toast
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.storynest.Comments.CommentBottomFragment
+import com.example.storynest.CustomViews.InfoMessage
+import com.example.storynest.CustomViews.UiEvents
 import com.example.storynest.R
 import com.example.storynest.HomePage.HelperFragment.HelperFragment
 import com.example.storynest.HomePage.PostLikeUser.LikeUsersBottomSheet
@@ -42,17 +48,20 @@ class HomePageFragment : Fragment() {
         generalProgressBar=view.findViewById(R.id.generalProgressBar)
 
         setupRecyclerView()
-        setupObservers()
-        viewModel.homePagePosts(reset = true)
+        setupLifecycle()
     }
 
     private fun setupRecyclerView() {
         postAdapter = PostAdapter(object : PostAdapter.OnPostInteractionListener {
-            override fun onLikeClicked(Id: Long) {
-                viewModel.toggleLike(Id)
+            override fun onLikeClicked(post: postUiItem,likeView:View) {
+                val animation = AnimationUtils.loadAnimation(context, R.anim.pop_heart)
+                likeView.startAnimation(animation)
+                likeView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                viewModel.toggleLike(post,isCurrentlyLiked = post.liked,
+                    currentLikeCount = post.numberof_likes.toIntOrNull() ?: 0)
             }
 
-            override fun onReadMoreClicked(post: postResponse) {
+            override fun onReadMoreClicked(post: postUiItem) {
                 parentFragmentManager.beginTransaction()
                     .replace(R.id.fragment_container, HelperFragment.newInstance(post))
                     .addToBackStack(null)
@@ -80,59 +89,38 @@ class HomePageFragment : Fragment() {
             adapter = postAdapter
         }
 
-        recyclerViewPosts.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(rv, dx, dy)
+    }
 
-                val visibleItemCount = layoutManager.childCount
-                val totalItemCount = layoutManager.itemCount
-                val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+    private fun setupLifecycle() {
+        lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.uiEvent.collect { event ->
+                        when (event) {
+                            is UiEvents.ShowToast -> {
+                                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                            }
 
-                if (!viewModel.isLoadingHome && !viewModel.isLastPageHome) {
-                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount &&
-                        firstVisibleItemPosition >= 0
-                    ) {
-                        viewModel.homePagePosts()
+                            is UiEvents.showInfoMessage -> {
+                                InfoMessage.show(
+                                    fragment = this@HomePageFragment,
+                                    message = event.message
+                                )
+                            }
+
+                            is UiEvents.ShowSnackbar -> {
+
+                            }
+                        }
+                    }
+                    launch {
+                        viewModel.posts.collectLatest { pagingData ->
+                            postAdapter.submitData(pagingData)
+                        }
                     }
                 }
             }
-        })
+        }
     }
 
-    private fun setupObservers(){
-        observeUiState(viewModel.homepagePosts, generalProgressBar) { data ->
-            postAdapter.submitList(data)
-        }
-       viewModel.postsLike.observe(viewLifecycleOwner){ postsLikeList ->
-       }
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.PagingPosts.collectLatest { pagingData ->
-                postAdapter.submitData(pagingData)
-            }
-        }
-
-    }
-    private fun <T> observeUiState(
-        liveData: LiveData<UiState<T>>,
-        progressBar: View,
-        onSuccess: (T) -> Unit = {}
-    ) {
-        liveData.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is UiState.Loading -> progressBar.visibility = View.VISIBLE
-                is UiState.Success -> {
-                    progressBar.visibility = View.GONE
-                    onSuccess(state.data)
-                }
-                is UiState.Error -> {
-                    progressBar.visibility = View.GONE
-                    Toast.makeText(requireContext(), "Hata: ${state.message}", Toast.LENGTH_SHORT).show()
-                }
-                is UiState.EmailNotVerified->{
-                }
-                is UiState.EmailSent->{
-                }
-            }
-        }
-    }
 }

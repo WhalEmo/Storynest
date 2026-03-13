@@ -6,6 +6,7 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.example.storynest.HomePage.postResponse
+import com.example.storynest.HomePage.viewModelHpHelper.PostMapper.toEntity
 import com.example.storynest.ResultWrapper
 
 @OptIn(ExperimentalPagingApi::class)
@@ -40,23 +41,12 @@ class PostRemoteMediator(
                         database.postDao().clearAll()
                     }
 
+                    val startIndex = page * state.config.pageSize
                     val prevKey = if (page == 0) null else page - 1
                     val nextKey = if (isEndOfList) null else page + 1
 
                     val entities = postList.mapIndexed { index, post ->
-                        PostEntity(
-                            post_id = post.post_id,
-                            user = post.user,
-                            postName = post.postName,
-                            contents = post.contents,
-                            categories = post.categories,
-                            coverImage = post.coverImage,
-                            numberof_likes = post.numberof_likes,
-                            postDate = post.postDate,
-                            liked = post.liked,
-                            pinnedCount = post.pinnedCount,
-                            orderIndex = (page * state.config.pageSize) + index
-                        )
+                        post.toEntity(index = startIndex + index)
                     }
 
                     val keys = postList.map {

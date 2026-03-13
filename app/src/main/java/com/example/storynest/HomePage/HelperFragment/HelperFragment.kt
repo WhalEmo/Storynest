@@ -12,6 +12,7 @@ import androidx.fragment.app.activityViewModels
 import com.bumptech.glide.Glide
 import com.example.storynest.HomePage.HomePageViewModel
 import com.example.storynest.HomePage.postResponse
+import com.example.storynest.HomePage.postUiItem
 import com.example.storynest.R
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -29,7 +30,7 @@ class HelperFragment :  Fragment() {
         private const val ARG_POST_NAME ="post_name"
         private const val ARG_POST_COVERIMAGE="post_cover_image"
 
-        fun newInstance(post: postResponse): HelperFragment {
+        fun newInstance(post: postUiItem): HelperFragment {
             val fragment = HelperFragment()
             val args = Bundle()
             args.putString(ARG_POST_CONTENTS,post.contents)
