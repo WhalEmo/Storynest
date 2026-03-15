@@ -1,12 +1,10 @@
 package com.example.storynest.HomePage
 
 import com.google.gson.annotations.SerializedName
-import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
-import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -15,7 +13,7 @@ data class postRequest(
     val postName: String,
     val contents: String,
     val categories: String,
-    val coverImage: String
+    val coverImage: String?
 )
 data class postResponse(
     val post_id:Long,
@@ -23,27 +21,30 @@ data class postResponse(
     val postName:String,
     val contents:String,
     val categories:String,
-    val coverImage:String,
+    val coverImage:String?,
+    @SerializedName("numberof_likes")
     var numberof_likes: Int,
     val postDate: String,
-    var liked:Boolean,
+    @SerializedName(value = "isLiked", alternate = ["liked"])
+    var isLiked: Boolean ,
     var pinnedCount:Long
 )
 
 data class postUiItem(
-    val postId:Long,
+    val postId: Long,
     val userId: Long,
     val userName: String,
     val profileUrl: String?,
-    val postName:String,
-    val contents:String,
-    val categories:String,
-    val coverImage:String,
+    val postName: String,
+    val contents: String,
+    val categories: String,
+    val coverImage: String?,
+    val rawLikeCount: Int,
     var numberof_likes: String,
     val postDate: String,
     val likeIconRes: Int,
-    var liked:Boolean,
-    var pinnedCount:Long
+    var liked: Boolean,
+    var pinnedCount: Long
 )
 data class UserResponse(
     val id: Long,
@@ -92,6 +93,14 @@ interface HPController {
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
     ): List<postResponse>
+
+
+    @DELETE("/api/posts/{postId}/deletePost")
+    suspend fun deletePosts(
+        @Path("postId") postId:Long
+    ):retrofit2.Response<String>
+
+
 }
 
 

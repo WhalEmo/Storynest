@@ -9,17 +9,25 @@ import androidx.room.Update
 
 @Dao
 interface PostDao {
-    @Query("SELECT * FROM posts ORDER BY orderIndex ASC")
+    @Query("SELECT * FROM posts WHERE isDeleted = 0 ORDER BY orderIndex ASC")
     fun getAllPosts(): PagingSource<Int, PostEntity>
 
     @Query("SELECT * FROM posts WHERE user_id = :myId ORDER BY post_id DESC")
     fun getMyPosts(myId: Long): PagingSource<Int, PostEntity>
 
-    @Query("DELETE FROM posts WHERE post_id = :postId AND user_id = :myId")
-    suspend fun deletePost(postId: Long, myId: Long)
+    @Query("DELETE FROM posts WHERE post_id = :postId")
+    suspend fun deletePost(postId: Long)
+
+    @Query("UPDATE posts SET isDeleted = 1 WHERE post_id = :postId")
+    suspend fun softDeletePost(postId: Long)
+
+    @Query("UPDATE posts SET isDeleted = 0 WHERE post_id = :postId")
+    suspend fun undoSoftDelete(postId: Long)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPost(post: PostEntity)
 
     @Query("UPDATE posts SET liked = :isLiked, numberof_likes = :count WHERE post_id = :id")
-    suspend fun updateLikeStatus(id: Long, isLiked: Boolean, count: String)
+    suspend fun updateLikeStatus(id: Long, isLiked: Boolean, count: Int)
 
     @Update
     suspend fun updatePost(post: PostEntity)

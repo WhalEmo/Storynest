@@ -1,5 +1,6 @@
 package com.example.storynest.HomePage
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -9,26 +10,22 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import androidx.paging.filter
-import androidx.paging.flatMap
 import androidx.paging.insertSeparators
 import androidx.paging.map
-import com.example.storynest.Comments.CommentsUiModel
+import androidx.room.withTransaction
 import com.example.storynest.CustomViews.UiEvents
-import com.example.storynest.GenericPagingSource
 import com.example.storynest.HomePage.viewModelHpHelper.PostMapper
 import com.example.storynest.Posts.AppDatabase
 import com.example.storynest.Posts.PostEntity
 import com.example.storynest.Posts.PostRemoteMediator
-import com.example.storynest.RegisterLogin.LoginResponse
 import com.example.storynest.dataLocal.UserStaticClass
 
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 
@@ -137,8 +134,7 @@ class HomePageViewModel  @Inject constructor(
         viewModelScope.launch {
             val targetLiked = !isCurrentlyLiked
             val targetCount = if (targetLiked) currentLikeCount + 1 else currentLikeCount - 1
-
-            database.postDao().updateLikeStatus(post.postId, targetLiked, targetCount.toString())
+            database.postDao().updateLikeStatus(post.postId, targetLiked, targetCount)
 
             val result = repo.toggleLike(post.postId)
 
@@ -146,13 +142,55 @@ class HomePageViewModel  @Inject constructor(
                 is ResultWrapper.Success -> {
                 }
                 is ResultWrapper.Error -> {
-                    database.postDao().updateLikeStatus(post.postId, isCurrentlyLiked, currentLikeCount.toString())
-                    _uiEvent.trySend(UiEvents.showInfoMessage("Beğenirken bir hata oluştu"))
+                    database.postDao().updateLikeStatus(post.postId, isCurrentlyLiked, currentLikeCount)
+                    _uiEvent.trySend(UiEvents.showInfoMessage("Bir hata oluştu.Bağlantınızı kontrol ediniz."))
                 }
             }
         }
     }
 
+    private var undoJob: Job? = null
+    private var recentlyDeletedPostId: Long? = null // Sadece ID tutmak yeterli
+
+    fun deletePosts(postUi: postUiItem) {
+        viewModelScope.launch {
+            recentlyDeletedPostId = postUi.postId
+            database.postDao().softDeletePost(postUi.postId)
+            _uiEvent.trySend(UiEvents.ShowUndoSnackbar("Post silindi"))
+        }
+    }
+
+    fun undoDelete() {
+        undoJob?.cancel()
+        undoJob = viewModelScope.launch {
+            recentlyDeletedPostId?.let { postId ->
+                try {
+                    database.postDao().undoSoftDelete(postId)
+                    android.util.Log.d("UNDO_DEBUG", "Soft Undo başarılı. ID: $postId")
+                    recentlyDeletedPostId = null
+                    _uiEvent.trySend(UiEvents.showInfoMessage("İşlem geri alındı"))
+                } catch (e: Exception) {
+                    android.util.Log.e("UNDO_DEBUG", "Undo hatası", e)
+                }
+            }
+        }
+    }
+
+    fun confirmDelete() {
+        val postId = recentlyDeletedPostId ?: return
+        recentlyDeletedPostId = null
+
+        viewModelScope.launch {
+            val result = repo.deletePosts(postId)
+
+            if (result is ResultWrapper.Success) {
+                database.postDao().deletePost(postId)
+            } else {
+                database.postDao().undoSoftDelete(postId)
+                _uiEvent.trySend(UiEvents.showInfoMessage("Hata: Sunucudan silinemedi."))
+            }
+        }
+    }
     private var currentPageUser = 0
     private val pageSizeUser = 10
     var isLoadingUser = false

@@ -14,10 +14,12 @@ data class PostEntity(
     val postName: String,
     val contents: String,
     val categories: String,
-    val coverImage: String,
+    val coverImage: String?,
     var numberof_likes: Int,
     val postDate: String,
     var liked: Boolean,
     var pinnedCount: Long,
-    val orderIndex: Int
+    val orderIndex: Int,
+    val isDeleted: Boolean = false,
+    val localTimestamp: Long = System.currentTimeMillis()
 )

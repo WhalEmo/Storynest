@@ -19,53 +19,64 @@ class PostRemoteMediator(
         loadType: LoadType,
         state: PagingState<Int, PostEntity>
     ): MediatorResult {
-        val page = when (loadType) {
-            LoadType.REFRESH -> 0
-            LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true)
-            LoadType.APPEND -> {
-                val remoteKeys = getRemoteKeyForLastItem(state)
-                remoteKeys?.nextKey ?: return MediatorResult.Success(endOfPaginationReached = remoteKeys != null)
-            }
-        }
-
-        val responseWrapper = apiCall(page, state.config.pageSize)
-
-        return when (responseWrapper) {
-            is ResultWrapper.Success -> {
-                val postList = responseWrapper.data
-                val isEndOfList = postList.isEmpty()
-
-                database.withTransaction {
-                    if (loadType == LoadType.REFRESH) {
-                        database.remoteKeysDao().clearRemoteKeys()
-                        database.postDao().clearAll()
-                    }
-
-                    val startIndex = page * state.config.pageSize
-                    val prevKey = if (page == 0) null else page - 1
-                    val nextKey = if (isEndOfList) null else page + 1
-
-                    val entities = postList.mapIndexed { index, post ->
-                        post.toEntity(index = startIndex + index)
-                    }
-
-                    val keys = postList.map {
-                        RemoteKeysEntity.RemoteKeys(
-                            post_id = it.post_id,
-                            prevKey = prevKey,
-                            nextKey = nextKey
-                        )
-                    }
-
-                    database.remoteKeysDao().insertAll(keys)
-                    database.postDao().insertAll(entities)
+        return try {
+            val page = when (loadType) {
+                LoadType.REFRESH -> 0
+                LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true)
+                LoadType.APPEND -> {
+                    val remoteKeys = getRemoteKeyForLastItem(state)
+                    remoteKeys?.nextKey ?: return MediatorResult.Success(endOfPaginationReached = remoteKeys != null)
                 }
-                MediatorResult.Success(endOfPaginationReached = isEndOfList)
             }
 
-            is ResultWrapper.Error -> {
-                MediatorResult.Error(Exception(responseWrapper.message))
+            val responseWrapper = apiCall(page, state.config.pageSize)
+
+            when (responseWrapper) {
+                is ResultWrapper.Success -> {
+                    val postList = responseWrapper.data
+                    val isEndOfList = postList.size < state.config.pageSize
+
+
+                    database.withTransaction {
+                        try {
+                            if (loadType == LoadType.REFRESH) {
+                                database.remoteKeysDao().clearRemoteKeys()
+                                database.postDao().clearAll()
+                            }
+
+                            val startIndex = page * state.config.pageSize
+                            val prevKey = if (page == 0) null else page - 1
+                            val nextKey = if (isEndOfList) null else page + 1
+
+                            val entities = postList.mapIndexed { index, post ->
+                                post.toEntity(index = startIndex + index)
+                            }
+
+                            val keys = postList.map {
+                                RemoteKeysEntity.RemoteKeys(
+                                    post_id = it.post_id,
+                                    prevKey = prevKey,
+                                    nextKey = nextKey
+                                )
+                            }
+
+                            database.remoteKeysDao().insertAll(keys)
+                            database.postDao().insertAll(entities)
+
+
+                        } catch (dbEx: Exception) {
+                            throw dbEx
+                        }
+                    }
+                    MediatorResult.Success(endOfPaginationReached = isEndOfList)
+                }
+
+                is ResultWrapper.Error -> {
+                    MediatorResult.Error(Exception(responseWrapper.message))
+                }
             }
+        } catch (e: Exception) {
+            MediatorResult.Error(e)
         }
     }
 

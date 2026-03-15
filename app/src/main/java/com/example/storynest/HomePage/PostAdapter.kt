@@ -2,6 +2,7 @@ package com.example.storynest.HomePage
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.paging.PagingDataAdapter
@@ -20,7 +21,9 @@ class PostAdapter(
         fun onReadMoreClicked(post: postUiItem)
 
         fun getLikeUsers(Id: Long)
-        fun clickComment(Id: Long,commentsPinned:Long);
+        fun clickComment(Id: Long, commentsPinned: Long);
+        fun clickMenu(post: postUiItem,anchorView:View)
+
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -107,6 +110,7 @@ class PostAdapter(
         val btnComment: ImageView = itemView.findViewById(R.id.btnComment)
         val txtLikeCount: TextView = itemView.findViewById(R.id.txtLikeCount)
         val txtReadMore: TextView = itemView.findViewById(R.id.txtReadMore)
+        val btnPostMenu: ImageButton = itemView.findViewById(R.id.btnPostMenu)
 
         init {
             btnLike.setOnClickListener {
@@ -126,6 +130,10 @@ class PostAdapter(
             btnComment.setOnClickListener {
                 val item=getPostAtCurrentPosition();
                 item?.let {  listener.clickComment(it.postId,it.pinnedCount)}
+            }
+            btnPostMenu.setOnClickListener {
+                val item=getPostAtCurrentPosition()
+                item?.let { listener.clickMenu(it, btnPostMenu) }
             }
 
         }

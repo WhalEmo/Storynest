@@ -24,6 +24,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "storynest_db"
         )
+
             .fallbackToDestructiveMigration()
             .build()
     }

@@ -487,6 +487,9 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                             is UiEvents.ShowSnackbar->{
 
                             }
+
+                            is UiEvents.ShowUndoSnackbar -> {
+                            }
                         }
                     }
                 }

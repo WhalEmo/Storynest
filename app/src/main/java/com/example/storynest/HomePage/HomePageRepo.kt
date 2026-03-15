@@ -39,4 +39,11 @@ class HomePageRepo @Inject constructor(
             api.HomePagePosts(page ,size)
         }
 
+    suspend fun deletePosts(
+        postId:Long
+    ): ResultWrapper<retrofit2.Response<String>> =
+        safeApiCall {
+            api.deletePosts(postId)
+        }
+
 }
