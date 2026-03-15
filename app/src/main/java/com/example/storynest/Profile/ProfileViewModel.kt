@@ -108,7 +108,8 @@ class ProfileViewModel: ViewModel() {
                 _uiState.value = ProfileScreenState.Blocked(
                     uiState = ProfileBlockUiState(
                         showUnBlockButton = true,
-                        textUnBlock = "Bu hesabı engelledin"
+                        textUnBlock = "Bu hesabı engelledin",
+                        textDescriptionBlock = "Paylaşımlarını görmek için engeli kaldırman gerekiyor."
                     )
                 )
             }
@@ -243,7 +244,8 @@ class ProfileViewModel: ViewModel() {
     private fun ProfileData.BlockProfileData.toUiState(): ProfileBlockUiState {
         return ProfileBlockUiState(
             showUnBlockButton = this.blockStatus == BlockStatus.YOU_BLOCKER,
-            textUnBlock = if(this.blockStatus == BlockStatus.YOU_BLOCKER) "Bu hesabı engelledin" else "Bu hesaba erişilemiyor"
+            textUnBlock = if(this.blockStatus == BlockStatus.YOU_BLOCKER) "Bu hesabı engelledin" else "Bu hesaba erişilemiyor",
+            textDescriptionBlock = if(this.blockStatus == BlockStatus.YOU_BLOCKER) "Paylaşımlarını görmek için engeli kaldırman gerekiyor." else "Bu hesap seni engellemiş."
         )
     }
 
@@ -285,7 +287,8 @@ class ProfileViewModel: ViewModel() {
             return ProfileScreenState.Blocked(
                 uiState = ProfileBlockUiState(
                     showUnBlockButton = true,
-                    textUnBlock = "Bu hesabı engelledin"
+                    textUnBlock = "Bu hesabı engelledin",
+                    textDescriptionBlock = "Paylaşımlarını görmek için engeli kaldırman gerekiyor."
                 )
             )
         }
@@ -293,7 +296,8 @@ class ProfileViewModel: ViewModel() {
             return ProfileScreenState.Blocked(
                 uiState = ProfileBlockUiState(
                     showUnBlockButton = false,
-                    textUnBlock = "Bu hesaba erişilemiyor"
+                    textUnBlock = "Bu hesaba erişilemiyor",
+                    textDescriptionBlock = "Bu hesap seni engellemiş."
                 )
             )
         }

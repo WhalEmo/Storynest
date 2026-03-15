@@ -305,21 +305,28 @@ class FollowListFragment: Fragment() {
         binding.errorEvent.root.isVisible = false
         binding.loadingEvent.root.isVisible = false
 
-        emptyEvent.emptyTitle.text = when(followType){
+        val emptyState = followType.toEmptyState()
+        emptyEvent.emptyTitle.text = emptyState.title
+        emptyEvent.emptyDescription.text = emptyState.description
+        emptyEvent.btnExplore.isVisible = emptyState.showDiscoverPeople
+
+    }
+
+    private fun FollowType.toEmptyState(): FollowListEmptyDescription{
+        return when(this){
             FollowType.MY_FOLLOWERS -> {
-                "Henüz Takipçi Yok"
+                FollowListEmptyDescription.MY_FOLLOWERS
             }
             FollowType.MY_FOLLOWING -> {
-                "Henüz Takip Etmemişsin"
+                FollowListEmptyDescription.MY_FOLLOWING
             }
             FollowType.USER_FOLLOWERS -> {
-                "Henüz Takipçi Yok"
+                FollowListEmptyDescription.USER_FOLLOWERS
             }
             FollowType.USER_FOLLOWING -> {
-                "Henüz Takip Etmemişsin"
+                FollowListEmptyDescription.USER_FOLLOWING
             }
         }
-
     }
 
     private fun sendMessage(){

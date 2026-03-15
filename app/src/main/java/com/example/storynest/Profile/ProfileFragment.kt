@@ -221,10 +221,10 @@ class ProfileFragment : Fragment(){
             interpolator = AccelerateDecelerateInterpolator()
         }
         TransitionManager.beginDelayedTransition(binding.root, transition)
+
         hideIncludeViews(
             unHideView = binding.profileHeaderGroup
         )
-
         headerBinding.username.text = state.username
         headerBinding.nameSurname.text = "${state.name} ${state.surname}"
         headerBinding.biography.text = state.biography
@@ -260,8 +260,9 @@ class ProfileFragment : Fragment(){
         }
         TransitionManager.beginDelayedTransition(binding.root, transition)
 
-        binding.profileHeaderGroup.isVisible = false
-        binding.containerBlockedByMe.isVisible = true
+        hideIncludeViews(
+            unHideView = binding.containerBlockedByMe
+        )
         binding.toolBar.settingsButton.isVisible = false
         binding.toolBar.notificationContainer.isVisible = false
 
@@ -269,6 +270,7 @@ class ProfileFragment : Fragment(){
 
         blockBinding.txtBlockTitle.text = state.textUnBlock
         blockBinding.btnUnblock.isVisible = state.showUnBlockButton
+        blockBinding.txtBlockDescription.text = state.textDescriptionBlock
 
         blockBinding.btnUnblock.setOnClickListener {
             viewModel.unBlockUser(userId, profileMode)
@@ -360,6 +362,16 @@ class ProfileFragment : Fragment(){
             viewModel.init(
                 mode = profileMode,
                 userId = userId
+            )
+        }
+
+        headerBinding.btnEditProfile.setOnClickListener {
+            navigator.openEditProfile(
+                activity = requireActivity() as AppCompatActivity,
+                name = userData?.name ?: "",
+                surname = userData?.surname ?: "",
+                bio = userData?.biography ?: "",
+                imageUrl = userData?.profileImageUrl ?: ""
             )
         }
     }

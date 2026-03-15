@@ -59,6 +59,19 @@
     <!-- Divider -->
     <color name="divider">#F0F0F0</color>
 
+    <!-- Save -->
+    <color name="save_button">#3B6EDC</color>
+    <color name="save_button_pressed">#315FC2</color>
+    <color name="save_button_disabled">#803B6EDC</color>
+
+    <!-- Soft Blue -->
+    <color name="soft_blue">#F0F4FF</color>
+
+
+    <!-- StoryNest.TextInputLayout Colors -->
+    <color name="gray_default">#B0B0B0</color>
+    <color name="red_error">#D32F2F</color>
+    <color name="cursor_selected">#334B7BE5</color>
 
 
 </resources>

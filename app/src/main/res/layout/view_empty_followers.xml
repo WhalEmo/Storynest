@@ -13,13 +13,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.28" />
+        app:layout_constraintGuide_percent="0.15" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/emptyIconCard"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        app:cardBackgroundColor="#F0F4FF"
+        app:cardBackgroundColor="@color/soft_blue"
         app:cardCornerRadius="50dp"
         app:cardElevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -39,9 +39,10 @@
         android:id="@+id/emptyTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:layout_marginTop="24dp"
         android:fontFamily="sans-serif-medium"
-        android:text="Henüz Takipçi Yok"
+        android:text="Kimseyi Takip Etmiyorsunuz"
         android:textColor="#1A1A2E"
         android:textSize="20sp"
         android:textStyle="bold"

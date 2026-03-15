@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.storynest.Follow.FollowListFragment
 import com.example.storynest.Follow.FollowType
 import com.example.storynest.Notification.NotificationFragment
+import com.example.storynest.Profile.EditProfile.EditProfileFragment
 import com.example.storynest.Profile.ProfileFragment
 import com.example.storynest.Profile.ProfileMode
 import com.example.storynest.Settings.SettingsFragment
@@ -60,6 +61,28 @@ object Navigator {
             fragment = FollowListFragment.newInstance(
                 type = type,
                 userId = userId
+            )
+        }
+
+        activity.openFragment(fragment, tag)
+    }
+
+    fun openEditProfile(
+        activity: AppCompatActivity,
+        name: String,
+        surname: String,
+        bio: String,
+        imageUrl: String
+    ){
+        val tag = "edit_profile"
+        val manager = activity.supportFragmentManager
+        var fragment = manager.findFragmentByTag(tag)
+        if(fragment == null){
+            fragment = EditProfileFragment.newInstance(
+                name = name,
+                surname = surname,
+                bio = bio,
+                imageUrl = imageUrl
             )
         }
 
