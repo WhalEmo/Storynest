@@ -19,6 +19,7 @@ import com.example.storynest.Follow.ResponseDTO.FollowUserResponseDTO
 import com.example.storynest.Notification.FollowRequestStatus
 import com.example.storynest.Notification.FollowResponseDTO
 import com.example.storynest.TestUserProvider
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -30,11 +31,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
+import javax.inject.Inject
 
-class FollowViewModel: ViewModel() {
-    private val repository: FollowRepository = FollowRepository
-    private val blockRepository = BlockRepository
-
+@HiltViewModel
+class FollowViewModel @Inject constructor(
+    private val repository: FollowRepository,
+    private val blockRepository: BlockRepository
+) : ViewModel() {
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
 

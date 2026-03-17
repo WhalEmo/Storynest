@@ -34,7 +34,6 @@
 
     </style>
 
-    <style name="Theme.Storynest" parent="Base.Theme.Storynest" />
 
     <style name="StoryNestCustomInputStyle" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="colorControlActivated">@color/colorPrimary</item>

@@ -2,7 +2,6 @@ package com.example.storynest.Profile.MVC
 
 import com.example.storynest.Api.BaseRepository
 import com.example.storynest.Api.NetworkResult
-import com.example.storynest.ApiClient
 import com.example.storynest.Block.BlockStatus
 import com.example.storynest.Follow.ResponseDTO.FollowResponse
 import com.example.storynest.GlobalEvent.FollowEvent
@@ -10,19 +9,17 @@ import com.example.storynest.Profile.Data.ProfileData
 import com.example.storynest.Profile.ProfileMode
 import com.example.storynest.Profile.ProfileMode.*
 import com.example.storynest.Profile.ProfileResponse
-import com.example.storynest.TestUserProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import javax.inject.Inject
+import javax.inject.Singleton
 
 
-object ProfileRepository: BaseRepository(){
-    private lateinit var token: String
+@Singleton
+class ProfileRepository @Inject constructor(
+    private val profileController: ProfileApiController
+): BaseRepository(){
 
-    init {
-        token = TestUserProvider.STATIC_TOKEN
-    }
-
-    private val profileController = ApiClient.getClient(token).create(ProfileApiController::class.java)
     private val memoryCache = mutableMapOf<Long, ProfileData>()
 
 

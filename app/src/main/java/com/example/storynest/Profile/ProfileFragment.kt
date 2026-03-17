@@ -33,9 +33,10 @@ import com.example.storynest.R
 import com.example.storynest.databinding.ProfileBlockedBinding
 import com.example.storynest.databinding.ProfileFragmentBinding
 import com.example.storynest.databinding.ProfileHeaderBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-
+@AndroidEntryPoint
 class ProfileFragment : Fragment(){
 
     private var _binding: ProfileFragmentBinding? = null
@@ -204,7 +205,7 @@ class ProfileFragment : Fragment(){
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
                 viewModel.error.observe(viewLifecycleOwner){
                     InfoMessage.show(
-                        activity = requireActivity(),
+                        fragment = this@ProfileFragment,
                         message = it,
                         duration = 500
                     )

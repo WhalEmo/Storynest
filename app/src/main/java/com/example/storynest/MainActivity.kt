@@ -16,6 +16,7 @@ import com.example.storynest.HomePage.HomePageFragment
 import com.example.storynest.HomePage.BarFragmnets.AddPostFragmnet
 import com.example.storynest.HomePage.BarFragmnets.SearchFragment
 import com.example.storynest.HomePage.BarFragmnets.ProfileFragmnet
+import com.example.storynest.dataLocal.UserStaticClass
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -108,7 +109,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnProfile.setOnClickListener {
-            openFragment(ProfileFragmnet())
+            navigator.openProfile(
+                activity = this,
+                mode = ProfileMode.MY_PROFILE,
+                id = UserStaticClass.userId ?: -1
+            )
         }
     }
 

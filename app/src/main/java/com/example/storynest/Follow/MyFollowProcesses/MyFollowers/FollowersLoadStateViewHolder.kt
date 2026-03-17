@@ -21,7 +21,6 @@ class FollowersLoadStateViewHolder(
     fun bind(loadState: LoadState) {
         binding.progressBar.isVisible = loadState is LoadState.Loading
         binding.retryButton.isVisible = loadState is LoadState.Error
-        binding.errorText.isVisible = loadState is LoadState.Error
     }
 
     companion object {

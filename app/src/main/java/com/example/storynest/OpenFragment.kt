@@ -25,7 +25,7 @@ fun AppCompatActivity.openFragment(fragment: Fragment, tag: String) {
         existing = fragment
     }
     if (!fragment.isAdded) {
-        transaction.add(R.id.nav_host, fragment, tag)
+        transaction.add(R.id.fragment_container, fragment, tag)
     } else {
         transaction.show(fragment)
     }

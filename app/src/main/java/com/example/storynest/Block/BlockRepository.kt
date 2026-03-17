@@ -7,16 +7,15 @@ import com.example.storynest.Follow.FollowRepository
 import com.example.storynest.GlobalEvent.FollowEvent
 import com.example.storynest.Profile.MVC.ProfileRepository
 import com.example.storynest.TestUserProvider
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object BlockRepository: BaseRepository() {
-    private lateinit var token: String
-
-    init {
-        token = TestUserProvider.STATIC_TOKEN
-    }
-    private val followRepository = FollowRepository
-    private val profileRepo: ProfileRepository = ProfileRepository
-    private val blockApiController = ApiClient.getClient(token).create(BlockApiController::class.java)
+@Singleton
+class BlockRepository @Inject constructor(
+    private val blockApiController: BlockApiController,
+    private val profileRepo: ProfileRepository,
+    private val followRepository: FollowRepository
+): BaseRepository() {
 
 
     suspend fun block(userId: Long): Boolean{

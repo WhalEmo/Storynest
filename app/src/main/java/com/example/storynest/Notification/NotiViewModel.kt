@@ -7,12 +7,16 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.storynest.Notification.Adapter.NotificationRow
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
+import javax.inject.Inject
 
-class NotiViewModel: ViewModel() {
-    private val notificationService = NotificationService()
+@HiltViewModel
+class NotiViewModel @Inject constructor(
+    private val notificationService: NotificationService
+): ViewModel() {
 
     private val _rows = MutableLiveData<List<NotificationRow>>()
     val rows: LiveData<List<NotificationRow>> = _rows

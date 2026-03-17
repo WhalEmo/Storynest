@@ -28,6 +28,7 @@ import com.example.storynest.Profile.ProfileMode
 import com.example.storynest.R
 import com.example.storynest.databinding.MyFollowersFragmentBinding
 import com.example.storynest.databinding.ViewErrorBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -35,6 +36,7 @@ import retrofit2.HttpException
 import java.io.IOException
 import kotlin.getValue
 
+@AndroidEntryPoint
 class FollowListFragment: Fragment() {
 
     private var _binding: MyFollowersFragmentBinding? = null
@@ -233,8 +235,8 @@ class FollowListFragment: Fragment() {
                     userId = usrResponse.id,
                     onRemoved = {
                         InfoMessage.show(
-                            requireActivity(),
-                            "Takipçiden Çıkarıldı"
+                            fragment = this,
+                            message = "Takipçiden Çıkarıldı"
                         )
                     },
                     followType = followType
@@ -331,8 +333,8 @@ class FollowListFragment: Fragment() {
 
     private fun sendMessage(){
         InfoMessage.show(
-            requireActivity(),
-            "Mesaj gönderilme henüz desteklenmiyor"
+            fragment = this,
+            message = "Mesaj gönderilme henüz desteklenmiyor"
         )
     }
 

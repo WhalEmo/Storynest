@@ -1,6 +1,5 @@
 package com.example.storynest.HomePage
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -12,7 +11,6 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.insertSeparators
 import androidx.paging.map
-import androidx.room.withTransaction
 import com.example.storynest.CustomViews.UiEvents
 import com.example.storynest.HomePage.viewModelHpHelper.PostMapper
 import com.example.storynest.Posts.AppDatabase

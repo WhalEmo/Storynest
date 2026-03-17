@@ -3,7 +3,6 @@ package com.example.storynest.Follow
 import android.util.Log
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
-import com.example.storynest.ApiClient
 import com.example.storynest.Follow.Paging.FollowPagingSource
 import com.example.storynest.Follow.RequestDTO.FollowDTO
 import com.example.storynest.Follow.ResponseDTO.FollowResponse
@@ -15,16 +14,14 @@ import com.example.storynest.Profile.MVC.ProfileRepository
 import com.example.storynest.TestUserProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import retrofit2.Response
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object FollowRepository {
-    private lateinit var token: String
-
-    init {
-        token = TestUserProvider.STATIC_TOKEN
-    }
-    val followApiController = ApiClient.getClient(token).create(FollowApiController::class.java)
-
-    private val profileRepo: ProfileRepository = ProfileRepository
+@Singleton
+class FollowRepository @Inject constructor(
+    private val followApiController: FollowApiController,
+    private val profileRepo: ProfileRepository
+) {
 
     private val _globalFollowEvents =
         MutableSharedFlow<Pair<Long, EventCapsule<FollowEventData>>>(extraBufferCapacity = 1)

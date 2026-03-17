@@ -11,7 +11,7 @@ import java.time.temporal.ChronoUnit
 object PostFormatter {
     fun formatPostDate(postDate: String): String {
 
-        val parser = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+        val parser = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss[.SSSSSS]")
 
         val postUtc = LocalDateTime.parse(postDate, parser)
             .atZone(ZoneOffset.UTC)

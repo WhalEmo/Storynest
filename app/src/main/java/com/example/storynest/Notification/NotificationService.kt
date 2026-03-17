@@ -2,21 +2,16 @@ package com.example.storynest.Notification
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.example.storynest.ApiClient
 import com.example.storynest.Notification.Adapter.NotificationRow
-import com.example.storynest.TestUserProvider
 import retrofit2.Response
 import java.time.LocalDateTime
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class NotificationService {
-
-    private lateinit var token: String
-
-    init {
-        token = TestUserProvider.STATIC_TOKEN
-    }
-
-    val notificationController = ApiClient.getClient(token).create(NotificationApiController::class.java)
+@Singleton
+class NotificationService @Inject constructor(
+    private val notificationController: NotificationApiController
+){
 
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getFollowRequests(): List<NotificationRow> {

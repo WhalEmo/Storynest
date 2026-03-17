@@ -17,6 +17,7 @@ import com.example.storynest.Profile.ProfileOptions.ProfileOptionsState
 import com.example.storynest.Profile.ProfileUiStates.ProfileBasicUiState
 import com.example.storynest.Profile.ProfileUiStates.ProfileBlockUiState
 import com.example.storynest.Profile.ProfileUiStates.ProfileUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,13 +26,14 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
+import javax.inject.Inject
 
-
-class ProfileViewModel: ViewModel() {
-
-    private val profileRepository = ProfileRepository
-    private val followRepository = FollowRepository
-    private val blockRepository = BlockRepository
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val profileRepository: ProfileRepository,
+    private val followRepository: FollowRepository,
+    private val blockRepository: BlockRepository
+) : ViewModel() {
 
     private val _error = MutableLiveData<String>()
 

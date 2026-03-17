@@ -1,9 +1,13 @@
 package com.example.storynest.DependencyInjection
 
 import com.example.storynest.ApiClient
+import com.example.storynest.Block.BlockApiController
 import com.example.storynest.BuildConfig
 import com.example.storynest.Comments.CMController
+import com.example.storynest.Follow.FollowApiController
 import com.example.storynest.HomePage.HPController
+import com.example.storynest.Notification.NotificationApiController
+import com.example.storynest.Profile.MVC.ProfileApiController
 import com.example.storynest.RegisterLogin.RLController
 import dagger.Module
 import dagger.Provides
@@ -64,4 +68,27 @@ object NetworkModule {
         return retrofit.create(CMController::class.java)
     }
 
+    @Provides
+    @Singleton
+    fun provideProfileController(retrofit: Retrofit): ProfileApiController {
+        return retrofit.create(ProfileApiController::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationController(retrofit: Retrofit): NotificationApiController {
+        return retrofit.create(NotificationApiController::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFollowController(retrofit: Retrofit): FollowApiController {
+        return retrofit.create(FollowApiController::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBlockController(retrofit: Retrofit): BlockApiController {
+        return retrofit.create(BlockApiController::class.java)
+    }
 }
