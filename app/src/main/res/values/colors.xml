@@ -74,4 +74,17 @@
     <color name="cursor_selected">#334B7BE5</color>
 
 
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="error_red">#4A1212</color>
+
+    <color name="accept_blue">#4A90E2</color>
+    <color name="opengray">#F8F9FA</color>
+    <color name="light_gray_soft">#EEEEEE</color>
+
+
+    <color name="gray">#8E8E8E</color>
+
+
+
 </resources>

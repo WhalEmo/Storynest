@@ -1,16 +1,31 @@
 package com.example.storynest
 
+import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
+import android.view.View
+import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.storynest.Profile.ProfileMode
+import androidx.fragment.app.Fragment
+import com.example.storynest.RegisterLogin.RegisterLoginFragmnet
+import com.example.storynest.HomePage.HomePageFragment
+import com.example.storynest.HomePage.BarFragmnets.AddPostFragmnet
+import com.example.storynest.HomePage.BarFragmnets.SearchFragment
+import com.example.storynest.HomePage.BarFragmnets.ProfileFragmnet
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-
     private val navigator = Navigator
+    private lateinit var btnHome: ImageView
+    private lateinit var btnSearch: ImageView
+    private lateinit var btnAddPost: ImageView
+    private lateinit var btnProfile: ImageView
+    private lateinit var bottomBar: LinearLayout
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,24 +37,85 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        val userId = 8L
-        val at = "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=800"
+        bottomBar=findViewById(R.id.bottomBar)
+        btnHome = findViewById(R.id.btnHome)
+        btnSearch = findViewById(R.id.btnSearch)
+        btnAddPost = findViewById(R.id.btnAddPost)
+        btnProfile = findViewById(R.id.btnProfile)
 
-        navigator.openProfile(
-            activity = this as AppCompatActivity,
-            id = userId,
-            mode = ProfileMode.MY_PROFILE
-        )
+        if (intent.getBooleanExtra("showLogin", false)) {
+            println("showLogin")
+            bottomBar.visibility = View.GONE
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, RegisterLoginFragmnet())
+                .commitNow()
+        } else if(intent.getBooleanExtra("login",false)){
+            bottomBar.visibility = View.GONE
+            println("login")
+            val fragment = RegisterLoginFragmnet()
+                val bundle = Bundle()
+                bundle.putBoolean("login", true)
+                fragment.arguments = bundle
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commitNow()
 
+        }else if(intent.getBooleanExtra("register",false)){
+            bottomBar.visibility = View.GONE
+            println("register")
+            val fragment = RegisterLoginFragmnet()
+            val bundle = Bundle()
+            bundle.putBoolean("register", true)
+            fragment.arguments = bundle
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commitNow()
+        }else if(intent.getBooleanExtra("forgotpassword",false)){
+            bottomBar.visibility = View.GONE
+            val fragment = RegisterLoginFragmnet()
+            val bundle = Bundle()
+            bundle.putBoolean("forgotpassword", true)
+
+            val token = intent.getStringExtra("TOKEN_KEY") // Launchden gelen sifre tokeni
+            bundle.putString("TOKEN_KEY", token)
+
+            fragment.arguments = bundle
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commitNow()
+        }else {
+            bottomBar.visibility = View.VISIBLE
+
+            if (savedInstanceState == null) {
+                openFragment(HomePageFragment())
+            }
+
+            setupBottomBarClicks()
+        }
     }
+    private fun setupBottomBarClicks() {
 
-    fun dumpStack() {
-        supportFragmentManager.fragments.forEach {
-            Log.d("STACK_DUMP",
-                "Fragment=${it.tag} hash=${it.hashCode()} added=${it.isAdded} visible=${it.isVisible}"
-            )
+        btnHome.setOnClickListener {
+            openFragment(HomePageFragment())
+        }
+
+        btnSearch.setOnClickListener {
+            openFragment(SearchFragment())
+        }
+
+        btnAddPost.setOnClickListener {
+            openFragment(AddPostFragmnet())
+        }
+
+        btnProfile.setOnClickListener {
+            openFragment(ProfileFragmnet())
         }
     }
 
+    private fun openFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .commit()
+    }
 
 }

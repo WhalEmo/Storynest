@@ -3,12 +3,15 @@ import java.io.FileInputStream
 
 val localProps = Properties()
 localProps.load(FileInputStream(rootProject.file("local.properties")))
-val devBaseUrl = localProps.getProperty("DEV_BASE_URL_V2") ?: ""
+
+val devBaseUrl = localProps.getProperty("DEV_BASE_URL") ?: ""
 
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
-    id("androidx.navigation.safeargs.kotlin")
+    id("com.google.dagger.hilt.android")
+    id("kotlin-kapt")
+    kotlin("kapt")
 }
 
 
@@ -17,7 +20,9 @@ plugins {
 android {
     namespace = "com.example.storynest"
     compileSdk = 36
-
+    buildFeatures{
+        buildConfig = true
+    }
     defaultConfig {
         applicationId = "com.example.storynest"
         minSdk = 24
@@ -44,7 +49,6 @@ android {
 
             buildConfigField("String", "BASE_URL", "\"$devBaseUrl\"")
         }
-
     }
 
     buildFeatures{
@@ -55,6 +59,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -63,10 +68,37 @@ android {
 
 dependencies {
     implementation(libs.androidxCoreKtx)
+    val room_version = "2.6.1"
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+    kapt ("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-paging:${room_version}")
+    implementation("com.google.dagger:hilt-android:2.50")
+    kapt("com.google.dagger:hilt-android-compiler:2.50")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation ("com.facebook.shimmer:shimmer:0.5.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("androidx.paging:paging-runtime-ktx:3.1.1")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.6")
+    implementation("androidx.recyclerview:recyclerview:1.3.1")
+    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.4")
+    implementation(libs.pagingCommon)
+    implementation(libs.pagingRuntimeKtx)
+    kapt("com.github.bumptech.glide:compiler:4.16.0")
+    implementation("com.google.android.material:material:1.12.0")
     implementation(libs.androidxAppcompat)
     implementation(libs.material)
     implementation(libs.androidxActivity)
     implementation(libs.androidxConstraintlayout)
+    implementation(libs.legacySupportV4)
+    implementation(libs.lifecycleLivedataKtx)
+    implementation(libs.lifecycleViewmodelKtx)
+    implementation(libs.fragmentKtx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidxJunit)
     androidTestImplementation(libs.androidxEspressoCore)
@@ -78,8 +110,5 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
     implementation("com.airbnb.android:lottie:6.4.0")
     implementation("androidx.paging:paging-runtime-ktx:3.2.1")
-
-    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
-    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
 
 }

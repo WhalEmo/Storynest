@@ -1,27 +1,25 @@
 package com.example.storynest
 
+
+import com.example.storynest.Comments.CMController
+import com.example.storynest.HomePage.HPController
+import com.example.storynest.RegisterLogin.RLController
+import com.example.storynest.dataLocal.UserPreferences
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiClient {
-
-
-    fun getClient(token: String): Retrofit {
-        val logging = HttpLoggingInterceptor()
-        logging.level = HttpLoggingInterceptor.Level.BODY
-
-        val okHttp = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(token))
-            .addInterceptor(logging)
-            .build()
-
-        return Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_URL+"/")
-            .client(okHttp)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+    var currentToken: String? = null
+    fun updateToken(token: String?) {
+        currentToken = token
+    }
+    fun clearToken() {
+        currentToken = null
     }
 
+    suspend fun clearAllUserData(userPrefs: UserPreferences) {
+        clearToken()
+        userPrefs.clearUser()
+    }
 }

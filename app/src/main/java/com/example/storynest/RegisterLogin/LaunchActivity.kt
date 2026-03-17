@@ -1,0 +1,183 @@
+package com.example.storynest.RegisterLogin
+
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.storynest.ApiClient
+import com.example.storynest.MainActivity
+import com.example.storynest.R
+import com.example.storynest.dataLocal.UserPreferences
+import com.example.storynest.dataLocal.UserStaticClass
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
+
+
+@AndroidEntryPoint
+class LaunchActivity : AppCompatActivity() {
+    @Inject
+    lateinit var rlApi: RLController
+    private lateinit var userPrefs: UserPreferences
+    private lateinit var isTokenExpired: IsTokenExpired
+    private lateinit var intentOther: Intent
+
+    private lateinit var context: Context
+
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContentView(R.layout.activity_launch)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+
+        context = this
+
+        intentOther = Intent(this@LaunchActivity, MainActivity::class.java)
+
+        userPrefs = UserPreferences.getInstance(this)
+        isTokenExpired = IsTokenExpired()
+        lifecycleScope.launch {
+            val tokenStart = userPrefs.token.firstOrNull()
+            if ((tokenStart.isNullOrEmpty() || isTokenExpired.isTokenExpired(tokenStart))) {
+                handleIntent(intent)
+            }
+            else{
+                val uri = intent?.data
+                val token = uri?.getQueryParameter("token")
+
+                if (!token.isNullOrEmpty()) {
+                    Toast.makeText(context, "Zaten doğrulanmış!", Toast.LENGTH_SHORT).show()
+                }
+                goNormalFlow()
+
+            }
+        }
+
+    }
+    private var handled = false
+
+    private fun handleIntent(intent: Intent?) {
+        println("handleIntent")
+        if (handled) return
+        handled = true
+
+        val uri = intent?.data
+        val token = uri?.getQueryParameter("token")
+        val path = uri?.path
+
+        if (token.isNullOrEmpty()) {
+            dontNormalFlow("showLogin")
+            return
+        }
+
+        when {
+            path?.startsWith("/auth/verify") == true -> {
+                verifyEmail(token)
+            }
+
+            path?.startsWith("/auth/reset-password") == true -> {
+                verifyPassword(token)
+            }
+            else -> {
+                goNormalFlow()
+            }
+        }
+
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        println("onNewIntent")
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun goNormalFlow(){
+        println("goNormalFlow")
+        lifecycleScope.launch {
+            val token = userPrefs.token.firstOrNull()
+            if (token.isNullOrEmpty() || isTokenExpired.isTokenExpired(token)) {
+                withContext(Dispatchers.IO) {
+                    ApiClient.clearAllUserData(userPrefs)
+                }
+                intentOther.putExtra("showLogin", true)
+                startActivity(intentOther)
+            } else {
+                UserStaticClass.userId=userPrefs.id.firstOrNull()
+                UserStaticClass.name=userPrefs.name.firstOrNull()
+                UserStaticClass.username=userPrefs.username.firstOrNull()
+                UserStaticClass.surname=userPrefs.surname.firstOrNull()
+                UserStaticClass.email=userPrefs.email.firstOrNull()
+                UserStaticClass.ppfoto=userPrefs.profilePhoto.firstOrNull()
+
+                ApiClient.updateToken(token)
+                startActivity(Intent(this@LaunchActivity, MainActivity::class.java))
+            }
+            finish()
+        }
+    }
+    private fun dontNormalFlow(name:String,token: String? = null){
+        println("dontNormalFlow"+" "+name)
+        intentOther.putExtra(name, true)
+
+        token?.let {
+            intentOther.putExtra("TOKEN_KEY", it)
+        }
+        startActivity(intentOther)
+        finish()
+    }
+
+
+    private fun verifyEmail(token: String) {
+        Log.d("VERIFY", "verifyEmail çağrıldı")
+
+        lifecycleScope.launch {
+            try {
+                val result =rlApi.verify(token) // suspend çağrı
+                dontNormalFlow("login")
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@LaunchActivity,
+                    "Doğrulama linki geçersiz veya internet yok!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                dontNormalFlow("showLogin")
+            }
+        }
+    }
+
+    private fun verifyPassword(token: String) {
+        Log.d("VERIFY", "verifyPassword çağrıldı")
+
+        lifecycleScope.launch {
+            try {
+                val result =rlApi.verifyResetPassword(token) // suspend
+                dontNormalFlow("forgotpassword", token)
+            } catch (e: Exception) {
+                Log.e("VERIFY", "network error", e)
+                Toast.makeText(
+                    this@LaunchActivity,
+                    "Şifre değiştirme linki geçersiz veya internet yok!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                dontNormalFlow("login")
+            }
+        }
+    }
+
+}

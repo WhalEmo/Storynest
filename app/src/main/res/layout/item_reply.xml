@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/replylayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="60dp"
+    android:paddingHorizontal="12dp"
+    android:paddingVertical="12dp"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:text="3 yanıtı gör"
+    android:textSize="13sp"
+    android:textStyle="bold"
+    android:textColor="@android:color/darker_gray">
+
+    <!-- Profil Foto -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/imgProfilereply"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/ppfotoreply"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/account_circle_24"
+            android:scaleType="centerCrop"/>
+    </androidx.cardview.widget.CardView>
+
+    <ImageView
+        android:id="@+id/imgPinreply"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:src="@drawable/pin"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@id/txtUsernamereply"
+        app:layout_constraintTop_toTopOf="@id/txtUsernamereply"
+        app:layout_constraintBottom_toBottomOf="@id/txtUsernamereply"
+        android:layout_marginStart="6dp"/>
+
+    <TextView
+        android:id="@+id/txtUsernamereply"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="beyzatakca"
+        android:textStyle="bold"
+        android:textSize="13sp"
+        android:textColor="@color/black"
+        app:layout_constraintStart_toEndOf="@id/imgProfilereply"
+        app:layout_constraintTop_toTopOf="@id/imgProfilereply"
+        android:layout_marginStart="4dp"/>
+
+
+    <TextView
+        android:id="@+id/txtEditedreply"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Düzenlendi"
+        android:textSize="11sp"
+        android:textColor="@color/accept_blue"
+        android:textStyle="italic"
+        android:visibility="gone"
+        android:layout_marginStart="4dp"
+        app:layout_constraintStart_toEndOf="@id/imgPinreply"
+        app:layout_constraintBottom_toBottomOf="@id/txtUsernamereply"/>
+
+    <TextView
+        android:id="@+id/txtEditDatereply"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="• 13 Şub 2026"
+        android:textSize="11sp"
+        android:visibility="gone"
+        android:textColor="@color/accept_blue"
+        android:textStyle="italic"
+        app:layout_constraintStart_toEndOf="@id/txtEditedreply"
+        app:layout_constraintTop_toTopOf="@id/txtEditedreply"
+        android:layout_marginStart="4dp"/>
+
+
+    <!-- Yorum -->
+    <TextView
+        android:id="@+id/txtCommentreply"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Bu gönderi gerçekten çok güzel olmuş 🔥"
+        android:textSize="13sp"
+        android:textColor="@color/black"
+        android:layout_marginTop="2dp"
+        app:layout_constraintStart_toStartOf="@id/txtUsernamereply"
+        app:layout_constraintTop_toBottomOf="@id/txtUsernamereply"
+        app:layout_constraintEnd_toStartOf="@id/likeContainerreply"/>
+
+
+    <!-- Zaman -->
+    <TextView
+        android:id="@+id/txtTimereply"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="2s"
+        android:textSize="11sp"
+        android:textColor="@color/gray"
+        android:layout_marginTop="6dp"
+        app:layout_constraintStart_toStartOf="@id/txtCommentreply"
+        app:layout_constraintTop_toBottomOf="@id/txtCommentreply"/>
+
+    <!-- Yanıtla -->
+    <TextView
+        android:id="@+id/txtReplyreply"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Yanıtla"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textColor="@color/gray"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@id/txtTimereply"
+        app:layout_constraintBaseline_toBaselineOf="@id/txtTimereply"/>
+
+    <LinearLayout
+        android:id="@+id/likeContainerreply"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="center_horizontal"
+        app:layout_constraintTop_toTopOf="@id/txtUsernamereply"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/btnLikereply"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:src="@drawable/baseline_favorite_border_24"/>
+
+        <TextView
+            android:id="@+id/txtLikeCountreply"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="120"
+            android:textStyle="bold"
+            android:textSize="11sp"
+            android:gravity="center"
+            android:layout_marginTop="2dp"/>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,28 @@
+package com.example.storynest.Comments.viewModelChelper
+
+import com.example.storynest.Comments.commentResponse
+
+data class CommentUiState(
+    val removedIds: Set<Long>,
+    val updates: Map<Long, commentResponse>,
+    val newItems: List<commentResponse>,
+    val pinnedItems: List<commentResponse>,
+    val replyThreads: Map<Long, ReplyThread>
+)
+data class ReplyThread(
+    val replies: List<commentResponse> = emptyList(),
+    val visibleCount: Int = 0,
+    val totalCount: Long = 0,
+    val currentPage: Int = 0,
+    val isLoadMore: Boolean =true,
+    val isLoading: Boolean = false,
+    val isExpanded: Boolean = true
+)
+    data class BaseState(
+        val removedIds: Set<Long>,
+        val updates: Map<Long, commentResponse>,
+        val newItems: List<commentResponse>,
+        val pinnedIds: List<commentResponse>
+    )
+
+
