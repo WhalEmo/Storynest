@@ -1,14 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- Background & Surfaces -->
+    <color name="colorBackground">#F5F2EA</color>
+    <color name="colorSurface">#FAF7F0</color>
+    <color name="colorSurfaceVariant">#EDE9DF</color>
+
+    <color name="accept_green">#4CAF50</color>
+    <color name="accept_indigo">#5C6BC0</color>
+    <color name="accept_blue">#4A90E2</color>
+    <color name="reject_gray">#8E8E93</color>
+
+    <!-- Primary -->
+    <color name="colorPrimary">#4B7BE5</color>
+    <color name="colorPrimaryVariant">#3C69C7</color>
+    <color name="colorOnPrimary">#FFFFFFFF</color>
+
+    <!-- Secondary -->
+    <color name="colorSecondary">#F2B880</color>
+    <color name="colorSecondaryVariant">#E0A870</color>
+    <color name="colorOnSecondary">#FFFFFFFF</color>
+
+    <!-- Text Colors -->
+    <color name="colorTextPrimary">#2B2B2B</color>
+    <color name="colorTextSecondary">#545454</color>
+    <color name="colorDivider">#D6D3CC</color>
+
+    <!-- Status Colors -->
+    <color name="colorSuccess">#4CAF50</color>
+    <color name="colorWarning">#FFC107</color>
+    <color name="colorError">#E53935</color>
+
+
+    <color name="un_follow_dialog">#2563EB</color>
+
+
+    <!-- Unfollow (Warning - Soft Red) -->
+    <!--
+    <color name="un_follow">#F97316</color>
+    <color name="un_follow_pressed">#CCF97316</color>
+    <color name="un_follow_disabled">#66F97316</color>
+    -->
+    <color name="un_follow">#64748B</color>
+    <color name="un_follow_pressed">#475569</color>
+    <color name="un_follow_disabled">#8064748B</color>
+
+    <!-- Block -->
+    <!-- Block (Stronger Red) -->
+    <color name="sn_block">#DC2626</color>
+    <color name="sn_block_pressed">#B91C1C</color>
+    <color name="sn_block_disabled">#66DC2626</color>
+
+    <!-- Danger Background -->
+    <color name="sn_block_bg">#14DC2626</color> <!-- %8 alpha -->
+    <color name="sn_block_bg_pressed">#22DC2626</color>
+    <!-- Block -->
+
+    <!-- Divider -->
+    <color name="divider">#F0F0F0</color>
+
+    <!-- Save -->
+    <color name="save_button">#3B6EDC</color>
+    <color name="save_button_pressed">#315FC2</color>
+    <color name="save_button_disabled">#803B6EDC</color>
+
+    <!-- Soft Blue -->
+    <color name="soft_blue">#F0F4FF</color>
+
+
+    <!-- StoryNest.TextInputLayout Colors -->
+    <color name="gray_default">#B0B0B0</color>
+    <color name="red_error">#D32F2F</color>
+    <color name="cursor_selected">#334B7BE5</color>
+
+
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="error_red">#4A1212</color>
 
-    <color name="colorOnSecondary">#FFFFFFFF</color>
     <color name="accept_blue">#4A90E2</color>
-    <color name="colorTextPrimary">#2B2B2B</color>
-    <color name="colorDivider">#D6D3CC</color>
-    <color name="reject_gray">#8E8E93</color>
     <color name="opengray">#F8F9FA</color>
     <color name="light_gray_soft">#EEEEEE</color>
 

@@ -3,6 +3,7 @@ import java.io.FileInputStream
 
 val localProps = Properties()
 localProps.load(FileInputStream(rootProject.file("local.properties")))
+
 val devBaseUrl = localProps.getProperty("DEV_BASE_URL") ?: ""
 
 plugins {
@@ -12,6 +13,9 @@ plugins {
     id("kotlin-kapt")
     kotlin("kapt")
 }
+
+
+
 
 android {
     namespace = "com.example.storynest"
@@ -29,21 +33,29 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+
     buildTypes {
-        release {
+        getByName("debug") {
+            isMinifyEnabled = false
+            buildConfigField("String", "BASE_URL", "\"$devBaseUrl\"")
+        }
+
+        getByName("release") {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-        }
-        getByName("debug") {
-            buildConfigField("String", "BASE_URL", "\"$devBaseUrl\"")
-        }
-        getByName("release") {
+
             buildConfigField("String", "BASE_URL", "\"$devBaseUrl\"")
         }
     }
+
+    buildFeatures{
+        viewBinding = true
+        buildConfig = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -90,4 +102,13 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidxJunit)
     androidTestImplementation(libs.androidxEspressoCore)
+
+    implementation("io.coil-kt:coil:2.5.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.11")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
+    implementation("com.airbnb.android:lottie:6.4.0")
+    implementation("androidx.paging:paging-runtime-ktx:3.2.1")
+
 }

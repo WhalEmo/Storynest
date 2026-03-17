@@ -34,4 +34,31 @@
 
     </style>
 
+    <style name="Theme.Storynest" parent="Base.Theme.Storynest" />
+
+    <style name="StoryNestCustomInputStyle" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="colorControlActivated">@color/colorPrimary</item>
+        <item name="android:textColorHighlight">@color/soft_blue</item>
+    </style>
+
+
+    <style name="Widget.StoryNest.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/colorPrimary</item>
+        <item name="hintTextColor">@color/colorPrimary</item>
+        <item name="android:textColorHint">@color/reject_gray</item>
+        <item name="cursorColor">@color/colorPrimary</item>
+
+        <item name="errorTextColor">@color/red_error</item>
+        <item name="boxStrokeErrorColor">@color/red_error</item>
+        <item name="errorIconTint">@color/red_error</item>
+
+        <item name="boxCornerRadiusTopStart">10dp</item>
+        <item name="boxCornerRadiusTopEnd">10dp</item>
+        <item name="boxCornerRadiusBottomStart">10dp</item>
+        <item name="boxCornerRadiusBottomEnd">10dp</item>
+
+        <item name="theme">@style/StoryNestCustomInputStyle</item>
+    </style>
+
+
 </resources>

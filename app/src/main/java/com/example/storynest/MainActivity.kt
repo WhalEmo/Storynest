@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.storynest.Profile.ProfileMode
 import androidx.fragment.app.Fragment
 import com.example.storynest.RegisterLogin.RegisterLoginFragmnet
 import com.example.storynest.HomePage.HomePageFragment
@@ -19,6 +20,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+    private val navigator = Navigator
     private lateinit var btnHome: ImageView
     private lateinit var btnSearch: ImageView
     private lateinit var btnAddPost: ImageView
