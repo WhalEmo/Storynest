@@ -540,7 +540,6 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
                             }
                         }
                     }
-
                 }
                 launch {
                     commentAdapter.loadStateFlow.collectLatest { loadStates ->

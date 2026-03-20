@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 object PostFormatter {
-    fun formatPostDate(postDate: String): String {
+    fun formatPostDate(postDate: String?): String {
 
         val parser = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
 

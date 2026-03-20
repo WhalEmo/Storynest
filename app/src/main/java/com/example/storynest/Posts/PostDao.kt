@@ -6,6 +6,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Dao
 interface PostDao {
@@ -23,14 +25,23 @@ interface PostDao {
 
     @Query("UPDATE posts SET isDeleted = 0 WHERE post_id = :postId")
     suspend fun undoSoftDelete(postId: Long)
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPost(post: PostEntity)
 
     @Query("UPDATE posts SET liked = :isLiked, numberof_likes = :count WHERE post_id = :id")
     suspend fun updateLikeStatus(id: Long, isLiked: Boolean, count: Int)
 
-    @Update
-    suspend fun updatePost(post: PostEntity)
+    @Query("""
+        UPDATE posts 
+        SET postName = :name, contents = :content, categories = :cat, coverImage = :image, postUpdate = :update
+        WHERE post_id = :postId
+    """)
+    suspend fun updatePostFields(
+        postId: Long,
+        name: String,
+        content: String,
+        cat: String,
+        image: String?,
+        update: String?
+    )
 
 
     @Query("DELETE FROM posts")

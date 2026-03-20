@@ -32,6 +32,8 @@ import com.example.storynest.CustomViews.UiEvents
 import com.example.storynest.R
 import com.example.storynest.HomePage.HelperFragment.HelperFragment
 import com.example.storynest.HomePage.PostLikeUser.LikeUsersBottomSheet
+import com.example.storynest.HomePage.UpdatePost.UpdatePostFragmnets
+import com.example.storynest.dataLocal.UserStaticClass
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -141,15 +143,26 @@ class HomePageFragment : Fragment() {
                 popupWindow.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
                 val deleteItem= view.findViewById<LinearLayout>(R.id.post_delete)
-               // if(post.userId== UserStaticClass.userId){
+                if(post.userId== UserStaticClass.userId){
                     deleteItem.visibility=View.VISIBLE
                     deleteItem.setOnClickListener {
                         viewModel.deletePosts(post)
                         endPopupAnimation(popupWindow,view)
                     }
-               // }else{
-                //    deleteItem.visibility=View.GONE
-              //  }
+                }else{
+                    deleteItem.visibility=View.GONE
+                }
+                val updateItem= view.findViewById<LinearLayout>(R.id.post_edit)
+                if(post.userId== UserStaticClass.userId){
+                    updateItem.visibility=View.VISIBLE
+                    updateItem.setOnClickListener {
+                       showUpdateDialog()
+                        endPopupAnimation(popupWindow,view)
+                    }
+                }else{
+                    updateItem.visibility=View.GONE
+                }
+
                 val gapInDp = -24
                 val gapInPx = (gapInDp * anchorView.resources.displayMetrics.density).toInt()
 
@@ -160,8 +173,6 @@ class HomePageFragment : Fragment() {
                 val xOffset = anchorView.width - popupWidth
 
                 val yOffset = gapInPx
-
-
                 popupWindow.showAsDropDown(anchorView, xOffset, yOffset)
                 startPopupAnimation(view)
             }
@@ -177,6 +188,11 @@ class HomePageFragment : Fragment() {
             (itemAnimator as? DefaultItemAnimator)?.supportsChangeAnimations = false
         }
 
+    }
+    private fun updateDialog(postUi: postUiItem){
+        UpdatePostFragmnets
+            .newInstance(postUi)
+            .show(parentFragmentManager,"UpdateFragment")
     }
     private fun startPopupAnimation(view: View){
         view.alpha=0f
@@ -224,7 +240,7 @@ class HomePageFragment : Fragment() {
                             }
 
                             is UiEvents.ShowUndoSnackbar -> {
-                                val view = view ?: return@collect // Fragment görünümü yoksa işlem yapma
+                                val view = view ?: return@collect
 
                                 Snackbar.make(view, event.message, Snackbar.LENGTH_LONG)
                                     .setAction("Geri al") {

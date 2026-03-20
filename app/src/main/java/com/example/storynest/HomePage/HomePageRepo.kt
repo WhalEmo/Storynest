@@ -46,4 +46,12 @@ class HomePageRepo @Inject constructor(
             api.deletePosts(postId)
         }
 
+    suspend fun updatePosts(
+        postId: Long,
+        post: updatePost
+    ) : ResultWrapper<postResponse> =
+        safeApiCall {
+            api.updatePosts(postId,post)
+        }
+
 }

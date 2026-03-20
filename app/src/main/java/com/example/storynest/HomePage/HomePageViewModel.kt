@@ -150,7 +150,7 @@ class HomePageViewModel  @Inject constructor(
     }
 
     private var undoJob: Job? = null
-    private var recentlyDeletedPostId: Long? = null // Sadece ID tutmak yeterli
+    private var recentlyDeletedPostId: Long? = null
 
     fun deletePosts(postUi: postUiItem) {
         viewModelScope.launch {
@@ -166,11 +166,9 @@ class HomePageViewModel  @Inject constructor(
             recentlyDeletedPostId?.let { postId ->
                 try {
                     database.postDao().undoSoftDelete(postId)
-                    android.util.Log.d("UNDO_DEBUG", "Soft Undo başarılı. ID: $postId")
                     recentlyDeletedPostId = null
                     _uiEvent.trySend(UiEvents.showInfoMessage("İşlem geri alındı"))
                 } catch (e: Exception) {
-                    android.util.Log.e("UNDO_DEBUG", "Undo hatası", e)
                 }
             }
         }
@@ -187,9 +185,26 @@ class HomePageViewModel  @Inject constructor(
                 database.postDao().deletePost(postId)
             } else {
                 database.postDao().undoSoftDelete(postId)
-                _uiEvent.trySend(UiEvents.showInfoMessage("Hata: Sunucudan silinemedi."))
+                _uiEvent.trySend(UiEvents.showInfoMessage("Bir hata oluştu.Bağlantınızı kontrol ediniz."))
             }
         }
+    }
+
+    fun updatePost(postId: Long,updatePost: updatePost){
+        viewModelScope.launch {
+            val result=repo.updatePosts(postId,updatePost)
+
+            when (result) {
+                is ResultWrapper.Success -> {
+                    database.postDao().updatePostFields(postId,updatePost.postName,updatePost.contents,updatePost.categories,updatePost.coverImage,result.data.updateDate)
+                }
+                is ResultWrapper.Error -> {
+                    _uiEvent.trySend(UiEvents.showInfoMessage("Bir hata oluştu.Bağlantınızı kontrol ediniz."))
+                }
+            }
+        }
+
+
     }
     private var currentPageUser = 0
     private val pageSizeUser = 10

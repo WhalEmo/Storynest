@@ -19,11 +19,13 @@ object PostMapper {
             rawLikeCount = numberof_likes,
             numberof_likes = PostFormatter.formatLike(numberof_likes),
             postDate = PostFormatter.formatPostDate(postDate),
+            updateDate = PostFormatter.formatPostDate(postUpdate),
             likeIconRes = if (liked)
                 R.drawable.baseline_favorite_24
             else
                 R.drawable.baseline_favorite_border_24,
             liked = liked,
+            edited = edited,
             pinnedCount = pinnedCount
         )
     }
@@ -37,7 +39,9 @@ object PostMapper {
             coverImage = this.coverImage,
             numberof_likes = this.numberof_likes,
             postDate = this.postDate,
+            postUpdate = this.updateDate,
             liked = this.isLiked,
+            edited = this.isEdited,
             pinnedCount = this.pinnedCount,
             orderIndex = index
         )
@@ -59,7 +63,9 @@ object PostMapper {
                 coverImage = this.coverImage,
                 numberof_likes = this.rawLikeCount,
                 postDate = this.postDate,
+                postUpdate = this.updateDate,
                 liked = this.liked,
+                edited = this.edited,
                 pinnedCount = this.pinnedCount,
                 orderIndex = orderIndex
             )

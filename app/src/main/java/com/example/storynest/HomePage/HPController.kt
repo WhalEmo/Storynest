@@ -1,15 +1,25 @@
 package com.example.storynest.HomePage
 
+import android.os.Parcel
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
+import kotlinx.android.parcel.Parcelize
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
 data class postRequest(
     val user_id: Long?,
+    val postName: String,
+    val contents: String,
+    val categories: String,
+    val coverImage: String?
+)
+data class updatePost(
     val postName: String,
     val contents: String,
     val categories: String,
@@ -25,11 +35,15 @@ data class postResponse(
     @SerializedName("numberof_likes")
     var numberof_likes: Int,
     val postDate: String,
+    val updateDate: String?,
     @SerializedName(value = "isLiked", alternate = ["liked"])
-    var isLiked: Boolean ,
+    var isLiked: Boolean,
+    @SerializedName(value = "isEdited", alternate = ["edited"])
+    val isEdited: Boolean,
     var pinnedCount:Long
 )
 
+@Parcelize
 data class postUiItem(
     val postId: Long,
     val userId: Long,
@@ -42,10 +56,13 @@ data class postUiItem(
     val rawLikeCount: Int,
     var numberof_likes: String,
     val postDate: String,
+    val updateDate: String?,
     val likeIconRes: Int,
     var liked: Boolean,
+    var edited: Boolean,
     var pinnedCount: Long
-)
+) : Parcelable
+
 data class UserResponse(
     val id: Long,
     val username: String,
@@ -99,6 +116,13 @@ interface HPController {
     suspend fun deletePosts(
         @Path("postId") postId:Long
     ):retrofit2.Response<String>
+
+
+    @PUT("/api/posts/{postId}/updatePost")
+    suspend fun updatePosts(
+        @Path("postId") postId: Long,
+        @Body request: updatePost
+    ):postResponse
 
 
 }

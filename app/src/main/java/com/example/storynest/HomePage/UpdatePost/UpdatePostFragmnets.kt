@@ -1,99 +1,122 @@
-package com.example.storynest.HomePage.BarFragmnets
+package com.example.storynest.HomePage.UpdatePost
 
-import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputFilter
 import android.text.TextWatcher
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
-import android.widget.ProgressBar
+import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.LiveData
 import com.bumptech.glide.Glide
 import com.example.storynest.HomePage.HomePageViewModel
+
+import com.example.storynest.HomePage.postUiItem
 import com.example.storynest.R
-import com.example.storynest.ResultWrapper
-import com.example.storynest.UiState
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.color.MaterialColors
+import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
+import kotlin.getValue
 
 @AndroidEntryPoint
-class AddPostFragmnet : Fragment() {
+class UpdatePostFragmnets: Fragment() {
     private val viewModel: HomePageViewModel by activityViewModels()
-
-    private lateinit var edtStoryTitle: EditText
     private lateinit var imgCover: ImageView
+    private lateinit var changePhoto: LinearLayout
+    private lateinit var edtUpdateTitle: EditText
     private lateinit var txtKategori: TextView
     private lateinit var txtSelectedCategories: TextView
-    private lateinit var edtStoryContent: EditText
-    private lateinit var btnPublish: Button
-    private lateinit var textkapakekle: TextView
+    private lateinit var edtUpdateContent: TextInputEditText
+    private lateinit var btnUpdatePost: MaterialButton
+    private lateinit var btnCancelUpdate: MaterialButton
+    private lateinit var imgUserProfile: ImageView
+    private lateinit var txtUsername: TextView
 
     private val secilenKategoriler = mutableSetOf<String>()
-    private var selectedImageUri: Uri? = null
-    private lateinit var generalProgressBar: ProgressBar
 
+
+    private val postData: postUiItem? by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arguments?.getParcelable(ARG_POST, postUiItem::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            arguments?.getParcelable(ARG_POST)
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.fragment_add_post_fragmnet, container, false)
+        return inflater.inflate(R.layout.update_post, container, false)
     }
+
     override fun onViewCreated(view: View,savedInstanceState: Bundle?) {
         super.onViewCreated(view,savedInstanceState)
+        imgCover=view.findViewById(R.id.imgCover)
+        edtUpdateTitle=view.findViewById(R.id.edtUpdateTitle)
+        txtKategori=view.findViewById(R.id.txtKategori)
+        edtUpdateContent=view.findViewById(R.id.edtUpdateContent)
+        imgUserProfile=view.findViewById(R.id.imgUserProfile)
+        txtUsername=view.findViewById(R.id.txtUsername)
 
-        edtStoryTitle = view.findViewById(R.id.edtStoryTitle)
-        imgCover = view.findViewById(R.id.imgCover)
-        txtKategori = view.findViewById(R.id.txtKategori)
-        txtSelectedCategories = view.findViewById(R.id.txtSelectedCategories)
-        edtStoryContent = view.findViewById(R.id.edtStoryContent)
-        btnPublish = view.findViewById(R.id.btnPublish)
-        textkapakekle=view.findViewById(R.id.textkapakekle)
-        generalProgressBar=view.findViewById(R.id.generalProgressBar)
+        changePhoto=view.findViewById(R.id.changePhoto)
+        txtSelectedCategories=view.findViewById(R.id.txtSelectedCategories)
+        btnUpdatePost=view.findViewById(R.id.btnUpdatePost)
+        btnCancelUpdate=view.findViewById(R.id.btnCancelUpdate)
+
+
+        postData?.let { post ->
+            txtUsername.text = post.userName
+            edtUpdateTitle.setText(post.postName)
+            edtUpdateTitle.setSelection(edtUpdateTitle.text.length)
+            txtKategori.text=post.categories
+
+            edtUpdateContent.setText(post.contents)
+            edtUpdateContent.setSelection(edtUpdateTitle.text.length)
+
+            Glide.with(requireContext())
+                .load(post.profileUrl)
+                .placeholder(R.drawable.account_circle_24)
+                .error(R.drawable.account_circle_24)
+                .circleCrop()
+                .into(imgUserProfile)
+
+            Glide.with(requireContext())
+                .load(post.coverImage)
+                .placeholder(R.drawable.outline_broken_image_24)
+                .error(R.drawable.outline_broken_image_24)
+                .into(imgCover)
+
+        }
 
         textListener()
         setupTextWatchers()
-        click()
-        setupObservers()
-    }
-    private val pickImageLauncher = registerForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            selectedImageUri = it
-            Glide.with(requireContext())
-                .load(it)
-                .into(imgCover)
-
-            textkapakekle.visibility= View.GONE
-        }
+        clicks()
     }
 
-    private fun click() {
-        imgCover.setOnClickListener {
-            pickImageLauncher.launch("image/*")
-        }
+    private fun clicks(){
         txtKategori.setOnClickListener {
             showCategoryBottomSheet()
         }
-
-        btnPublish.setOnClickListener {
-            val title = edtStoryTitle.text.toString().trim()
-            val content = edtStoryContent.text.toString().trim()
+        btnUpdatePost.setOnClickListener {
+            val title = edtUpdateTitle.text.toString().trim()
+            val content = edtUpdateContent.text.toString().trim()
             val categoriesString = secilenKategoriler.joinToString(",")
 
             val minChars = 100
@@ -101,62 +124,54 @@ class AddPostFragmnet : Fragment() {
 
             when {
                 title.isEmpty() -> {
-                    edtStoryTitle.error = "Başlık boş olamaz"
+                    edtUpdateTitle.error = "Başlık boş olamaz"
                 }
                 content.length < minChars -> {
-                    edtStoryContent.error = "Metin en az $minChars karakter olmalı"
+                    edtUpdateContent.error = "Metin en az $minChars karakter olmalı"
                 }
                 content.length > maxChars -> {
-                    edtStoryContent.error = "Metin en fazla $maxChars karakter olabilir"
+                    edtUpdateContent.error = "Metin en fazla $maxChars karakter olabilir"
                 }
                 secilenKategoriler.isEmpty() -> {
                     txtSelectedCategories.error = "En az bir kategori seçmelisin"
                 }
                 else -> {
-                    edtStoryContent.error = null
-                    viewModel.addPost(title, content, categoriesString, selectedImageUri.toString())
+                    edtUpdateContent.error = null
+                    viewModel.updatePost(title, content, categoriesString, selectedImageUri.toString())
                 }
             }
         }
-
     }
+
     private fun setupTextWatchers() {
-        edtStoryTitle.addTextChangedListener {
-            edtStoryTitle.error = null
+        edtUpdateTitle.addTextChangedListener {
+            edtUpdateTitle.error = null
         }
 
-        edtStoryContent.addTextChangedListener {
-            edtStoryContent.error = null
+        edtUpdateContent.addTextChangedListener {
+            edtUpdateContent.error = null
         }
     }
 
     private fun textListener() {
         val maxChars = 2000
-        edtStoryContent.filters = arrayOf(InputFilter.LengthFilter(maxChars))
-        edtStoryContent.addTextChangedListener(object : TextWatcher {
+
+        edtUpdateContent.filters = arrayOf(InputFilter.LengthFilter(maxChars))
+        edtUpdateContent.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val currentLength = s?.length ?: 0
 
                 if (currentLength >= maxChars) {
-                    edtStoryContent.error = "Metin en fazla $maxChars karakter olabilir!"
+                    edtUpdateContent.error = "Metin en fazla $maxChars karakter olabilir!"
                 } else {
-                    edtStoryContent.error = null
+                    edtUpdateContent.error = null
                 }
             }
-
             override fun afterTextChanged(s: Editable?) {}
         })
     }
-
-    private fun setupObservers(){
-        observeUiState(viewModel.addPostResult, generalProgressBar) { data ->
-            Toast.makeText(requireContext(), "Post paylaşıldı!", Toast.LENGTH_SHORT).show()
-            resetForm()
-        }
-    }
-
     private fun showCategoryBottomSheet() {
 
         val bottomSheetDialog = BottomSheetDialog(requireContext())
@@ -202,7 +217,7 @@ class AddPostFragmnet : Fragment() {
             }
 
             chipGroup.addView(chip)
-    }
+        }
 
         btnOnayla.setOnClickListener {
             updateSelectedCategoriesText()
@@ -211,6 +226,16 @@ class AddPostFragmnet : Fragment() {
 
         bottomSheetDialog.setContentView(view)
         bottomSheetDialog.show()
+    }
+
+    private fun resetForm() {
+        edtUpdateTitle.text.clear()
+        edtUpdateContent.text?.clear()
+        imgCover.setImageResource(0)
+        txtSelectedCategories.text = ""
+        txtSelectedCategories.error = null
+        txtKategori.error = null
+        secilenKategoriler.clear()
     }
     private fun updateSelectedCategoriesText() {
         txtSelectedCategories.error = null
@@ -223,41 +248,15 @@ class AddPostFragmnet : Fragment() {
     }
 
 
+    companion object {
+        private const val ARG_POST = "post"
 
-    private fun resetForm() {
-        edtStoryTitle.text.clear()
-        edtStoryContent.text.clear()
-        imgCover.setImageResource(0)
-        txtSelectedCategories.text = ""
-        txtSelectedCategories.error = null
-        txtKategori.error = null
-        secilenKategoriler.clear()
-        selectedImageUri = null
-        textkapakekle.visibility = View.VISIBLE
-
-    }
-    private fun <T> observeUiState(
-        liveData: LiveData<UiState<T>>,
-        progressBar: View,
-        onSuccess: (T) -> Unit = {}
-    ) {
-        liveData.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is UiState.Loading -> progressBar.visibility = View.VISIBLE
-                is UiState.Success -> {
-                    progressBar.visibility = View.GONE
-                    onSuccess(state.data)
-                }
-                is UiState.Error -> {
-                    progressBar.visibility = View.GONE
-                    Toast.makeText(requireContext(), "Hata: ${state.message}", Toast.LENGTH_SHORT).show()
-                }
-                is UiState.EmailNotVerified->{
-                }
-                is UiState.EmailSent->{
+        fun newInstance(post: postUiItem): UpdatePostFragmnets {
+            return UpdatePostFragmnets().apply {
+                arguments = Bundle().apply {
+                    putParcelable(ARG_POST, post)
                 }
             }
         }
     }
-
 }
