@@ -26,6 +26,7 @@ data class updatePost(
     val coverImage: String?
 )
 data class postResponse(
+    @SerializedName("post_id")
     val post_id:Long,
     val user: UserResponse,
     val postName:String,
@@ -43,7 +44,6 @@ data class postResponse(
     var pinnedCount:Long
 )
 
-@Parcelize
 data class postUiItem(
     val postId: Long,
     val userId: Long,
@@ -61,7 +61,7 @@ data class postUiItem(
     var liked: Boolean,
     var edited: Boolean,
     var pinnedCount: Long
-) : Parcelable
+)
 
 data class UserResponse(
     val id: Long,

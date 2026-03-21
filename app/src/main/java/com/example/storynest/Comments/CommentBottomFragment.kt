@@ -592,7 +592,7 @@ class CommentBottomFragment: BottomSheetDialogFragment() {
 
                                 isListEmpty -> {
                                     txtEmpty.visibility = View.VISIBLE
-                                    txtEmpty.text = "Henüz yorum yapılmamış. İlk yorumu sen yap!"
+                                    txtEmpty.text = "Henüz yorum yok. İlk yorumu sen yap!"
                                 }
 
                                 else -> {

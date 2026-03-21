@@ -8,6 +8,7 @@
         <item name="colorPrimary">#F0D8C0</item>
 
         <item name="colorError">@color/error_red</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
 
     </style>
     <style name="Theme.Storynest"

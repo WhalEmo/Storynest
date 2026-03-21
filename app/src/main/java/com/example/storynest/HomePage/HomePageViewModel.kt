@@ -23,13 +23,21 @@ import com.example.storynest.dataLocal.UserStaticClass
 import com.example.storynest.ResultWrapper
 import com.example.storynest.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,8 +49,10 @@ class HomePageViewModel  @Inject constructor(
     private val _addPostResult = MutableLiveData<UiState<postResponse>>()
     val addPostResult: LiveData<UiState<postResponse>> = _addPostResult
 
-    private val _userPosts = MutableLiveData<UiState<List<postResponse>>>()
-    val userPosts: LiveData<UiState<List<postResponse>>> = _userPosts
+    private val _isLoading = MutableStateFlow<Boolean>(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    private val _updateSucces = MutableSharedFlow<Unit>()
+    val updateSucces = _updateSucces.asSharedFlow()
 
     private val _uiEvent = Channel<UiEvents>()
     val uiEvent = _uiEvent.receiveAsFlow()
@@ -70,7 +80,7 @@ class HomePageViewModel  @Inject constructor(
             }
         ).flow.cachedIn(viewModelScope)
 
-
+/*
     val posts: Flow<PagingData<HomePageUiModel>> = pagingPosts
         .map { pagingData ->
             val mappedData = pagingData.map { entity ->
@@ -109,6 +119,23 @@ class HomePageViewModel  @Inject constructor(
             }
         }
 
+ */
+  val posts: Flow<PagingData<HomePageUiModel>> =
+    pagingPosts
+        .map { pagingData ->
+            pagingData
+                .map { entity ->
+                    HomePageUiModel.PostItem(
+                        post = with(PostMapper) { entity.toUiItem() },
+                        position = entity.orderIndex
+                    ) as HomePageUiModel
+                }
+                .insertSeparators<HomePageUiModel, HomePageUiModel> { before, after ->
+                    null
+                }
+        }
+        .cachedIn(viewModelScope)
+
     fun addPost(
         postName: String,
         contents: String,
@@ -130,32 +157,36 @@ class HomePageViewModel  @Inject constructor(
         }
     }
 
-    fun toggleLike(post: postUiItem, isCurrentlyLiked: Boolean, currentLikeCount: Int) {
+     fun toggleLike(post: postUiItem, isCurrentlyLiked: Boolean, currentLikeCount: Int) {
         viewModelScope.launch {
             val targetLiked = !isCurrentlyLiked
             val targetCount = if (targetLiked) currentLikeCount + 1 else currentLikeCount - 1
-            database.postDao().updateLikeStatus(post.postId, targetLiked, targetCount)
-
+            withContext(Dispatchers.IO) {
+                database.postDao().updateLikeStatus(post.postId, targetLiked, targetCount)
+            }
             val result = repo.toggleLike(post.postId)
 
             when (result) {
                 is ResultWrapper.Success -> {
                 }
                 is ResultWrapper.Error -> {
-                    database.postDao().updateLikeStatus(post.postId, isCurrentlyLiked, currentLikeCount)
+                    withContext(Dispatchers.IO) {
+                        database.postDao().updateLikeStatus(post.postId, isCurrentlyLiked, currentLikeCount)
+                    }
                     _uiEvent.trySend(UiEvents.showInfoMessage("Bir hata oluştu.Bağlantınızı kontrol ediniz."))
                 }
             }
         }
     }
-
     private var undoJob: Job? = null
     private var recentlyDeletedPostId: Long? = null
 
     fun deletePosts(postUi: postUiItem) {
         viewModelScope.launch {
             recentlyDeletedPostId = postUi.postId
-            database.postDao().softDeletePost(postUi.postId)
+            withContext(Dispatchers.IO) {
+                database.postDao().softDeletePost(postUi.postId)
+            }
             _uiEvent.trySend(UiEvents.ShowUndoSnackbar("Post silindi"))
         }
     }
@@ -165,7 +196,9 @@ class HomePageViewModel  @Inject constructor(
         undoJob = viewModelScope.launch {
             recentlyDeletedPostId?.let { postId ->
                 try {
-                    database.postDao().undoSoftDelete(postId)
+                    withContext(Dispatchers.IO) {
+                        database.postDao().undoSoftDelete(postId)
+                    }
                     recentlyDeletedPostId = null
                     _uiEvent.trySend(UiEvents.showInfoMessage("İşlem geri alındı"))
                 } catch (e: Exception) {
@@ -182,29 +215,58 @@ class HomePageViewModel  @Inject constructor(
             val result = repo.deletePosts(postId)
 
             if (result is ResultWrapper.Success) {
-                database.postDao().deletePost(postId)
+                withContext(Dispatchers.IO) {
+                    database.postDao().deletePost(postId)
+                }
             } else {
-                database.postDao().undoSoftDelete(postId)
+                withContext(Dispatchers.IO) {
+                    database.postDao().undoSoftDelete(postId)
+                }
                 _uiEvent.trySend(UiEvents.showInfoMessage("Bir hata oluştu.Bağlantınızı kontrol ediniz."))
             }
         }
     }
 
-    fun updatePost(postId: Long,updatePost: updatePost){
+    fun updatePost(
+        postId: Long,
+        postName: String,
+        contents:String,
+        categories: String,
+        coverImage: String?
+    ){
         viewModelScope.launch {
-            val result=repo.updatePosts(postId,updatePost)
+            try {
+                _isLoading.value = true
+                val request = updatePost(postName, contents, categories, coverImage)
+                val result = repo.updatePosts(postId, request)
+                when (result) {
+                    is ResultWrapper.Success -> {
+                        _updateSucces.emit(Unit)
+                        _uiEvent.trySend(UiEvents.showInfoMessage("Post güncellendi"))
+                        _isLoading.value = false
+                        withContext(Dispatchers.IO) {
+                            database.postDao().updatePostFields(
+                                postId,
+                                postName,
+                                contents,
+                                categories,
+                                coverImage,
+                                result.data.updateDate
+                            )
+                        }
+                    }
 
-            when (result) {
-                is ResultWrapper.Success -> {
-                    database.postDao().updatePostFields(postId,updatePost.postName,updatePost.contents,updatePost.categories,updatePost.coverImage,result.data.updateDate)
+                    is ResultWrapper.Error -> {
+                        _isLoading.value = false
+                        _uiEvent.trySend(UiEvents.showInfoMessage("Bir hata oluştu.Bağlantınızı kontrol ediniz."))
+                    }
                 }
-                is ResultWrapper.Error -> {
-                    _uiEvent.trySend(UiEvents.showInfoMessage("Bir hata oluştu.Bağlantınızı kontrol ediniz."))
-                }
+            }catch (e: Exception) {
+                _uiEvent.trySend(UiEvents.showInfoMessage("Beklenmedik bir hata!"))
+            } finally {
+                _isLoading.value = false
             }
         }
-
-
     }
     private var currentPageUser = 0
     private val pageSizeUser = 10

@@ -11,11 +11,17 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
+import com.example.storynest.CustomViews.InfoMessage
+import com.example.storynest.CustomViews.UiEvents
 import com.example.storynest.HomePage.HomePageViewModel
 
 import com.example.storynest.HomePage.postUiItem
@@ -27,6 +33,7 @@ import com.google.android.material.chip.ChipGroup
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import kotlin.getValue
 
 @AndroidEntryPoint
@@ -43,9 +50,11 @@ class UpdatePostFragmnets: Fragment() {
     private lateinit var imgUserProfile: ImageView
     private lateinit var txtUsername: TextView
 
+    private lateinit var loadingOverlay: RelativeLayout
     private val secilenKategoriler = mutableSetOf<String>()
+    private var postId: Long = -1L
 
-
+/*
     private val postData: postUiItem? by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             arguments?.getParcelable(ARG_POST, postUiItem::class.java)
@@ -54,6 +63,8 @@ class UpdatePostFragmnets: Fragment() {
             arguments?.getParcelable(ARG_POST)
         }
     }
+
+ */
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,17 +85,25 @@ class UpdatePostFragmnets: Fragment() {
         edtUpdateContent=view.findViewById(R.id.edtUpdateContent)
         imgUserProfile=view.findViewById(R.id.imgUserProfile)
         txtUsername=view.findViewById(R.id.txtUsername)
+        loadingOverlay = view.findViewById(R.id.loadingOverlay)
 
         changePhoto=view.findViewById(R.id.changePhoto)
         txtSelectedCategories=view.findViewById(R.id.txtSelectedCategories)
         btnUpdatePost=view.findViewById(R.id.btnUpdatePost)
         btnCancelUpdate=view.findViewById(R.id.btnCancelUpdate)
 
-
+/*
         postData?.let { post ->
+            postId=post.postId
             txtUsername.text = post.userName
             edtUpdateTitle.setText(post.postName)
             edtUpdateTitle.setSelection(edtUpdateTitle.text.length)
+
+            if (!post.categories.isNullOrEmpty()) {
+                val list = post.categories.split(",")
+                secilenKategoriler.addAll(list)
+                updateSelectedCategoriesText()
+            }
             txtKategori.text=post.categories
 
             edtUpdateContent.setText(post.contents)
@@ -105,6 +124,8 @@ class UpdatePostFragmnets: Fragment() {
 
         }
 
+ */
+        listenData()
         textListener()
         setupTextWatchers()
         clicks()
@@ -137,7 +158,7 @@ class UpdatePostFragmnets: Fragment() {
                 }
                 else -> {
                     edtUpdateContent.error = null
-                    viewModel.updatePost(title, content, categoriesString, selectedImageUri.toString())
+                   // viewModel.updatePost(postId,title,content,categoriesString,postData?.coverImage)
                 }
             }
         }
@@ -247,6 +268,42 @@ class UpdatePostFragmnets: Fragment() {
         txtSelectedCategories.text = text
     }
 
+    private fun listenData(){
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.isLoading.collect { isLoading ->
+                        loadingOverlay.visibility = if (isLoading) View.VISIBLE else View.GONE
+                    }
+                }
+                launch {
+                    viewModel.updateSucces.collect {
+                        resetForm()
+                        parentFragmentManager.popBackStack()
+                    }
+                }
+                launch {
+                    viewModel.uiEvent.collect { event ->
+                        when(event){
+                            is UiEvents.ShowSnackbar -> {
+
+                            }
+                            is UiEvents.ShowToast -> {}
+                            is UiEvents.ShowUndoSnackbar -> {}
+                            is UiEvents.showInfoMessage -> {
+                                InfoMessage.show(
+                                    fragment = this@UpdatePostFragmnets,
+                                    message = event.message
+                                )
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+    }
 
     companion object {
         private const val ARG_POST = "post"
@@ -254,7 +311,7 @@ class UpdatePostFragmnets: Fragment() {
         fun newInstance(post: postUiItem): UpdatePostFragmnets {
             return UpdatePostFragmnets().apply {
                 arguments = Bundle().apply {
-                    putParcelable(ARG_POST, post)
+                    //putParcelable(ARG_POST, post)
                 }
             }
         }

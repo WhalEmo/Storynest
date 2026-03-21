@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -7,60 +8,71 @@
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:padding="12dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <View
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/placeholder_bg" />
-
-            <View
-                android:layout_width="120dp"
-                android:layout_height="16dp"
-                android:layout_marginStart="12dp"
-                android:background="@drawable/placeholder_bg" />
-        </LinearLayout>
-
+        <!-- USER ICON -->
         <View
+            android:id="@+id/placeholderUserIcon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/placeholder_bg"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- USER NAME -->
+        <View
+            android:id="@+id/placeholderUsername"
+            android:layout_width="120dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/placeholder_bg"
+            app:layout_constraintStart_toEndOf="@id/placeholderUserIcon"
+            app:layout_constraintTop_toTopOf="@id/placeholderUserIcon"
+            app:layout_constraintBottom_toBottomOf="@id/placeholderUserIcon" />
+
+        <!-- POST TITLE -->
+        <View
+            android:id="@+id/placeholderTitle"
             android:layout_width="200dp"
             android:layout_height="20dp"
             android:layout_marginTop="16dp"
-            android:background="@drawable/placeholder_bg" />
+            android:background="@drawable/placeholder_bg"
+            app:layout_constraintTop_toBottomOf="@id/placeholderUserIcon"
+            app:layout_constraintStart_toStartOf="parent" />
 
+        <!-- COVER IMAGE -->
         <View
-            android:layout_width="match_parent"
+            android:id="@+id/placeholderCover"
+            android:layout_width="0dp"
             android:layout_height="100dp"
             android:layout_marginTop="12dp"
-            android:background="@drawable/placeholder_bg" />
+            android:background="@drawable/placeholder_bg"
+            app:layout_constraintTop_toBottomOf="@id/placeholderTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+        <View
+            android:id="@+id/placeholderLikeIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:layout_marginTop="16dp"
-            android:orientation="horizontal">
+            android:background="@drawable/placeholder_bg"
+            app:layout_constraintTop_toBottomOf="@id/placeholderCover"
+            app:layout_constraintStart_toStartOf="parent"/>
 
-            <View
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:background="@drawable/placeholder_bg" />
+        <View
+            android:id="@+id/placeholderLikeCount"
+            android:layout_width="60dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/placeholder_bg"
+            app:layout_constraintStart_toEndOf="@id/placeholderLikeIcon"
+            app:layout_constraintTop_toTopOf="@id/placeholderLikeIcon"
+            app:layout_constraintBottom_toBottomOf="@id/placeholderLikeIcon"/>
 
-            <View
-                android:layout_width="60dp"
-                android:layout_height="16dp"
-                android:layout_gravity="center_vertical"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/placeholder_bg" />
-        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </LinearLayout>
 </androidx.cardview.widget.CardView>

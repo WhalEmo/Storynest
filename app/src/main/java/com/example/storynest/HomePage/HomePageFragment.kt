@@ -69,13 +69,14 @@ class HomePageFragment : Fragment() {
         btnRetry=view.findViewById(R.id.btnRetry)
         generalProgressBar=view.findViewById(R.id.generalProgressBar)
 
-        shimmerRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        shimmerRecyclerView.layoutManager = LinearLayoutManager(context ?: requireContext())
+        shimmerRecyclerView.setHasFixedSize(true)
         shimmerRecyclerView.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
                 val v = LayoutInflater.from(parent.context).inflate(R.layout.item_post_placeholder, parent, false)
                 return object : RecyclerView.ViewHolder(v) {}
             }
-            override fun getItemCount() = 10
+            override fun getItemCount() = 5 // 10 çok fazla olabilir, 5 idealdir.
             override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {}
         }
 
@@ -156,7 +157,7 @@ class HomePageFragment : Fragment() {
                 if(post.userId== UserStaticClass.userId){
                     updateItem.visibility=View.VISIBLE
                     updateItem.setOnClickListener {
-                       showUpdateDialog()
+                        updateDialog(post)
                         endPopupAnimation(popupWindow,view)
                     }
                 }else{
@@ -190,9 +191,12 @@ class HomePageFragment : Fragment() {
 
     }
     private fun updateDialog(postUi: postUiItem){
-        UpdatePostFragmnets
-            .newInstance(postUi)
-            .show(parentFragmentManager,"UpdateFragment")
+        val fragment = UpdatePostFragmnets.newInstance(postUi)
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null)
+            .commit()
     }
     private fun startPopupAnimation(view: View){
         view.alpha=0f
@@ -202,7 +206,7 @@ class HomePageFragment : Fragment() {
             .alpha(1f)
             .scaleX(1f)
             .scaleY(1f)
-            .setDuration(180)
+            .setDuration(100)
             .setInterpolator(android.view.animation.DecelerateInterpolator())
             .start()
     }
@@ -211,7 +215,7 @@ class HomePageFragment : Fragment() {
             .alpha(0f)
             .scaleX(0.85f)
             .scaleY(0.85f)
-            .setDuration(180)
+            .setDuration(100)
             .withEndAction {
                 popupWindow.dismiss()
             }
@@ -302,21 +306,19 @@ class HomePageFragment : Fragment() {
                                 shimmerLayout.stopShimmer()
                                 shimmerLayout.visibility = View.GONE
 
-                                val error = refreshState.error
                                 if (isItemEmpty) {
                                     txtEmpty.visibility = View.VISIBLE
                                     btnRetry.visibility = View.VISIBLE
-                                    txtEmpty.text = error.localizedMessage
+                                    txtEmpty.text = refreshState.error.localizedMessage
                                     recyclerViewPosts.visibility = View.GONE
                                 } else {
-                                    goBar(error.localizedMessage ?: "Bir hata oluştu")
+                                    recyclerViewPosts.visibility = View.VISIBLE
+                                    goBar("İnternet bağlantısı yok.")
                                 }
                             }
                         }
                     }
                 }
-
-
             }
         }
     }

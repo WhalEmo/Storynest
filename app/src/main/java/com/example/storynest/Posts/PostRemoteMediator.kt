@@ -25,7 +25,12 @@ class PostRemoteMediator(
                 LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true)
                 LoadType.APPEND -> {
                     val remoteKeys = getRemoteKeyForLastItem(state)
-                    remoteKeys?.nextKey ?: return MediatorResult.Success(endOfPaginationReached = remoteKeys != null)
+                    val nextKey = remoteKeys?.nextKey
+
+                    if (nextKey == null) {
+                        return MediatorResult.Success(endOfPaginationReached = true)
+                    }
+                    nextKey
                 }
             }
 
@@ -48,8 +53,9 @@ class PostRemoteMediator(
                             val prevKey = if (page == 0) null else page - 1
                             val nextKey = if (isEndOfList) null else page + 1
 
-                            val entities = postList.mapIndexed { index, post ->
-                                post.toEntity(index = startIndex + index)
+                            val entities = ArrayList<PostEntity>(postList.size)
+                            postList.forEachIndexed { index, post ->
+                                entities.add(post.toEntity(index = startIndex + index))
                             }
 
                             val keys = postList.map {

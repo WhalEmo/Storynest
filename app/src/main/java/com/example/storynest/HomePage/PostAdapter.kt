@@ -146,17 +146,20 @@ class PostAdapter(
         }
 
         fun bind(post: postUiItem) {
+
             Glide.with(itemView.context)
                 .load(post.profileUrl)
                 .placeholder(R.drawable.account_circle_24)
                 .error(R.drawable.account_circle_24)
                 .circleCrop()
+                .dontAnimate()
                 .into(imgUserProfile)
 
             Glide.with(itemView.context)
                 .load(post.coverImage)
                 .placeholder(R.drawable.outline_broken_image_24)
                 .error(R.drawable.outline_broken_image_24)
+                .dontAnimate()
                 .into(coverImage)
 
             txtUsername.text = post.userName
@@ -176,6 +179,7 @@ class PostAdapter(
                 Glide.with(itemView.context)
                     .load(post.coverImage)
                     .placeholder(R.drawable.outline_broken_image_24)
+                    .dontAnimate()
                     .into(coverImage)
             }
             if (changes.contains("CATEGORY")) { txtCategory.text = post.categories }

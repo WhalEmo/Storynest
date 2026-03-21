@@ -201,7 +201,7 @@
         android:layout_height="match_parent"
         android:background="#CCFFFFFF"
         android:visibility="gone"
-        android:clickable="false"
+        android:clickable="true"
         android:focusable="true">
         <ProgressBar
             android:layout_width="48dp"

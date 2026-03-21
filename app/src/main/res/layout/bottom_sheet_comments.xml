@@ -91,7 +91,7 @@
         android:padding="12dp"
         android:visibility="gone"
         android:src="@drawable/spinner_vector"
-        app:layout_constraintBottom_toBottomOf="@id/rvComment"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toTopOf="@id/txtEmpty"
@@ -99,17 +99,19 @@
 
     <TextView
         android:id="@+id/txtEmpty"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
+        android:layout_margin="50dp"
         android:layout_height="wrap_content"
-        android:text="Henüz yorum yok"
+        android:text="Henüz yorum yok. İlk yorumu sen yap!"
         android:textColor="@color/black"
         android:textStyle="bold"
-        android:textSize="25dp"
+        android:textSize="25sp"
+        android:gravity="center"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/rvComment"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/rvComment" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/replyLayout"

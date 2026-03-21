@@ -1,5 +1,6 @@
 package com.example.storynest.HomePage.viewModelHpHelper
 
+import com.example.storynest.Comments.viewModelChelper.CommentFormatter
 import com.example.storynest.HomePage.postResponse
 import com.example.storynest.HomePage.postUiItem
 import com.example.storynest.Posts.PostEntity
@@ -19,7 +20,8 @@ object PostMapper {
             rawLikeCount = numberof_likes,
             numberof_likes = PostFormatter.formatLike(numberof_likes),
             postDate = PostFormatter.formatPostDate(postDate),
-            updateDate = PostFormatter.formatPostDate(postUpdate),
+            //updateDate = PostFormatter.formatPostDate(postUpdate),
+            updateDate =  if (edited) PostFormatter.formatPostDate(postUpdate) else null,
             likeIconRes = if (liked)
                 R.drawable.baseline_favorite_24
             else
